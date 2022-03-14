@@ -22,7 +22,7 @@ SnuPL/-1 defines a simple grammar consisting of assignments to 'variables' forme
 ## Examples
 A valid SnuPL/-1 program.
 
-    a := 5 + (10 * 5 / 25) - 2;
+    a := 5 + (1 * 5 / 2) - 2;
 
     b := (1 + 1);
     c := (2 * 3) = (3 * 2);
@@ -32,53 +32,53 @@ A valid SnuPL/-1 program.
 
 The token stream of the above program is
 ```
-  1:1: tIdent (a)
+  1:1: tLetter (a)
   1:3: tAssign
-  1:6: tNumber (5)
+  1:6: tDigit (5)
   1:8: tPlusMinus (+)
-  1:10: tLParens
-  1:11: tNumber (10)
-  1:14: tMulDiv (*)
-  1:16: tNumber (5)
-  1:18: tMulDiv (/)
-  1:20: tNumber (25)
-  1:22: tRParens
-  1:24: tPlusMinus (-)
-  1:26: tNumber (2)
-  1:27: tSemicolon
-  3:1: tIdent (b)
+  1:10: tLBrak
+  1:11: tDigit (1)
+  1:13: tMulDiv (*)
+  1:15: tDigit (5)
+  1:17: tMulDiv (/)
+  1:19: tDigit (2)
+  1:20: tRBrak
+  1:22: tPlusMinus (-)
+  1:24: tDigit (2)
+  1:25: tSemicolon
+  3:1: tLetter (b)
   3:3: tAssign
-  3:6: tLParens
-  3:7: tNumber (1)
+  3:6: tLBrak
+  3:7: tDigit (1)
   3:9: tPlusMinus (+)
-  3:11: tNumber (1)
-  3:12: tRParens
+  3:11: tDigit (1)
+  3:12: tRBrak
   3:13: tSemicolon
-  4:1: tIdent (c)
+  4:1: tLetter (c)
   4:3: tAssign
-  4:6: tLParens
-  4:7: tNumber (2)
+  4:6: tLBrak
+  4:7: tDigit (2)
   4:9: tMulDiv (*)
-  4:11: tNumber (3)
-  4:12: tRParens
+  4:11: tDigit (3)
+  4:12: tRBrak
   4:14: tRelOp (=)
-  4:16: tLParens
-  4:17: tNumber (3)
+  4:16: tLBrak
+  4:17: tDigit (3)
   4:19: tMulDiv (*)
-  4:21: tNumber (2)
-  4:22: tRParens
+  4:21: tDigit (2)
+  4:22: tRBrak
   4:23: tSemicolon
-  6:1: tIdent (d)
+  6:1: tLetter (d)
   6:6: tAssign
-  6:8: tNumber (1)
+  6:8: tDigit (1)
   6:15: tPlusMinus (+)
-  6:16: tNumber (2)
+  6:16: tDigit (2)
   6:17: tMulDiv (/)
-  6:18: tNumber (3)
+  6:18: tDigit (3)
   6:19: tMulDiv (*)
-  6:24: tNumber (2)
+  6:24: tDigit (2)
   6:25: tRelOp (=)
-  6:30: tNumber (5)
+  6:30: tDigit (5)
   7:1: tDot
   8:1: tEOF
 ```
