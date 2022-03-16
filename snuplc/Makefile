@@ -35,11 +35,14 @@ DOXYFILE=doc/Doxyfile
 #
 .PHONY: doc clean mrproper 
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DEP_DIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DEP_DIR) $(OBJ_DIR)
 	$(CC) $(CCFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(DEP_DIR):
 	@mkdir -p $(DEP_DIR)
+
+$(OBJ_DIR):
+	@mkdir -p $(OBJ_DIR)
 
 -include $(DEPS)
 
