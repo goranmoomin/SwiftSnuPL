@@ -1,0 +1,9 @@
+BasedOnStyle: Google
+
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: false
+BraceWrapping:
+  AfterFunction: true
+BreakBeforeBraces: Custom
+ColumnLimit: 100
+ContinuationIndentWidth: 2

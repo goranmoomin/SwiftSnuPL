@@ -38,10 +38,10 @@
 #ifndef __SnuPL_SCANNER_H__
 #define __SnuPL_SCANNER_H__
 
-#include <istream>
-#include <ostream>
 #include <iomanip>
+#include <istream>
 #include <map>
+#include <ostream>
 
 using namespace std;
 
@@ -51,28 +51,27 @@ using namespace std;
 /// Each member of this enumeration represents a token in SnuPL
 ///
 enum EToken {
-  tDigit=0,                         ///< a digit
-  tLetter,                          ///< a letter
-  tPlusMinus,                       ///< '+' or '-'
-  tMulDiv,                          ///< '*' or '/'
-  tRelOp,                           ///< relational operator
-  tAssign,                          ///< assignment operator
-  tSemicolon,                       ///< a semicolon
-  tDot,                             ///< a dot
-  tLBrak,                           ///< a left bracket
-  tRBrak,                           ///< a right bracket
+  tNumber = 0,  ///< a digit
+  tIdent,       ///< an identifier
+  tPlusMinus,   ///< '+' or '-'
+  tMulDiv,      ///< '*' or '/'
+  tRelOp,       ///< relational operator
+  tAssign,      ///< assignment operator
+  tSemicolon,   ///< a semicolon
+  tDot,         ///< a dot
+  tLBrak,       ///< a left bracket
+  tRBrak,       ///< a right bracket
 
-  tEOF,                             ///< end of file
-  tIOError,                         ///< I/O error
-  tInvStringConst,                  ///< invalid string constant
-  tUndefined,                       ///< undefined
+  tEOF,             ///< end of file
+  tIOError,         ///< I/O error
+  tInvStringConst,  ///< invalid string constant
+  tUndefined,       ///< undefined
 
   // these are not needed for SnuPL/-1 but required by CToken::(un)escape
   // (and you will need them when implementing SnuPL/2)
-  tCharConst,                       ///< character constant
-  tStringConst,                     ///< string constant
+  tCharConst,    ///< character constant
+  tStringConst,  ///< string constant
 };
-
 
 //--------------------------------------------------------------------------------------------------
 /// @brief token class
@@ -85,107 +84,120 @@ enum EToken {
 ///
 class CToken {
   friend class CScanner;
-  public:
-    /// @name constructors
-    /// @{
 
-    /// @brief default constructor
-    CToken();
+ public:
+  /// @name constructors
+  /// @{
 
-    /// @brief constructor taking initialization values
-    ///
-    /// @param line line number in the input stream
-    /// @param charpos character position in the input stream
-    /// @param type token type
-    /// @param value token value
-    CToken(int line, int charpos, EToken type, const string value="");
+  /// @brief default constructor
+  CToken();
 
-    /// @brief copy contructor
-    ///
-    /// @param token token to copy
-    CToken(const CToken &token);
+  /// @brief constructor taking initialization values
+  ///
+  /// @param line line number in the input stream
+  /// @param charpos character position in the input stream
+  /// @param type token type
+  /// @param value token value
+  CToken(int line, int charpos, EToken type, const string value = "");
 
-    /// @brief copy contructor
-    ///
-    /// @param token token to copy
-    CToken(const CToken *token);
-    /// @}
+  /// @brief copy contructor
+  ///
+  /// @param token token to copy
+  CToken(const CToken &token);
 
-    /// @name token attributes
-    /// @{
+  /// @brief copy contructor
+  ///
+  /// @param token token to copy
+  CToken(const CToken *token);
+  /// @}
 
-    /// @brief return the name for a given token
-    ///
-    /// @retval token name
-    static const string Name(EToken type);
+  /// @name token attributes
+  /// @{
 
-    /// @brief return the token name of this instance
-    ///
-    /// @retval token name
-    const string GetName(void) const;
+  /// @brief return the name for a given token
+  ///
+  /// @retval token name
+  static const string Name(EToken type);
 
-    /// @brief return the token type of this instance
-    ///
-    /// @retval token type
-    EToken GetType(void) const { return _type; };
+  /// @brief return the token name of this instance
+  ///
+  /// @retval token name
+  const string GetName(void) const;
 
-    /// @brief return the token value of this instance
-    ///
-    /// @retval token value
-    string GetValue(void) const { return _value; };
+  /// @brief return the token type of this instance
+  ///
+  /// @retval token type
+  EToken GetType(void) const
+  {
+    return _type;
+  };
 
-    /// @}
+  /// @brief return the token value of this instance
+  ///
+  /// @retval token value
+  string GetValue(void) const
+  {
+    return _value;
+  };
 
-    /// @name stream attributes
-    /// @{
+  /// @}
 
-    /// @brief return the line number
-    ///
-    /// @retval line number of the token in the input stream
-    int GetLineNumber(void) const { return _line; };
+  /// @name stream attributes
+  /// @{
 
-    /// @brief return the character position
-    ///
-    /// @retval character position of the token in the input stream
-    int GetCharPosition(void) const { return _char; };
+  /// @brief return the line number
+  ///
+  /// @retval line number of the token in the input stream
+  int GetLineNumber(void) const
+  {
+    return _line;
+  };
 
-    /// @}
+  /// @brief return the character position
+  ///
+  /// @retval character position of the token in the input stream
+  int GetCharPosition(void) const
+  {
+    return _char;
+  };
 
-    /// @name string escaping/unescaping (static methods)
-    /// @{
+  /// @}
 
-    /// @brief escape special characters in a string
-    ///
-    /// @param type token type
-    /// @param text string
-    /// @retval escaped string
-    static string escape(EToken type, const string text);
+  /// @name string escaping/unescaping (static methods)
+  /// @{
 
-    /// @brief unescape special characters in a string
-    ///
-    /// @param text escapted string
-    /// @retval unescaped string
-    static string unescape(const string text);
+  /// @brief escape special characters in a string
+  ///
+  /// @param type token type
+  /// @param text string
+  /// @retval escaped string
+  static string escape(EToken type, const string text);
 
-    /// @brief return the value of a single hexadecimal digit
-    ///
-    /// @param c hexadecimal digit
-    /// @retval int numerical value of digit (>=0)
-    /// @retval -1 if @c is not a (hexa)decimal digit
-    static int digitValue(char c);
+  /// @brief unescape special characters in a string
+  ///
+  /// @param text escapted string
+  /// @retval unescaped string
+  static string unescape(const string text);
 
-    /// @}
+  /// @brief return the value of a single hexadecimal digit
+  ///
+  /// @param c hexadecimal digit
+  /// @retval int numerical value of digit (>=0)
+  /// @retval -1 if @c is not a (hexa)decimal digit
+  static int digitValue(char c);
 
-    /// @brief print the token to an output stream
-    ///
-    /// @param out output stream
-    ostream&  print(ostream &out) const;
+  /// @}
 
-  private:
-    EToken _type;                   ///< token type
-    string _value;                  ///< token value
-    int    _line;                   ///< input stream position (line)
-    int    _char;                   ///< input stream position (character pos)
+  /// @brief print the token to an output stream
+  ///
+  /// @param out output stream
+  ostream &print(ostream &out) const;
+
+ private:
+  EToken _type;   ///< token type
+  string _value;  ///< token value
+  int _line;      ///< input stream position (line)
+  int _char;      ///< input stream position (character pos)
 };
 
 /// @name CToken output operators
@@ -196,17 +208,16 @@ class CToken {
 /// @param out output stream
 /// @param t reference to CToken
 /// @retval output stream
-ostream& operator<<(ostream &out, const CToken &t);
+ostream &operator<<(ostream &out, const CToken &t);
 
 /// @brief CToken output operator
 ///
 /// @param out output stream
 /// @param t reference to CToken
 /// @retval output stream
-ostream& operator<<(ostream &out, const CToken *t);
+ostream &operator<<(ostream &out, const CToken *t);
 
 /// @}
-
 
 //--------------------------------------------------------------------------------------------------
 /// @brief scanner class
@@ -214,163 +225,169 @@ ostream& operator<<(ostream &out, const CToken *t);
 /// Instantiated by CParser and called repeatedly to tokenize SnuPL code.
 ///
 class CScanner {
-  public:
-    /// @name construction/destruction
-    /// @{
+ public:
+  /// @name construction/destruction
+  /// @{
 
-    /// @brief constructor
-    ///
-    /// @param in input stream containing the source code
-    CScanner(istream *in);
+  /// @brief constructor
+  ///
+  /// @param in input stream containing the source code
+  CScanner(istream *in);
 
-    /// @brief constructor
-    ///
-    /// @param in input stream containing the source code
-    CScanner(string in);
+  /// @brief constructor
+  ///
+  /// @param in input stream containing the source code
+  CScanner(string in);
 
-    /// @brief destructor
-    ~CScanner();
+  /// @brief destructor
+  ~CScanner();
 
-    /// @}
+  /// @}
 
-    /// @brief return and remove the next token from the input stream
-    ///
-    /// @retval token token
-    CToken Get(void);
+  /// @brief return and remove the next token from the input stream
+  ///
+  /// @retval token token
+  CToken Get(void);
 
-    /// @brief peek at the next token in the input stream (without removing it)
-    ///
-    /// @retval token token
-    CToken Peek(void) const;
+  /// @brief peek at the next token in the input stream (without removing it)
+  ///
+  /// @retval token token
+  CToken Peek(void) const;
 
-    /// @brief check the status of the scanner
-    ///
-    /// @retval true if the scanner is in an operating (i.e., normal) state
-    /// @retval false if an error has occurred
-    bool Good(void) const { return _good; };
+  /// @brief check the status of the scanner
+  ///
+  /// @retval true if the scanner is in an operating (i.e., normal) state
+  /// @retval false if an error has occurred
+  bool Good(void) const
+  {
+    return _good;
+  };
 
-    /// @brief get the line number of the next token in the input stream
-    ///
-    /// @retval line number
-    int GetLineNumber(void) const { return _line; };
+  /// @brief get the line number of the next token in the input stream
+  ///
+  /// @retval line number
+  int GetLineNumber(void) const
+  {
+    return _line;
+  };
 
-    /// @brief get the character position of the next token in the input stream
-    ///
-    /// @retval character position
-    int GetCharPosition() const { return _char; };
+  /// @brief get the character position of the next token in the input stream
+  ///
+  /// @retval character position
+  int GetCharPosition() const
+  {
+    return _char;
+  };
 
-  private:
-    /// @brief result type for the GetCharacter() method
-    enum ECharacter {
-      cOkay =0,                     ///< character parsed
-      cInvChar,                     ///< invalid character
-      cInvEnc,                      ///< invalid escape sequence
-      cUnexpEnd,                    ///< unexpected end of string/character
-    };
+ private:
+  /// @brief result type for the GetCharacter() method
+  enum ECharacter {
+    cOkay = 0,  ///< character parsed
+    cInvChar,   ///< invalid character
+    cInvEnc,    ///< invalid escape sequence
+    cUnexpEnd,  ///< unexpected end of string/character
+  };
 
-    /// @brief initialize list of reserved keywords
-    void InitKeywords(void);
+  /// @brief initialize list of reserved keywords
+  void InitKeywords(void);
 
-    /// @brief scan the next token
-    void NextToken(void);
+  /// @brief scan the next token
+  void NextToken(void);
 
-    /// @brief store the current position of the input stream internally
-    void RecordStreamPosition(void);
+  /// @brief store the current position of the input stream internally
+  void RecordStreamPosition(void);
 
-    /// @brief return the previously recorded input stream position
-    ///
-    /// @param lineno line number
-    /// @param charpos character position
-    void GetRecordedStreamPosition(int *lineno, int *charpos);
+  /// @brief return the previously recorded input stream position
+  ///
+  /// @param lineno line number
+  /// @param charpos character position
+  void GetRecordedStreamPosition(int *lineno, int *charpos);
 
-    /// @brief create and return a new token
-    ///
-    /// @param type token type
-    /// @param token  token value
-    /// @retval CToken instance
-    CToken* NewToken(EToken type, const string token="");
+  /// @brief create and return a new token
+  ///
+  /// @param type token type
+  /// @param token  token value
+  /// @retval CToken instance
+  CToken *NewToken(EToken type, const string token = "");
 
+  /// @name low-level scanner routines
+  /// @{
 
-    /// @name low-level scanner routines
-    /// @{
+  /// @brief scan the input stream and return the next token
+  ///
+  /// @retval CToken instance
+  CToken *Scan(void);
 
-    /// @brief scan the input stream and return the next token
-    ///
-    /// @retval CToken instance
-    CToken* Scan(void);
+  /// @brief parse an (possibly escaped) character
+  ///
+  /// @param &c parsed (i.e., unescaped) character. Valid iff retval = cOkay
+  /// @param mode mode. Must be tStringConst or tCharConst
+  /// @retval ECharacter status of character parse
+  ECharacter GetCharacter(unsigned char &c, EToken mode);
 
-    /// @brief parse an (possibly escaped) character
-    ///
-    /// @param &c parsed (i.e., unescaped) character. Valid iff retval = cOkay
-    /// @param mode mode. Must be tStringConst or tCharConst
-    /// @retval ECharacter status of character parse
-    ECharacter GetCharacter(unsigned char &c, EToken mode);
+  /// @brief peek at the next character in the input stream (w/o removing it)
+  ///
+  /// @retval next character in the input stream
+  unsigned char PeekChar(void);
 
-    /// @brief peek at the next character in the input stream (w/o removing it)
-    ///
-    /// @retval next character in the input stream
-    unsigned char PeekChar(void);
+  /// @brief return the next character from the input stream
+  ///
+  /// @retval next character in the input stream
+  unsigned char GetChar(void);
 
-    /// @brief return the next character from the input stream
-    ///
-    /// @retval next character in the input stream
-    unsigned char GetChar(void);
+  /// @brief return the next 'n' characters from the input stream
+  ///
+  /// @param n number of characters to read
+  /// @retval string containing the characters read
+  string GetChar(int n);
 
-    /// @brief return the next 'n' characters from the input stream
-    ///
-    /// @param n number of characters to read
-    /// @retval string containing the characters read
-    string GetChar(int n);
+  /// @brief check if a character is a white character
+  ///
+  /// @param c character
+  /// @retval true character is white space
+  /// @retval false character is not white space
+  static bool IsWhite(unsigned char c);
 
-    /// @brief check if a character is a white character
-    ///
-    /// @param c character
-    /// @retval true character is white space
-    /// @retval false character is not white space
-    static bool IsWhite(unsigned char c);
+  /// @brief check if a character is an alphabetic character (a-z, A-Z)
+  ///
+  /// @param c character
+  /// @retval true character is alphabetic
+  /// @retval false character is not alphabetic
+  static bool IsAlpha(unsigned char c);
 
-    /// @brief check if a character is an alphabetic character (a-z, A-Z)
-    ///
-    /// @param c character
-    /// @retval true character is alphabetic
-    /// @retval false character is not alphabetic
-    static bool IsAlpha(unsigned char c);
+  /// @brief check if a character is an numeric character (0-9)
+  ///
+  /// @param c character
+  /// @retval true character is numeric
+  /// @retval false character is not numeric
+  static bool IsNum(unsigned char c);
 
-    /// @brief check if a character is an numeric character (0-9)
-    ///
-    /// @param c character
-    /// @retval true character is numeric
-    /// @retval false character is not numeric
-    static bool IsNum(unsigned char c);
+  /// @brief check if a character is an hexadecimal digit (0-9,a-f,A-F)
+  ///
+  /// @param c character
+  /// @retval true character is a hexadecimal digit
+  /// @retval false character is not a hexadecimal digit
+  static bool IsHexDigit(unsigned char c);
 
-    /// @brief check if a character is an hexadecimal digit (0-9,a-f,A-F)
-    ///
-    /// @param c character
-    /// @retval true character is a hexadecimal digit
-    /// @retval false character is not a hexadecimal digit
-    static bool IsHexDigit(unsigned char c);
+  /// @brief check if a character is a valid ID character
+  ///
+  /// @param c character
+  /// @retval true character is valid as an ID character
+  /// @retval false character is not valid in an ID
+  static bool IsIDChar(unsigned char c);
 
-    /// @brief check if a character is a valid ID character
-    ///
-    /// @param c character
-    /// @retval true character is valid as an ID character
-    /// @retval false character is not valid in an ID
-    static bool IsIDChar(unsigned char c);
+  /// @}
 
-    /// @}
-
-
-  private:
-    static map<string, EToken> keywords;///< reserved keywords with corr. tokens
-    istream *_in;                   ///< input stream
-    bool    _delete_in;             ///< delete input stream upon destruction
-    bool    _good;                  ///< scanner status flag
-    int     _line;                  ///< current stream position (line)
-    int     _char;                  ///< current stream position (character pos)
-    int     _saved_line;            ///< saved stream position (line)
-    int     _saved_char;            ///< saved stream position (character pos)
-    CToken *_token;                 ///< next token in input stream
+ private:
+  static map<string, EToken> keywords;  ///< reserved keywords with corr. tokens
+  istream *_in;                         ///< input stream
+  bool _delete_in;                      ///< delete input stream upon destruction
+  bool _good;                           ///< scanner status flag
+  int _line;                            ///< current stream position (line)
+  int _char;                            ///< current stream position (character pos)
+  int _saved_line;                      ///< saved stream position (line)
+  int _saved_char;                      ///< saved stream position (character pos)
+  CToken *_token;                       ///< next token in input stream
 };
 
-
-#endif // __SnuPL_SCANNER_H__
+#endif  // __SnuPL_SCANNER_H__

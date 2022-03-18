@@ -35,15 +35,15 @@
 /// DAMAGE.
 //--------------------------------------------------------------------------------------------------
 
-#include <iostream>
-#include <sstream>
+#include "scanner.h"
+
+#include <cassert>
 #include <cctype>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cassert>
-#include <cstdio>
-
-#include "scanner.h"
+#include <iostream>
+#include <sstream>
 using namespace std;
 
 //--------------------------------------------------------------------------------------------------
@@ -52,55 +52,49 @@ using namespace std;
 #define TOKEN_STRLEN 24
 
 char ETokenName[][TOKEN_STRLEN] = {
-  "tDigit",                         ///< a digit
-  "tLetter",                        ///< a letter
-  "tPlusMinus",                     ///< '+' or '-'
-  "tMulDiv",                        ///< '*' or '/'
-  "tRelOp",                         ///< relational operator
-  "tAssign",                        ///< assignment operator
-  "tSemicolon",                     ///< a semicolon
-  "tDot",                           ///< a dot
-  "tLBrak",                         ///< a left bracket
-  "tRBrak",                         ///< a right bracket
+  "tNumber",     ///< a number
+  "tIdent",      ///< an identifier
+  "tPlusMinus",  ///< '+' or '-'
+  "tMulDiv",     ///< '*' or '/'
+  "tRelOp",      ///< relational operator
+  "tAssign",     ///< assignment operator
+  "tSemicolon",  ///< a semicolon
+  "tDot",        ///< a dot
+  "tLBrak",      ///< a left bracket
+  "tRBrak",      ///< a right bracket
 
-  "tEOF",                           ///< end of file
-  "tIOError",                       ///< I/O error
-  "tInvStringConst",                ///< invalid string constant
-  "tUndefined",                     ///< undefined
+  "tEOF",             ///< end of file
+  "tIOError",         ///< I/O error
+  "tInvStringConst",  ///< invalid string constant
+  "tUndefined",       ///< undefined
 };
-
 
 //------------------------------------------------------------------------------
 // format strings used for printing tokens
 //
 
 char ETokenStr[][TOKEN_STRLEN] = {
-  "tDigit (%s)",                    ///< a digit
-  "tLetter (%s)",                   ///< a letter
-  "tPlusMinus (%s)",                ///< '+' or '-'
-  "tMulDiv (%s)",                   ///< '*' or '/'
-  "tRelOp (%s)",                    ///< relational operator
-  "tAssign",                        ///< assignment operator
-  "tSemicolon",                     ///< a semicolon
-  "tDot",                           ///< a dot
-  "tLBrak",                         ///< a left bracket
-  "tRBrak",                         ///< a right bracket
+  "tNumber (%s)",     ///< a number
+  "tIdent (%s)",      ///< an identifier
+  "tPlusMinus (%s)",  ///< '+' or '-'
+  "tMulDiv (%s)",     ///< '*' or '/'
+  "tRelOp (%s)",      ///< relational operator
+  "tAssign",          ///< assignment operator
+  "tSemicolon",       ///< a semicolon
+  "tDot",             ///< a dot
+  "tLBrak",           ///< a left bracket
+  "tRBrak",           ///< a right bracket
 
-  "tEOF",                           ///< end of file
-  "tIOError",                       ///< I/O error
-  "tInvStringConst (%s)",           ///< invalid string constant
-  "tUndefined (%s)",                ///< undefined
+  "tEOF",                  ///< end of file
+  "tIOError",              ///< I/O error
+  "tInvStringConst (%s)",  ///< invalid string constant
+  "tUndefined (%s)",       ///< undefined
 };
-
 
 //--------------------------------------------------------------------------------------------------
 // reserved keywords
 //
-pair<const char*, EToken> Keywords[] =
-{
-};
-
-
+pair<const char *, EToken> Keywords[] = {};
 
 //--------------------------------------------------------------------------------------------------
 // CToken
@@ -115,8 +109,11 @@ CToken::CToken()
 CToken::CToken(int line, int charpos, EToken type, const string value)
 {
   _type = type;
-  if ((type==tStringConst) || (type==tCharConst)) _value = escape(type, value);
-  else _value = value;
+  if ((type == tStringConst) || (type == tCharConst)) {
+    _value = escape(type, value);
+  } else {
+    _value = value;
+  }
   _line = line;
   _char = charpos;
 }
@@ -147,12 +144,12 @@ const string CToken::GetName(void) const
   return CToken::Name(GetType());
 }
 
-ostream& CToken::print(ostream &out) const
+ostream &CToken::print(ostream &out) const
 {
-  #define MAX_STRLEN 128
+#define MAX_STRLEN 128
   int str_len = _value.length();
   str_len = TOKEN_STRLEN + (str_len < MAX_STRLEN ? str_len : MAX_STRLEN);
-  char *str = (char*)malloc(str_len);
+  char *str = (char *)malloc(str_len);
   snprintf(str, str_len, ETokenStr[GetType()], _value.c_str());
   out << dec << _line << ":" << _char << ": " << str;
   free(str);
@@ -170,26 +167,37 @@ string CToken::escape(EToken type, const string text)
     char c = *t;
 
     switch (c) {
-      case '\n': s += "\\n";  break;
-      case '\t': s += "\\t";  break;
-      case '\0': s += "\\0";  break;
-      case '\'': if (type == tCharConst) s += "\\'";  
-                 else s += c;
-                 break;
-      case '\"': if (type == tStringConst) s += "\\\""; 
-                 else s += c;
-                 break;
+      case '\n': s += "\\n"; break;
+      case '\t': s += "\\t"; break;
+      case '\0': s += "\\0"; break;
+      case '\'':
+        if (type == tCharConst) {
+          s += "\\'";
+        } else {
+          s += c;
+        }
+        break;
+      case '\"':
+        if (type == tStringConst) {
+          s += "\\\"";
+        } else {
+          s += c;
+        }
+        break;
       case '\\': s += "\\\\"; break;
-      default :  if ((c < ' ') || (c == '\x7f')) {
-                   // ASCII characters 0x80~0xff satisfy (signed char c < ' ')
-                   char str[5];
-                   snprintf(str, sizeof(str), "\\x%02x", (unsigned char)c);
-                   s += str;
-                 } else {
-                   s += c;
-                 }
+      default:
+        if ((c < ' ') || (c == '\x7f')) {
+          // ASCII characters 0x80~0xff satisfy (signed char c < ' ')
+          char str[5];
+          snprintf(str, sizeof(str), "\\x%02x", (unsigned char)c);
+          s += str;
+        } else {
+          s += c;
+        }
     }
-    if (type == tCharConst) break;
+    if (type == tCharConst) {
+      break;
+    }
     t++;
   }
 
@@ -200,22 +208,24 @@ string CToken::unescape(const string text)
 {
   // inverse of CToken::escape()
 
-  const char *t = text.c_str(); 
+  const char *t = text.c_str();
   char c;
   string s;
 
   while (*t != '\0') {
     if (*t == '\\') {
       switch (*++t) {
-        case 'n':  s += "\n";  break;
-        case 't':  s += "\t";  break;
-        case '0':  s += "\0";  break;
-        case '\'': s += "'";  break;
-        case '"':  s += "\""; break;
+        case 'n': s += "\n"; break;
+        case 't': s += "\t"; break;
+        case '0': s += "\0"; break;
+        case '\'': s += "'"; break;
+        case '"': s += "\""; break;
         case '\\': s += "\\"; break;
-        case 'x':  c  = digitValue(*++t)<<4;
-                   s += (c + digitValue(*++t)); break;
-        default :  s += '?'; // error
+        case 'x':
+          c = digitValue(*++t) << 4;
+          s += (c + digitValue(*++t));
+          break;
+        default: s += '?';  // error
       }
     } else {
       s += *t;
@@ -229,21 +239,24 @@ string CToken::unescape(const string text)
 int CToken::digitValue(char c)
 {
   c = tolower(c);
-  if (('0' <= c) && (c <= '9')) return c - '0';
-  if (('a' <= c) && (c <= 'f')) return c - 'a' + 10;
+  if (('0' <= c) && (c <= '9')) {
+    return c - '0';
+  }
+  if (('a' <= c) && (c <= 'f')) {
+    return c - 'a' + 10;
+  }
   return -1;
 }
 
-ostream& operator<<(ostream &out, const CToken &t)
+ostream &operator<<(ostream &out, const CToken &t)
 {
   return t.print(out);
 }
 
-ostream& operator<<(ostream &out, const CToken *t)
+ostream &operator<<(ostream &out, const CToken *t)
 {
   return t->print(out);
 }
-
 
 //--------------------------------------------------------------------------------------------------
 // CScanner
@@ -274,15 +287,19 @@ CScanner::CScanner(string in)
 
 CScanner::~CScanner()
 {
-  if (_token != NULL) delete _token;
-  if (_delete_in) delete _in;
+  if (_token != NULL) {
+    delete _token;
+  }
+  if (_delete_in) {
+    delete _in;
+  }
 }
 
 void CScanner::InitKeywords(void)
 {
   if (keywords.size() == 0) {
     int size = sizeof(Keywords) / sizeof(Keywords[0]);
-    for (int i=0; i<size; i++) {
+    for (int i = 0; i < size; i++) {
       keywords[Keywords[i].first] = Keywords[i].second;
     }
   }
@@ -306,7 +323,9 @@ CToken CScanner::Peek() const
 
 void CScanner::NextToken()
 {
-  if (_token != NULL) delete _token;
+  if (_token != NULL) {
+    delete _token;
+  }
 
   _token = Scan();
 }
@@ -323,12 +342,12 @@ void CScanner::GetRecordedStreamPosition(int *lineno, int *charpos)
   *charpos = _saved_char;
 }
 
-CToken* CScanner::NewToken(EToken type, const string token)
+CToken *CScanner::NewToken(EToken type, const string token)
 {
   return new CToken(_saved_line, _saved_char, type, token);
 }
 
-CToken* CScanner::Scan()
+CToken *CScanner::Scan()
 {
   EToken token;
   ECharacter cres;
@@ -339,8 +358,12 @@ CToken* CScanner::Scan()
 
   RecordStreamPosition();
 
-  if (_in->eof()) return NewToken(tEOF);
-  if (!_in->good()) return NewToken(tIOError);
+  if (_in->eof()) {
+    return NewToken(tEOF);
+  }
+  if (!_in->good()) {
+    return NewToken(tIOError);
+  }
 
   c = GetChar();
   tokval = c;
@@ -355,42 +378,27 @@ CToken* CScanner::Scan()
       break;
 
     case '+':
-    case '-':
-      token = tPlusMinus;
-      break;
+    case '-': token = tPlusMinus; break;
 
     case '*':
-    case '/':
-      token = tMulDiv;
-      break;
+    case '/': token = tMulDiv; break;
 
     case '=':
-    case '#':
-      token = tRelOp;
-      break;
+    case '#': token = tRelOp; break;
 
-    case ';':
-      token = tSemicolon;
-      break;
+    case ';': token = tSemicolon; break;
 
-    case '.':
-      token = tDot;
-      break;
+    case '.': token = tDot; break;
 
-    case '(':
-      token = tLBrak;
-      break;
+    case '(': token = tLBrak; break;
 
-    case ')':
-      token = tRBrak;
-      break;
+    case ')': token = tRBrak; break;
 
     default:
       if (('0' <= c) && (c <= '9')) {
-        token = tDigit;
-      } else
-      if (('a' <= c) && (c <= 'z')) {
-        token = tLetter;
+        token = tNumber;
+      } else if (('a' <= c) && (c <= 'z')) {
+        token = tIdent;
       } else {
         tokval = "invalid character '";
         tokval += c;
@@ -424,33 +432,46 @@ CScanner::ECharacter CScanner::GetCharacter(unsigned char &c, EToken mode)
 
   if (c == '\\') {
     // escaped character
-    if (_in->eof() || !_in->good()) return cUnexpEnd;
+    if (_in->eof() || !_in->good()) {
+      return cUnexpEnd;
+    }
     c = GetChar();
 
     switch (PeekChar()) {
-      case 'n':  c = '\n'; break;
-      case 't':  c = '\t'; break;
-      case '0':  if (mode == tCharConst) c = '\0'; 
-                 else res = cInvEnc;
-                 break;
+      case 'n': c = '\n'; break;
+      case 't': c = '\t'; break;
+      case '0':
+        if (mode == tCharConst) {
+          c = '\0';
+        } else {
+          res = cInvEnc;
+        }
+        break;
       case '\'': c = '\''; break;
       case '\"': c = '\"'; break;
       case '\\': c = '\\'; break;
 
       case 'x':  // \xHH encoding: read exactly two hexadecimal digits
-                 for (i=v=0; i<2; i++) {
-                   if (_in->eof() || !_in->good()) return cUnexpEnd;
-                   GetChar();
-                   if ((t = CToken::digitValue(PeekChar())) == -1) break;
-                   v = (v << 4) + t;
-                 }
-                 c = v;
+        for (i = v = 0; i < 2; i++) {
+          if (_in->eof() || !_in->good()) {
+            return cUnexpEnd;
+          }
+          GetChar();
+          if ((t = CToken::digitValue(PeekChar())) == -1) {
+            break;
+          }
+          v = (v << 4) + t;
+        }
+        c = v;
 
-                 if (t == -1) res = cInvChar;
-                 else if ((mode != tCharConst) && (v == 0)) res = cInvEnc;
-                 break;
+        if (t == -1) {
+          res = cInvChar;
+        } else if ((mode != tCharConst) && (v == 0)) {
+          res = cInvEnc;
+        }
+        break;
 
-      default:   res = cInvEnc;
+      default: res = cInvEnc;
     }
   } else if ((c < ' ') || (c == 0x7f)) {
     // non-printable characters must be escaped
@@ -458,10 +479,14 @@ CScanner::ECharacter CScanner::GetCharacter(unsigned char &c, EToken mode)
   }
 
   // record exact error position
-  if (res != cOkay) RecordStreamPosition();
+  if (res != cOkay) {
+    RecordStreamPosition();
+  }
 
   // consume character (we only peeked at it so far)
-  if (_in->eof() || !_in->good()) return cUnexpEnd;
+  if (_in->eof() || !_in->good()) {
+    return cUnexpEnd;
+  }
   GetChar();
 
   return res;
@@ -475,14 +500,18 @@ unsigned char CScanner::PeekChar()
 unsigned char CScanner::GetChar()
 {
   unsigned char c = _in->get();
-  if (c == '\n') { _line++; _char = 1; } else _char++;
+  if (c == '\n') {
+    _line++;
+    _char = 1;
+  } else
+    _char++;
   return c;
 }
 
 string CScanner::GetChar(int n)
 {
   string str;
-  for (int i=0; i<n; i++) str += GetChar();
+  for (int i = 0; i < n; i++) str += GetChar();
   return str;
 }
 
@@ -503,13 +532,10 @@ bool CScanner::IsNum(unsigned char c)
 
 bool CScanner::IsHexDigit(unsigned char c)
 {
-  return (('0' <= c) && (c <= '9')) ||
-         (('a' <= c) && (c <= 'f')) ||
-         (('A' <= c) && (c <= 'F'));
+  return (('0' <= c) && (c <= '9')) || (('a' <= c) && (c <= 'f')) || (('A' <= c) && (c <= 'F'));
 }
 
 bool CScanner::IsIDChar(unsigned char c)
 {
   return (IsAlpha(c) || IsNum(c));
 }
-

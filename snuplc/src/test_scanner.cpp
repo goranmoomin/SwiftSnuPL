@@ -30,8 +30,8 @@
 //--------------------------------------------------------------------------------------------------
 
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 #include "scanner.h"
 using namespace std;
@@ -54,12 +54,16 @@ int main(int argc, char *argv[])
 
     CScanner *s = new CScanner(in);
 
-    if (!s->Good()) cout << "  cannot open input stream: " << s->Peek() << endl;
+    if (!s->Good()) {
+      cout << "  cannot open input stream: " << s->Peek() << endl;
+    }
 
     while (s->Good()) {
       CToken t = s->Get();
       cout << "  " << t << endl;
-      if (t.GetType() == tEOF) break;
+      if (t.GetType() == tEOF) {
+        break;
+      }
     }
 
     cout << endl << endl;
@@ -67,7 +71,9 @@ int main(int argc, char *argv[])
     i++;
 
     delete s;
-    if (!use_stdin) delete in;
+    if (!use_stdin) {
+      delete in;
+    }
     use_stdin = false;
   }
 
