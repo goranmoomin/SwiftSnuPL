@@ -24,7 +24,7 @@ SCANNER=scanner.cpp
 SOURCES=$(SCANNER)
 
 # object files of various targets
-DEPS=$(SOURCES:.cpp=$(DEP_DIR)/.d)
+DEPS=$(patsubst %.cpp,$(DEP_DIR)/%.d,$(SOURCES))
 OBJ_SCANNER=$(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SCANNER))
 
 # Doxygen configuration file
@@ -33,7 +33,9 @@ DOXYFILE=doc/Doxyfile
 #
 # compilations rules
 #
-.PHONY: doc clean mrproper 
+.PHONY: doc clean mrproper
+
+all: test_scanner
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DEP_DIR) $(OBJ_DIR)
 	$(CC) $(CCFLAGS) $(DEPFLAGS) -c -o $@ $<
@@ -46,8 +48,6 @@ $(OBJ_DIR):
 
 -include $(DEPS)
 
-all: test_scanner
-
 test_scanner: $(OBJ_DIR)/test_scanner.o $(OBJ_SCANNER)
 	$(CC) $(CCFLAGS) -o $@ $(OBJ_DIR)/test_scanner.o $(OBJ_SCANNER)
 
@@ -59,4 +59,3 @@ clean:
 
 mrproper: clean
 	rm -rf doc/html/* test_scanner
-
