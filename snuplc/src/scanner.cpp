@@ -44,6 +44,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+
 using namespace std;
 
 //--------------------------------------------------------------------------------------------------
@@ -56,12 +57,26 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tIdent",      ///< an identifier
   "tPlusMinus",  ///< '+' or '-'
   "tMulDiv",     ///< '*' or '/'
+  "tAnd",        ///< '&&'
+  "tOr",         ///< '||'
   "tRelOp",      ///< relational operator
   "tAssign",     ///< assignment operator
   "tSemicolon",  ///< a semicolon
   "tDot",        ///< a dot
-  "tLBrak",      ///< a left bracket
-  "tRBrak",      ///< a right bracket
+  "tComma",      ///< a comma
+  "tLParen",     ///< a left parenthesis
+  "tRParen",     ///< a right parenthesis
+  "tLBrack",     ///< a left bracket
+  "tRBrack",     ///< a right bracket
+
+  "tBoolean",  ///< 'boolean'
+  "tChar",     ///< 'char'
+  "tInteger",  ///< 'integer'
+  "tLongInt",  ///< 'longint'
+
+  "tBoolConst",    ///< boolean constant
+  "tCharConst",    ///< character constant
+  "tStringConst",  ///< string constant
 
   "tEOF",             ///< end of file
   "tIOError",         ///< I/O error
@@ -78,12 +93,26 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tIdent (%s)",      ///< an identifier
   "tPlusMinus (%s)",  ///< '+' or '-'
   "tMulDiv (%s)",     ///< '*' or '/'
+  "tAnd",             ///< '&&'
+  "tOr",              ///< '||'
   "tRelOp (%s)",      ///< relational operator
   "tAssign",          ///< assignment operator
   "tSemicolon",       ///< a semicolon
   "tDot",             ///< a dot
-  "tLBrak",           ///< a left bracket
-  "tRBrak",           ///< a right bracket
+  "tComma",           ///< a comma
+  "tLParen",          ///< a left parenthesis
+  "tRParen",          ///< a right parenthesis
+  "tLBrack",          ///< a left bracket
+  "tRBrack",          ///< a right bracket
+
+  "tBoolean",  ///< 'boolean'
+  "tChar",     ///< 'char'
+  "tInteger",  ///< 'integer'
+  "tLongInt",  ///< 'longint'
+
+  "tBoolConst (%s)",    ///< boolean constant
+  "tCharConst (%s)",    ///< character constant
+  "tStringConst (%s)",  ///< string constant
 
   "tEOF",                  ///< end of file
   "tIOError",              ///< I/O error
@@ -94,7 +123,11 @@ char ETokenStr[][TOKEN_STRLEN] = {
 //--------------------------------------------------------------------------------------------------
 // reserved keywords
 //
-pair<const char *, EToken> Keywords[] = {};
+pair<const char *, EToken> Keywords[] = {{"true", tBoolConst},
+                                         {"false", tBoolConst},
+                                         {"char", tChar},
+                                         {"integer", tInteger},
+                                         {"longint", tLongInt}};
 
 //--------------------------------------------------------------------------------------------------
 // CToken
@@ -352,7 +385,7 @@ CToken *CScanner::Scan()
   EToken token;
   ECharacter cres;
   string tokval;
-  char c;
+  unsigned char c;
 
   while (_in->good() && IsWhite(PeekChar())) GetChar();
 
@@ -383,22 +416,51 @@ CToken *CScanner::Scan()
     case '*':
     case '/': token = tMulDiv; break;
 
+    case '&':
+      if (PeekChar() == '&') {
+        tokval += GetChar();
+        token = tAnd;
+      }
+      break;
+
+    case '|':
+      if (PeekChar() == '|') {
+        tokval += GetChar();
+        token = tOr;
+      }
+      break;
+
     case '=':
     case '#': token = tRelOp; break;
 
     case ';': token = tSemicolon; break;
-
     case '.': token = tDot; break;
+    case ',': token = tComma; break;
 
-    case '(': token = tLBrak; break;
+    case '(': token = tLParen; break;
+    case ')': token = tRParen; break;
 
-    case ')': token = tRBrak; break;
+    case '[': token = tLBrack; break;
+    case ']': token = tRBrack; break;
 
     default:
-      if (('0' <= c) && (c <= '9')) {
+      if (IsNum(c)) {
+        while (IsNum(PeekChar())) {
+          tokval += GetChar();
+        }
+        if (PeekChar() == 'L') {
+          tokval += GetChar();
+        }
         token = tNumber;
-      } else if (('a' <= c) && (c <= 'z')) {
-        token = tIdent;
+      } else if (IsAlpha(c)) {
+        while (IsIDChar(PeekChar())) {
+          tokval += GetChar();
+        }
+        if (keywords.count(tokval)) {
+          token = keywords[tokval];
+        } else {
+          token = tIdent;
+        }
       } else {
         tokval = "invalid character '";
         tokval += c;

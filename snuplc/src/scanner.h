@@ -55,22 +55,31 @@ enum EToken {
   tIdent,       ///< an identifier
   tPlusMinus,   ///< '+' or '-'
   tMulDiv,      ///< '*' or '/'
+  tAnd,         ///< '&&'
+  tOr,          ///< '||'
   tRelOp,       ///< relational operator
   tAssign,      ///< assignment operator
   tSemicolon,   ///< a semicolon
   tDot,         ///< a dot
-  tLBrak,       ///< a left bracket
-  tRBrak,       ///< a right bracket
+  tComma,       ///< a comma
+  tLParen,      ///< a left parenthesis
+  tRParen,      ///< a right parenthesis
+  tLBrack,      ///< a left bracket
+  tRBrack,      ///< a right bracket
+
+  tBoolean,  ///< 'boolean'
+  tChar,     ///< 'char'
+  tInteger,  ///< 'integer'
+  tLongInt,  ///< 'longint'
+
+  tBoolConst,    ///< boolean constant
+  tCharConst,    ///< character constant
+  tStringConst,  ///< string constant
 
   tEOF,             ///< end of file
   tIOError,         ///< I/O error
   tInvStringConst,  ///< invalid string constant
   tUndefined,       ///< undefined
-
-  // these are not needed for SnuPL/-1 but required by CToken::(un)escape
-  // (and you will need them when implementing SnuPL/2)
-  tCharConst,    ///< character constant
-  tStringConst,  ///< string constant
 };
 
 //--------------------------------------------------------------------------------------------------
