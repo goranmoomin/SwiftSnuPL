@@ -80,6 +80,7 @@ char ETokenName[][TOKEN_STRLEN] = {
 
   "tEOF",             ///< end of file
   "tIOError",         ///< I/O error
+  "tInvCharConst",    ///< invalid char constant
   "tInvStringConst",  ///< invalid string constant
   "tUndefined",       ///< undefined
 };
@@ -110,12 +111,13 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tInteger",  ///< 'integer'
   "tLongInt",  ///< 'longint'
 
-  "tBoolConst (%s)",    ///< boolean constant
-  "tCharConst (%s)",    ///< character constant
-  "tStringConst (%s)",  ///< string constant
+  "tBoolConst (%s)",        ///< boolean constant
+  "tCharConst ('%s')",      ///< character constant
+  "tStringConst (\"%s\")",  ///< string constant
 
   "tEOF",                  ///< end of file
   "tIOError",              ///< I/O error
+  "tInvCharConst (%s)",    ///< invalid char constant
   "tInvStringConst (%s)",  ///< invalid string constant
   "tUndefined (%s)",       ///< undefined
 };
@@ -443,6 +445,49 @@ CToken *CScanner::Scan()
     case '[': token = tLBrack; break;
     case ']': token = tRBrack; break;
 
+    case '\'':
+      token = tInvCharConst;
+      cres = GetCharacter(c, tCharConst);
+      switch (cres) {
+        case cOkay:
+          if (TryChar('\'')) {
+            tokval = c;
+            token = tCharConst;
+          } else {
+            tokval = "unexpected end";
+          }
+          break;
+        case cInvChar: tokval = "invalid character"; break;
+        case cInvEnc: tokval = "invalid escape sequence"; break;
+        case cUnexpEnd: tokval = "unexpected end"; break;
+      }
+      break;
+
+    case '"':
+      tokval = "";
+      token = tInvStringConst;
+      cres = cOkay;
+      while (PeekChar() != '"' && (cres = GetCharacter(c, tStringConst)) == cOkay) {
+        tokval += c;
+      }
+      switch (cres) {
+        case cOkay:
+          if (TryChar('"')) {
+            token = tStringConst;
+          }
+          break;
+        case cInvChar:
+        case cInvEnc:
+          tokval = cres == cInvChar ? "invalid character" : "invalid escape sequence";
+          while (PeekChar() != '"' && PeekChar() != '\n') {
+            GetChar();
+          }
+          TryChar('"');
+          break;
+        case cUnexpEnd: tokval = "unexpected end"; break;
+      }
+      break;
+
     default:
       if (IsNum(c)) {
         while (IsNum(PeekChar())) {
@@ -575,6 +620,15 @@ string CScanner::GetChar(int n)
   string str;
   for (int i = 0; i < n; i++) str += GetChar();
   return str;
+}
+
+bool CScanner::TryChar(unsigned char c)
+{
+  if (PeekChar() != c) {
+    return false;
+  }
+  GetChar();
+  return true;
 }
 
 bool CScanner::IsWhite(unsigned char c)

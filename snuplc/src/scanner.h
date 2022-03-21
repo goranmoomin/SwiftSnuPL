@@ -78,6 +78,7 @@ enum EToken {
 
   tEOF,             ///< end of file
   tIOError,         ///< I/O error
+  tInvCharConst,    ///< invalid char constant
   tInvStringConst,  ///< invalid string constant
   tUndefined,       ///< undefined
 };
@@ -349,6 +350,13 @@ class CScanner {
   /// @param n number of characters to read
   /// @retval string containing the characters read
   string GetChar(int n);
+
+  /// @brief try to read the expected character from the input stream
+  ///
+  /// @param c expected character
+  /// @retval true read expected character
+  /// @retval false found unexpected character
+  bool TryChar(unsigned char c);
 
   /// @brief check if a character is a white character
   ///
