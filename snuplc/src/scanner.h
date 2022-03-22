@@ -59,6 +59,7 @@ enum EToken {
   tOr,          ///< '||'
   tRelOp,       ///< relational operator
   tAssign,      ///< assignment operator
+  tColon,       ///< a colon
   tSemicolon,   ///< a semicolon
   tDot,         ///< a dot
   tComma,       ///< a comma
@@ -71,6 +72,20 @@ enum EToken {
   tChar,     ///< 'char'
   tInteger,  ///< 'integer'
   tLongInt,  ///< 'longint'
+
+  tIf,      ///< 'if'
+  tThen,    ///< 'then'
+  tElse,    ///< 'else'
+  tWhile,   ///< 'while'
+  tDo,      ///< 'do'
+  tEnd,     ///< 'end'
+  tReturn,  ///< 'return'
+
+  tConst,      ///< 'const'
+  tVar,        ///< 'var'
+  tExtern,     ///< 'extern'
+  tProcedure,  ///< 'procedure'
+  tFunction,   ///< 'function'
 
   tBoolConst,    ///< boolean constant
   tCharConst,    ///< character constant
