@@ -436,6 +436,19 @@ CToken *CScanner::Scan()
   token = tUndefined;
 
   switch (c) {
+    case '/':
+      // FIXME: This feels like a big, big hack.
+      // This only works if Scan does not need any cleanup after this big switch.
+      if (TryChar('/')) {
+        while (PeekChar() != '\n') {
+          GetChar();
+        }
+        return Scan();
+      } else {
+        token = tMulDiv;
+      }
+      break;
+
     case ':':
       if (PeekChar() == '=') {
         tokval += GetChar();
@@ -448,8 +461,7 @@ CToken *CScanner::Scan()
     case '+':
     case '-': token = tPlusMinus; break;
 
-    case '*':
-    case '/': token = tMulDiv; break;
+    case '*': token = tMulDiv; break;
 
     case '&':
       if (PeekChar() == '&') {
