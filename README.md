@@ -22,3 +22,8 @@ The project will be conducted in several phases as follows
 ## Phase 1: Lexical Analysis
 
 Refer to the description of [Phase 1: Lexical Analysis](1.Lexical.Analysis.md)
+
+
+## Phase 2: Syntax Analysis
+
+Refer to the description of [Phase 2: Syntax Analysis](2.Syntax.Analysis.md)

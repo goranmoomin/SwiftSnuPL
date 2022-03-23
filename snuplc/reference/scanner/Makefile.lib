@@ -12,6 +12,7 @@
 # directories
 SRC_DIR=src
 OBJ_DIR=obj
+LIB_DIR=lib
 DEP_DIR=.deps
 
 # compilation w/ automatic dependency generation
@@ -34,9 +35,10 @@ PARSER=parser.cpp \
 SOURCES=$(BASE) $(SCANNER) $(PARSER)
 
 # object files of various targets
-DEPS=$(patsubst %.cpp,$(DEP_DIR)/%.d,$(SOURCES))
-OBJ_SCANNER=$(patsubst %.cpp,$(OBJ_DIR)/%.o,$(BASE) $(SCANNER))
-OBJ_PARSER=$(patsubst %.cpp,$(OBJ_DIR)/%.o,$(BASE) $(SCANNER) $(PARSER))
+DEPS=$(SOURCES:.cpp=$(DEP_DIR)/.d)
+OBJ_BASE=$(patsubst %.cpp,$(OBJ_DIR)/%.o,$(BASE))
+LIB_SCANNER=$(patsubst %.cpp,$(LIB_DIR)/%.o,$(SCANNER))
+OBJ_PARSER=$(patsubst %.cpp,$(OBJ_DIR)/%.o,$(PARSER))
 
 # Doxygen configuration file
 DOXYFILE=doc/Doxyfile
@@ -44,9 +46,7 @@ DOXYFILE=doc/Doxyfile
 #
 # compilations rules
 #
-.PHONY: doc clean mrproper
-
-all: test_parser
+.PHONY: doc clean mrproper 
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(DEP_DIR) $(OBJ_DIR)
 	$(CC) $(CCFLAGS) $(DEPFLAGS) -c -o $@ $<
@@ -59,11 +59,13 @@ $(OBJ_DIR):
 
 -include $(DEPS)
 
-test_scanner: $(OBJ_DIR)/test_scanner.o $(OBJ_SCANNER)
-	$(CC) $(CCFLAGS) -o $@ $(OBJ_DIR)/test_scanner.o $(OBJ_SCANNER)
+all: test_parser
 
-test_parser: $(OBJ_DIR)/test_parser.o $(OBJ_PARSER)
-	$(CC) $(CCFLAGS) -o $@ $(OBJ_DIR)/test_parser.o $(OBJ_PARSER)
+test_scanner: $(OBJ_DIR)/test_scanner.o $(OBJ_BASE)
+	$(CC) $(CCFLAGS) -o $@ $(OBJ_DIR)/test_scanner.o $(OBJ_BASE) $(LIB_SCANNER)
+
+test_parser: $(OBJ_DIR)/test_parser.o $(OBJ_BASE) $(OBJ_PARSER)
+	$(CC) $(CCFLAGS) -o $@ $(OBJ_DIR)/test_parser.o $(OBJ_BASE) $(LIB_SCANNER) $(OBJ_PARSER)
 
 doc:
 	doxygen $(DOXYFILE)
@@ -73,3 +75,4 @@ clean:
 
 mrproper: clean
 	rm -rf doc/html/* test_scanner test_parser
+
