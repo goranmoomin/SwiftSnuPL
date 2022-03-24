@@ -57,6 +57,7 @@ enum EToken {
   tMulDiv,      ///< '*' or '/'
   tAnd,         ///< '&&'
   tOr,          ///< '||'
+  tNot,         ///< '!'
   tRelOp,       ///< relational operator
   tAssign,      ///< assignment operator
   tColon,       ///< a colon
@@ -73,19 +74,21 @@ enum EToken {
   tInteger,  ///< 'integer'
   tLongInt,  ///< 'longint'
 
-  tIf,      ///< 'if'
-  tThen,    ///< 'then'
-  tElse,    ///< 'else'
-  tWhile,   ///< 'while'
-  tDo,      ///< 'do'
-  tEnd,     ///< 'end'
-  tReturn,  ///< 'return'
-
   tConst,      ///< 'const'
   tVar,        ///< 'var'
   tExtern,     ///< 'extern'
   tProcedure,  ///< 'procedure'
   tFunction,   ///< 'function'
+  tModule,     ///< 'module'
+  tBegin,      ///< 'begin'
+  tEnd,        ///< 'end'
+
+  tIf,      ///< 'if'
+  tThen,    ///< 'then'
+  tElse,    ///< 'else'
+  tWhile,   ///< 'while'
+  tDo,      ///< 'do'
+  tReturn,  ///< 'return'
 
   tBoolConst,    ///< boolean constant
   tCharConst,    ///< character constant

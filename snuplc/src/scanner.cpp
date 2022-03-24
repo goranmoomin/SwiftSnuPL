@@ -59,6 +59,7 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tMulDiv",     ///< '*' or '/'
   "tAnd",        ///< '&&'
   "tOr",         ///< '||'
+  "tNot",        ///< '!'
   "tRelOp",      ///< relational operator
   "tAssign",     ///< assignment operator
   "tColon",      ///< a colon
@@ -75,19 +76,21 @@ char ETokenName[][TOKEN_STRLEN] = {
   "tInteger",  ///< 'integer'
   "tLongInt",  ///< 'longint'
 
-  "tIf",      ///< 'if'
-  "tThen",    ///< 'then'
-  "tElse",    ///< 'else'
-  "tWhile",   ///< 'while'
-  "tDo",      ///< 'do'
-  "tEnd",     ///< 'end'
-  "tReturn",  ///< 'return'
-
   "tConst",      ///< 'const'
   "tVar",        ///< 'var'
   "tExtern",     ///< 'extern'
   "tProcedure",  ///< 'procedure'
   "tFunction",   ///< 'function'
+  "tModule",     ///< 'module'
+  "tBegin",      ///< 'begin'
+  "tEnd",        ///< 'end'
+
+  "tIf",      ///< 'if'
+  "tThen",    ///< 'then'
+  "tElse",    ///< 'else'
+  "tWhile",   ///< 'while'
+  "tDo",      ///< 'do'
+  "tReturn",  ///< 'return'
 
   "tBoolConst",    ///< boolean constant
   "tCharConst",    ///< character constant
@@ -111,6 +114,7 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tMulDiv (%s)",     ///< '*' or '/'
   "tAnd",             ///< '&&'
   "tOr",              ///< '||'
+  "tNot",             ///< '!'
   "tRelOp (%s)",      ///< relational operator
   "tAssign",          ///< assignment operator
   "tColon",           ///< a colon
@@ -127,19 +131,21 @@ char ETokenStr[][TOKEN_STRLEN] = {
   "tInteger",  ///< 'integer'
   "tLongInt",  ///< 'longint'
 
-  "tIf",      ///< 'if'
-  "tThen",    ///< 'then'
-  "tElse",    ///< 'else'
-  "tWhile",   ///< 'while'
-  "tDo",      ///< 'do'
-  "tEnd",     ///< 'end'
-  "tReturn",  ///< 'return'
-
   "tConst",      ///< 'const'
   "tVar",        ///< 'var'
   "tExtern",     ///< 'extern'
   "tProcedure",  ///< 'procedure'
   "tFunction",   ///< 'function'
+  "tModule",     ///< 'module'
+  "tBegin",      ///< 'begin'
+  "tEnd",        ///< 'end'
+
+  "tIf",      ///< 'if'
+  "tThen",    ///< 'then'
+  "tElse",    ///< 'else'
+  "tWhile",   ///< 'while'
+  "tDo",      ///< 'do'
+  "tReturn",  ///< 'return'
 
   "tBoolConst (%s)",        ///< boolean constant
   "tCharConst ('%s')",      ///< character constant
@@ -156,11 +162,30 @@ char ETokenStr[][TOKEN_STRLEN] = {
 // reserved keywords
 //
 pair<const char *, EToken> Keywords[] = {
-  {"true", tBoolConst},   {"false", tBoolConst}, {"char", tChar},     {"integer", tInteger},
-  {"longint", tLongInt},  {"if", tIf},           {"then", tThen},     {"else", tElse},
-  {"while", tWhile},      {"do", tDo},           {"end", tEnd},       {"return", tReturn},
-  {"const", tConst},      {"var", tVar},         {"extern", tExtern}, {"prodecure", tProcedure},
-  {"function", tFunction}};
+  {"boolean", tBoolean},
+  {"char", tChar},
+  {"integer", tInteger},
+  {"longint", tLongInt},
+
+  {"const", tConst},
+  {"var", tVar},
+  {"extern", tExtern},
+  {"procedure", tProcedure},
+  {"function", tFunction},
+  {"module", tModule},
+  {"begin", tBegin},
+  {"end", tEnd},
+
+  {"if", tIf},
+  {"then", tThen},
+  {"else", tElse},
+  {"while", tWhile},
+  {"do", tDo},
+  {"return", tReturn},
+
+  {"true", tBoolConst},
+  {"false", tBoolConst},
+};
 
 //--------------------------------------------------------------------------------------------------
 // CToken
@@ -476,6 +501,8 @@ CToken *CScanner::Scan()
         token = tOr;
       }
       break;
+
+    case '!': token = tNot; break;
 
     case '=':
     case '#': token = tRelOp; break;
