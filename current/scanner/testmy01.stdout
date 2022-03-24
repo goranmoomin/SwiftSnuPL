@@ -1,6 +1,5 @@
 scanning 'test/scanner/testmy01.mod'...
   3:3: tInvCharConst (invalid escape sequence)
-  3:5: tInvCharConst (unexpected end)
   4:1: tInvCharConst (unexpected end)
   5:1: tInvCharConst (unexpected end)
   5:3: tIdent (i)

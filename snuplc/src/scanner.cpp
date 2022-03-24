@@ -536,8 +536,11 @@ CToken *CScanner::Scan()
             tokval = "unexpected end";
           }
           break;
-        case cInvChar: tokval = "invalid character"; break;
-        case cInvEnc: tokval = "invalid escape sequence"; break;
+        case cInvChar:
+        case cInvEnc:
+          tokval = cres == cInvChar ? "invalid character" : "invalid escape sequence";
+          TryChar('\'');
+          break;
         case cUnexpEnd: tokval = "unexpected end"; break;
       }
       break;

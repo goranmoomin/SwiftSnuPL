@@ -42,7 +42,6 @@ scanning 'test/scanner/test02.mod'...
   21:1: tUndefined (invalid character '^')
   22:1: tUndefined (invalid character '\')
   23:3: tInvCharConst (invalid escape sequence)
-  23:5: tInvCharConst (unexpected end)
   24:3: tInvCharConst (invalid escape sequence)
   24:4: tNumber (2)
   24:6: tInvCharConst (unexpected end)
