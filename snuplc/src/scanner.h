@@ -356,12 +356,14 @@ class CScanner {
   /// @brief peek at the next character in the input stream (w/o removing it)
   ///
   /// @retval next character in the input stream
-  unsigned char PeekChar(void);
+  /// @retval eof if input stream is not good
+  int PeekChar(void);
 
   /// @brief return the next character from the input stream
   ///
   /// @retval next character in the input stream
-  unsigned char GetChar(void);
+  /// @retval eof if input stream is not good
+  int GetChar(void);
 
   /// @brief return the next 'n' characters from the input stream
   ///

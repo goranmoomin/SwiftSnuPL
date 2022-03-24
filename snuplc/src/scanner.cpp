@@ -456,6 +456,7 @@ CToken *CScanner::Scan()
     return NewToken(tIOError);
   }
 
+  // c is guaranteed to not be EOF here
   c = GetChar();
   tokval = c;
   token = tUndefined;
@@ -679,14 +680,14 @@ CScanner::ECharacter CScanner::GetCharacter(unsigned char &c, EToken mode)
   return res;
 }
 
-unsigned char CScanner::PeekChar()
+int CScanner::PeekChar()
 {
-  return (unsigned char)_in->peek();
+  return _in->peek();
 }
 
-unsigned char CScanner::GetChar()
+int CScanner::GetChar()
 {
-  unsigned char c = _in->get();
+  int c = _in->get();
   if (c == '\n') {
     _line++;
     _char = 1;
