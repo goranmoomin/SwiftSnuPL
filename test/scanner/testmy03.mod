@@ -1,0 +1,1 @@
+"end of file in invalid \0 string

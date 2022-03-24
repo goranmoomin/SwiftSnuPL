@@ -465,7 +465,7 @@ CToken *CScanner::Scan()
       // FIXME: This feels like a big, big hack.
       // This only works if Scan does not need any cleanup after this big switch.
       if (TryChar('/')) {
-        while (PeekChar() != '\n') {
+        while (_in->good() && PeekChar() != '\n') {
           GetChar();
         }
         return Scan();
@@ -559,7 +559,7 @@ CToken *CScanner::Scan()
         case cInvChar:
         case cInvEnc:
           tokval = cres == cInvChar ? "invalid character" : "invalid escape sequence";
-          while (PeekChar() != '"' && PeekChar() != '\n') {
+          while (_in->good() && PeekChar() != '"' && PeekChar() != '\n') {
             GetChar();
           }
           TryChar('"');

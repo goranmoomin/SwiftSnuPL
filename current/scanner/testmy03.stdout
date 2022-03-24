@@ -1,0 +1,6 @@
+scanning 'test/scanner/testmy03.mod'...
+  1:26: tInvStringConst (invalid escape sequence)
+  1:35: tEOF
+
+
+Done.
