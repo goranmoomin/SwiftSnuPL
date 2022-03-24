@@ -1,0 +1,451 @@
+scanning 'test/scanner/test04.mod'...
+  7:1: tModule
+  7:8: tIdent (test04)
+  7:14: tSemicolon
+  9:1: tConst
+  10:3: tIdent (N)
+  10:5: tColon
+  10:7: tInteger
+  10:15: tRelOp (=)
+  10:17: tNumber (2)
+  10:18: tMulDiv (*)
+  10:19: tLParen
+  10:20: tNumber (2)
+  10:21: tPlusMinus (+)
+  10:22: tNumber (2)
+  10:23: tRParen
+  10:24: tSemicolon
+  11:3: tIdent (ProgramName)
+  11:15: tColon
+  11:17: tChar
+  11:21: tLBrack
+  11:22: tRBrack
+  11:24: tRelOp (=)
+  11:26: tStringConst ("Matrix\t Adder\n\n")
+  11:46: tSemicolon
+  13:1: tProcedure
+  13:11: tIdent (minit)
+  13:16: tLParen
+  13:17: tIdent (m)
+  13:18: tColon
+  13:20: tInteger
+  13:27: tLBrack
+  13:28: tRBrack
+  13:29: tLBrack
+  13:30: tRBrack
+  13:31: tRParen
+  13:32: tSemicolon
+  14:1: tVar
+  14:5: tIdent (x)
+  14:6: tComma
+  14:7: tIdent (y)
+  14:8: tComma
+  14:9: tIdent (v)
+  14:10: tColon
+  14:12: tInteger
+  14:19: tSemicolon
+  15:1: tBegin
+  16:3: tIdent (v)
+  16:5: tAssign
+  16:8: tNumber (1)
+  16:9: tSemicolon
+  17:3: tWhile
+  17:9: tLParen
+  17:10: tIdent (y)
+  17:12: tRelOp (<)
+  17:14: tIdent (N)
+  17:15: tRParen
+  17:17: tDo
+  18:5: tIdent (x)
+  18:7: tAssign
+  18:10: tNumber (0)
+  18:11: tSemicolon
+  19:5: tWhile
+  19:11: tLParen
+  19:12: tIdent (x)
+  19:14: tRelOp (<)
+  19:16: tIdent (N)
+  19:17: tRParen
+  19:19: tDo
+  20:7: tIdent (m)
+  20:8: tLBrack
+  20:9: tIdent (y)
+  20:10: tRBrack
+  20:11: tLBrack
+  20:12: tIdent (x)
+  20:13: tRBrack
+  20:15: tAssign
+  20:18: tIdent (v)
+  20:19: tSemicolon
+  21:7: tIdent (v)
+  21:9: tAssign
+  21:12: tIdent (v)
+  21:13: tPlusMinus (+)
+  21:14: tNumber (1)
+  21:15: tSemicolon
+  22:7: tIf
+  22:10: tLParen
+  22:11: tIdent (v)
+  22:13: tRelOp (=)
+  22:15: tNumber (10)
+  22:17: tRParen
+  22:19: tThen
+  22:24: tIdent (v)
+  22:26: tAssign
+  22:29: tNumber (0)
+  22:31: tEnd
+  22:34: tSemicolon
+  23:7: tIdent (x)
+  23:9: tAssign
+  23:12: tIdent (x)
+  23:13: tPlusMinus (+)
+  23:14: tNumber (1)
+  24:5: tEnd
+  24:8: tSemicolon
+  25:5: tIdent (y)
+  25:7: tAssign
+  25:10: tIdent (y)
+  25:11: tPlusMinus (+)
+  25:12: tNumber (1)
+  26:3: tEnd
+  27:1: tEnd
+  27:5: tIdent (minit)
+  27:10: tSemicolon
+  29:1: tProcedure
+  29:11: tIdent (madd)
+  29:15: tLParen
+  29:16: tIdent (sum)
+  29:19: tColon
+  29:21: tInteger
+  29:28: tLBrack
+  29:29: tIdent (N)
+  29:30: tRBrack
+  29:31: tLBrack
+  29:32: tIdent (N)
+  29:33: tRBrack
+  29:34: tSemicolon
+  29:36: tIdent (a)
+  29:37: tComma
+  29:38: tIdent (b)
+  29:39: tColon
+  29:41: tInteger
+  29:48: tLBrack
+  29:49: tIdent (N)
+  29:50: tRBrack
+  29:51: tLBrack
+  29:52: tIdent (N)
+  29:53: tRBrack
+  29:54: tRParen
+  29:55: tSemicolon
+  30:1: tVar
+  30:5: tIdent (x)
+  30:6: tComma
+  30:7: tIdent (y)
+  30:8: tColon
+  30:10: tInteger
+  30:17: tSemicolon
+  31:1: tBegin
+  32:3: tIdent (y)
+  32:5: tAssign
+  32:8: tNumber (0)
+  32:9: tSemicolon
+  33:3: tWhile
+  33:9: tLParen
+  33:10: tIdent (y)
+  33:12: tRelOp (<)
+  33:14: tIdent (N)
+  33:15: tRParen
+  33:17: tDo
+  34:5: tIdent (x)
+  34:7: tAssign
+  34:10: tNumber (0)
+  34:11: tSemicolon
+  35:5: tWhile
+  35:11: tLParen
+  35:12: tIdent (x)
+  35:14: tRelOp (<)
+  35:16: tIdent (N)
+  35:17: tRParen
+  35:19: tDo
+  36:7: tIdent (sum)
+  36:10: tLBrack
+  36:11: tIdent (y)
+  36:12: tRBrack
+  36:13: tLBrack
+  36:14: tIdent (x)
+  36:15: tRBrack
+  36:17: tAssign
+  36:20: tIdent (a)
+  36:21: tLBrack
+  36:22: tIdent (y)
+  36:23: tRBrack
+  36:24: tLBrack
+  36:25: tIdent (x)
+  36:26: tRBrack
+  36:28: tPlusMinus (+)
+  36:30: tIdent (b)
+  36:31: tLBrack
+  36:32: tIdent (y)
+  36:33: tRBrack
+  36:34: tLBrack
+  36:35: tIdent (x)
+  36:36: tRBrack
+  36:37: tSemicolon
+  37:7: tIdent (x)
+  37:9: tAssign
+  37:12: tIdent (x)
+  37:13: tPlusMinus (+)
+  37:14: tNumber (1)
+  38:5: tEnd
+  38:8: tSemicolon
+  39:5: tIdent (y)
+  39:7: tAssign
+  39:10: tIdent (y)
+  39:11: tPlusMinus (+)
+  39:12: tNumber (1)
+  40:3: tEnd
+  41:1: tEnd
+  41:5: tIdent (madd)
+  41:9: tSemicolon
+  43:1: tProcedure
+  43:11: tIdent (mprint)
+  43:17: tLParen
+  43:18: tIdent (m)
+  43:19: tColon
+  43:21: tInteger
+  43:28: tLBrack
+  43:29: tRBrack
+  43:30: tLBrack
+  43:31: tRBrack
+  43:32: tSemicolon
+  43:34: tIdent (title)
+  43:39: tColon
+  43:41: tChar
+  43:45: tLBrack
+  43:46: tRBrack
+  43:47: tRParen
+  43:48: tSemicolon
+  44:1: tConst
+  44:7: tIdent (MStr)
+  44:12: tColon
+  44:14: tChar
+  44:18: tLBrack
+  44:19: tRBrack
+  44:21: tRelOp (=)
+  44:23: tStringConst (". Matrix ")
+  44:34: tSemicolon
+  45:1: tVar
+  45:5: tIdent (N)
+  45:6: tComma
+  45:7: tIdent (M)
+  45:8: tComma
+  45:9: tIdent (x)
+  45:10: tComma
+  45:11: tIdent (y)
+  45:12: tColon
+  45:14: tInteger
+  45:21: tSemicolon
+  46:1: tBegin
+  47:3: tIdent (M)
+  47:5: tAssign
+  47:8: tIdent (DIM)
+  47:11: tLParen
+  47:12: tIdent (m)
+  47:13: tComma
+  47:15: tNumber (1)
+  47:16: tRParen
+  47:17: tSemicolon
+  48:3: tIdent (N)
+  48:5: tAssign
+  48:8: tIdent (DIM)
+  48:11: tLParen
+  48:12: tIdent (m)
+  48:13: tComma
+  48:15: tNumber (2)
+  48:16: tRParen
+  48:17: tSemicolon
+  50:3: tIdent (WriteStr)
+  50:11: tLParen
+  50:12: tIdent (title)
+  50:17: tRParen
+  50:18: tSemicolon
+  50:20: tIdent (WriteStr)
+  50:28: tLParen
+  50:29: tIdent (MStr)
+  50:33: tRParen
+  50:34: tSemicolon
+  50:36: tIdent (WriteInt)
+  50:44: tLParen
+  50:45: tIdent (M)
+  50:46: tRParen
+  50:47: tSemicolon
+  50:49: tIdent (WriteChar)
+  50:58: tLParen
+  50:59: tCharConst ('x')
+  50:62: tRParen
+  50:63: tSemicolon
+  50:65: tIdent (WriteInt)
+  50:73: tLParen
+  50:74: tIdent (N)
+  50:75: tRParen
+  50:76: tSemicolon
+  51:3: tIdent (WriteLn)
+  51:10: tLParen
+  51:11: tRParen
+  51:12: tSemicolon
+  52:3: tIdent (WriteStr)
+  52:11: tLParen
+  52:12: tStringConst ("[\n")
+  52:17: tRParen
+  52:18: tSemicolon
+  54:3: tWhile
+  54:9: tLParen
+  54:10: tIdent (y)
+  54:12: tRelOp (<)
+  54:14: tIdent (M)
+  54:15: tRParen
+  54:17: tDo
+  55:5: tIdent (WriteStr)
+  55:13: tLParen
+  55:14: tStringConst ("  ")
+  55:18: tRParen
+  55:19: tSemicolon
+  55:21: tIdent (WriteInt)
+  55:29: tLParen
+  55:30: tIdent (y)
+  55:31: tRParen
+  55:32: tSemicolon
+  55:34: tIdent (WriteStr)
+  55:42: tLParen
+  55:43: tStringConst (":  [   ")
+  55:52: tRParen
+  55:53: tSemicolon
+  57:5: tIdent (x)
+  57:7: tAssign
+  57:10: tNumber (0)
+  57:11: tSemicolon
+  58:5: tWhile
+  58:11: tLParen
+  58:12: tIdent (x)
+  58:14: tRelOp (<)
+  58:16: tIdent (N)
+  58:17: tRParen
+  58:19: tDo
+  59:7: tIdent (WriteInt)
+  59:15: tLParen
+  59:16: tIdent (m)
+  59:17: tLBrack
+  59:18: tIdent (y)
+  59:19: tRBrack
+  59:20: tLBrack
+  59:21: tIdent (x)
+  59:22: tRBrack
+  59:23: tRParen
+  59:24: tSemicolon
+  59:26: tIdent (WriteStr)
+  59:34: tLParen
+  59:35: tStringConst ("   ")
+  59:40: tRParen
+  59:41: tSemicolon
+  60:7: tIdent (x)
+  60:9: tAssign
+  60:12: tIdent (x)
+  60:13: tPlusMinus (+)
+  60:14: tNumber (1)
+  61:5: tEnd
+  61:8: tSemicolon
+  63:5: tIdent (WriteStr)
+  63:13: tLParen
+  63:14: tStringConst ("]\n")
+  63:19: tRParen
+  63:20: tSemicolon
+  64:5: tIdent (y)
+  64:7: tAssign
+  64:10: tIdent (y)
+  64:11: tPlusMinus (+)
+  64:12: tNumber (1)
+  65:3: tEnd
+  65:6: tSemicolon
+  67:3: tIdent (WriteStr)
+  67:11: tLParen
+  67:12: tStringConst ("]\n\n")
+  67:19: tRParen
+  68:1: tEnd
+  68:5: tIdent (mprint)
+  68:11: tSemicolon
+  70:1: tVar
+  71:3: tIdent (A)
+  71:4: tComma
+  71:6: tIdent (B)
+  71:7: tComma
+  71:9: tIdent (C)
+  71:11: tColon
+  71:13: tInteger
+  71:20: tLBrack
+  71:21: tIdent (N)
+  71:22: tRBrack
+  71:23: tLBrack
+  71:24: tIdent (N)
+  71:25: tRBrack
+  71:26: tSemicolon
+  72:1: tBegin
+  73:3: tIdent (WriteStr)
+  73:11: tLParen
+  73:12: tIdent (ProgramName)
+  73:23: tRParen
+  73:24: tSemicolon
+  73:26: tIdent (WriteLn)
+  73:33: tLParen
+  73:34: tRParen
+  73:35: tSemicolon
+  75:3: tIdent (minit)
+  75:8: tLParen
+  75:9: tIdent (A)
+  75:10: tRParen
+  75:11: tSemicolon
+  76:3: tIdent (minit)
+  76:8: tLParen
+  76:9: tIdent (B)
+  76:10: tRParen
+  76:11: tSemicolon
+  77:3: tIdent (minit)
+  77:8: tLParen
+  77:9: tIdent (C)
+  77:10: tRParen
+  77:11: tSemicolon
+  79:3: tIdent (mprint)
+  79:9: tLParen
+  79:10: tIdent (A)
+  79:11: tComma
+  79:13: tStringConst ("A")
+  79:16: tRParen
+  79:17: tSemicolon
+  80:3: tIdent (mprint)
+  80:9: tLParen
+  80:10: tIdent (B)
+  80:11: tComma
+  80:13: tStringConst ("B")
+  80:16: tRParen
+  80:17: tSemicolon
+  82:3: tIdent (madd)
+  82:7: tLParen
+  82:8: tIdent (C)
+  82:9: tComma
+  82:11: tIdent (A)
+  82:12: tComma
+  82:14: tIdent (B)
+  82:15: tRParen
+  82:16: tSemicolon
+  84:3: tIdent (mprint)
+  84:9: tLParen
+  84:10: tIdent (C)
+  84:11: tComma
+  84:13: tStringConst ("C = A+B")
+  84:22: tRParen
+  85:1: tEnd
+  85:5: tIdent (test04)
+  85:11: tDot
+  86:1: tEOF
+
+
+Done.

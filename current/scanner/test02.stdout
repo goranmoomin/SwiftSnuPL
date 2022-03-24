@@ -1,0 +1,57 @@
+scanning 'test/scanner/test02.mod'...
+  13:1: tRelOp (<=)
+  13:3: tRelOp (=)
+  13:4: tRelOp (=)
+  13:5: tRelOp (>=)
+  13:7: tRelOp (#)
+  13:8: tAssign
+  13:10: tColon
+  13:11: tColon
+  13:12: tAssign
+  13:14: tRelOp (=)
+  13:15: tRelOp (>)
+  13:16: tSemicolon
+  13:17: tSemicolon
+  13:18: tSemicolon
+  13:19: tIf
+  13:21: tLParen
+  13:22: tThen
+  13:26: tRParen
+  13:27: tElse
+  13:31: tSemicolon
+  13:32: tIdent (a)
+  13:33: tAssign
+  13:35: tPlusMinus (-)
+  13:36: tNumber (1)
+  13:37: tDot
+  13:38: tNumber (1)
+  13:39: tSemicolon
+  13:40: tIdent (a)
+  13:41: tColon
+  13:42: tAssign
+  13:44: tRelOp (=)
+  13:45: tNumber (0)
+  13:46: tIdent (x5)
+  13:48: tSemicolon
+  14:1: tNumber (1)
+  14:2: tIdent (a2b)
+  15:1: tStringConst ("hello world")
+  18:1: tUndefined (invalid character '{')
+  19:1: tUndefined (invalid character '}')
+  20:1: tUndefined (invalid character '?')
+  21:1: tUndefined (invalid character '^')
+  22:1: tUndefined (invalid character '\')
+  23:3: tInvCharConst (invalid escape sequence)
+  23:5: tInvCharConst (unexpected end)
+  24:3: tInvCharConst (invalid escape sequence)
+  24:4: tNumber (2)
+  24:6: tInvCharConst (unexpected end)
+  25:1: tInvCharConst (unexpected end)
+  25:3: tIdent (ello)
+  25:8: tIdent (world)
+  25:14: tInvCharConst (unexpected end)
+  26:10: tInvStringConst (invalid escape sequence)
+  27:1: tEOF
+
+
+Done.

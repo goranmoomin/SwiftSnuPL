@@ -1,0 +1,33 @@
+scanning 'test/scanner/test03.mod'...
+  10:1: tCharConst ('7')
+  11:1: tCharConst ('\0')
+  12:1: tCharConst ('\0')
+  13:1: tCharConst ('w')
+  14:1: tCharConst ('\xe4')
+  15:1: tCharConst ('\xe4')
+  18:1: tStringConst ("hello, world!")
+  20:1: tStringConst ("hello,\tworld\n")
+  22:1: tStringConst ("she said, \"hello, world!\"")
+  24:1: tStringConst ("escaped single-quotes are not required but accepted: 'this is nice,', he said")
+  25:1: tStringConst ("escaped single-quotes are not required but accepted: 'this is nice,', he said")
+  27:1: tStringConst ("a backslash is a '\\' character")
+  29:1: tStringConst ("Extended Latin1 characters work, but are escaped internally: \xf6, \xe4, \xfc.")
+  31:1: tStringConst ("Hex encoded characters in strings: \x80.")
+  33:1: tStringConst ("")
+  37:3: tInvCharConst (invalid escape sequence)
+  37:5: tInvCharConst (unexpected end)
+  38:1: tInvCharConst (unexpected end)
+  39:3: tInvCharConst (invalid escape sequence)
+  39:4: tNumber (2)
+  39:6: tInvCharConst (unexpected end)
+  40:2: tInvCharConst (invalid character)
+  40:4: tInvCharConst (unexpected end)
+  43:27: tInvStringConst (invalid escape sequence)
+  46:14: tInvStringConst (unexpected end)
+  49:42: tInvStringConst (invalid character)
+  52:8: tInvStringConst (invalid escape sequence)
+  55:7: tInvStringConst (unexpected end)
+  56:1: tEOF
+
+
+Done.
