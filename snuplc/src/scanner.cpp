@@ -443,38 +443,35 @@ CToken *CScanner::Scan()
   EToken token;
   ECharacter cres;
   string tokval;
-  unsigned char c;
+  unsigned char c = 0;
 
-  while (_in->good() && IsWhite(PeekChar())) GetChar();
+  do {
+    if (c == '/' && PeekChar() == '/') {
+      while (_in->good() && PeekChar() != '\n') {
+        GetChar();
+      }
+    }
 
-  RecordStreamPosition();
+    while (_in->good() && IsWhite(PeekChar())) {
+      GetChar();
+    }
 
-  if (_in->eof()) {
-    return NewToken(tEOF);
-  }
-  if (!_in->good()) {
-    return NewToken(tIOError);
-  }
+    RecordStreamPosition();
 
-  // c is guaranteed to not be EOF here
-  c = GetChar();
-  tokval = c;
-  token = tUndefined;
+    if (_in->eof()) {
+      return NewToken(tEOF);
+    }
+    if (!_in->good()) {
+      return NewToken(tIOError);
+    }
+
+    // c is guaranteed to not be EOF here
+    c = GetChar();
+    tokval = c;
+    token = tUndefined;
+  } while (c == '/' && PeekChar() == '/');
 
   switch (c) {
-    case '/':
-      // FIXME: This feels like a big, big hack.
-      // This only works if Scan does not need any cleanup after this big switch.
-      if (TryChar('/')) {
-        while (_in->good() && PeekChar() != '\n') {
-          GetChar();
-        }
-        return Scan();
-      } else {
-        token = tMulDiv;
-      }
-      break;
-
     case ':':
       if (PeekChar() == '=') {
         tokval += GetChar();
@@ -487,7 +484,8 @@ CToken *CScanner::Scan()
     case '+':
     case '-': token = tPlusMinus; break;
 
-    case '*': token = tMulDiv; break;
+    case '*':
+    case '/': token = tMulDiv; break;
 
     case '&':
       if (PeekChar() == '&') {
