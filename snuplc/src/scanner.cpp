@@ -559,7 +559,9 @@ CToken *CScanner::Scan()
         case cInvEnc:
           tokval = cres == cInvChar ? "invalid character" : "invalid escape sequence";
           while (_in->good() && PeekChar() != '"' && PeekChar() != '\n') {
-            GetChar();
+            if (GetChar() == '\\' && PeekChar() == '"') {
+              GetChar();
+            };
           }
           TryChar('"');
           break;
