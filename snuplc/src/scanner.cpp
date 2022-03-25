@@ -549,7 +549,7 @@ CToken *CScanner::Scan()
       tokval = "";
       token = tInvStringConst;
       cres = cOkay;
-      while (PeekChar() != '"' && (cres = GetCharacter(c, tStringConst)) == cOkay) {
+      while (_in->good() && PeekChar() != '"' && (cres = GetCharacter(c, tStringConst)) == cOkay) {
         tokval += c;
       }
       switch (cres) {
