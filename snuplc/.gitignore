@@ -1,0 +1,6 @@
+## Build output
+.deps
+obj
+/test_parser
+/test_scanner
+/doc/html
