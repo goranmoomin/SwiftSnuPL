@@ -111,7 +111,7 @@ void CParser::SetError(CToken t, const string message)
   _error_token = t;
   _message = message;
   _abort = true;
-  throw message;
+  throw CParseError();
 }
 
 bool CParser::Consume(EToken type, CToken *token)
