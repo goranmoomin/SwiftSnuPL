@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 {
   int i = 1;
   bool use_stdin = argc == 1;
+  bool make_dot = true;
   char *fn;
 
   while ((i < argc) || (use_stdin)) {
@@ -52,10 +53,18 @@ int main(int argc, char *argv[])
 
     if (use_stdin) {
       fn = strdup("stdin");
+      make_dot = false;
+      cout << "disabled dot output." << endl;
       in = &cin;
       cout << "parsing from standard input..." << endl;
     } else {
       fn = argv[i];
+      if (*fn == ':') {
+        make_dot = false;
+        cout << "disabled dot output: use ./ to parse relative files starting with a colon."
+             << endl;
+        fn++;
+      }
       in = new ifstream(fn);
       cout << "parsing '" << fn << "'..." << endl;
     }
@@ -77,23 +86,25 @@ int main(int argc, char *argv[])
 
       cout << "successfully parsed." << endl << "  AST:" << endl;
       m->print(cout, 4);
-      cout << endl << endl;
 
-      string outf = string(fn) + ".ast.dot";
-      ofstream out(outf.c_str());
-      out << "digraph AST {" << endl
-          << "  graph [fontname=\"Times New Roman\",fontsize=10];" << endl
-          << "  node  [fontname=\"Courier New\",fontsize=10];" << endl
-          << "  edge  [fontname=\"Times New Roman\",fontsize=10];" << endl
-          << endl;
-      m->toDot(out, 2);
-      out << "}" << endl;
-      out.flush();
+      if (make_dot) {
+        cout << endl << endl;
+        string outf = string(fn) + ".ast.dot";
+        ofstream out(outf.c_str());
+        out << "digraph AST {" << endl
+            << "  graph [fontname=\"Times New Roman\",fontsize=10];" << endl
+            << "  node  [fontname=\"Courier New\",fontsize=10];" << endl
+            << "  edge  [fontname=\"Times New Roman\",fontsize=10];" << endl
+            << endl;
+        m->toDot(out, 2);
+        out << "}" << endl;
+        out.flush();
 
-      ostringstream cmd;
-      cmd << "dot -Tpdf -o" << fn << ".ast.pdf " << fn << ".ast.dot";
-      cout << "run the following command to convert the .dot file into a PDF:" << endl
-           << "  " << cmd.str() << endl;
+        ostringstream cmd;
+        cmd << "dot -Tpdf -o" << fn << ".ast.pdf " << fn << ".ast.dot";
+        cout << "run the following command to convert the .dot file into a PDF:" << endl
+             << "  " << cmd.str() << endl;
+      }
 
       delete m;
     }
