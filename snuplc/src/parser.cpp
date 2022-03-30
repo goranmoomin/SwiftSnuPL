@@ -47,8 +47,8 @@
 using namespace std;
 
 //--------------------------------------------------------------------------------------------------
-// EBNF of SnuPL/-1
-//   module        =  statSequence "."
+// EBNF of SnuPL/2--
+//   module        =  "module" ident ";" [ "begin" statSequence ] "end" ident ".".
 //   digit         =  "0".."9".
 //   letter        =  "a".."z".
 //   factOp        =  "*" | "/".
@@ -138,15 +138,30 @@ void CParser::InitSymbolTable(CSymtab *st)
 CAstModule *CParser::module(void)
 {
   //
-  // module ::= statSequence  ".".
+  // module = "module" ident ";" [ "begin" statSequence ] "end" ident ".".
   //
-  CToken dummy;
-  CAstModule *m = new CAstModule(dummy, "placeholder");
+  CToken t;
+  CAstModule *m;
   CAstStatement *statseq = NULL;
 
+  Consume(tModule);
+  Consume(tIdent, &t);
+  Consume(tSemicolon);
+
+  m = new CAstModule(t, t.GetValue());
   InitSymbolTable(m->GetSymbolTable());
 
-  statseq = statSequence(m);
+  if (_scanner->Peek().GetType() == tBegin) {
+    Consume(tBegin);
+    statseq = statSequence(m);
+  }
+
+  Consume(tEnd);
+  Consume(tIdent, &t);
+  if (m->GetName() != t.GetValue()) {
+    SetError(t, "unexpected module identifier");
+  }
+
   Consume(tDot);
 
   m->SetStatementSequence(statseq);
@@ -161,10 +176,10 @@ CAstStatement *CParser::statSequence(CAstScope *s)
   // statement ::= assignment.
   //
   // FIRST(statSequence) = { tIdent }
-  // FOLLOW(statSequence) = { tDot }
+  // FOLLOW(statSequence) = { tEnd }
   //
   // FIRST(statement) = { tIdent }
-  // FOLLOW(statement) = { tSemicolon, tDot }
+  // FOLLOW(statement) = { tSemicolon, tEnd }
   //
 
   // The linking of statement sequences is a bit akward here because
@@ -176,7 +191,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
   // attach new statements to that tail.
   CAstStatement *head = NULL;
 
-  if (_scanner->Peek().GetType() != tDot) {
+  if (_scanner->Peek().GetType() != tEnd) {
     CAstStatement *tail = NULL;
 
     do {
@@ -196,7 +211,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
         tail->SetNext(st);
       tail = st;
 
-      if (_scanner->Peek().GetType() == tDot) break;
+      if (_scanner->Peek().GetType() == tEnd) break;
 
       Consume(tSemicolon);
     } while (!_abort);
