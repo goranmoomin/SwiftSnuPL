@@ -1,0 +1,6 @@
+disabled dot output: use ./ to parse relative files starting with a colon.
+parsing 'test/parser/const01.mod'...
+syntax error at 7:1 : expected 'tEnd', got 'tConst'
+
+
+Done.

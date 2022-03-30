@@ -1,0 +1,16 @@
+disabled dot output: use ./ to parse relative files starting with a colon.
+parsing 'test/parser/test01.mod'...
+successfully parsed.
+  AST:
+    CAstScope: 'test01'
+      symbol table:
+        [[
+        ]]
+      statement list:
+        empty.
+      nested scopes:
+        empty.
+    
+
+
+Done.

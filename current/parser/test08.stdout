@@ -1,0 +1,6 @@
+disabled dot output: use ./ to parse relative files starting with a colon.
+parsing 'test/parser/test08.mod'...
+syntax error at 13:1 : expected 'tEnd', got 'tVar'
+
+
+Done.

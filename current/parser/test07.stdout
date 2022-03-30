@@ -1,0 +1,6 @@
+disabled dot output: use ./ to parse relative files starting with a colon.
+parsing 'test/parser/test07.mod'...
+syntax error at 12:11 : expected 'tAssign', got 'tLParen'
+
+
+Done.
