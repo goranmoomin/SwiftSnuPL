@@ -1,6 +1,24 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/intminmax.mod'...
-syntax error at 14:10 : factor expected.
+successfully parsed.
+  AST:
+    CAstScope: 'test05'
+      symbol table:
+        [[
+          [ @max      <integer>         max           ]
+          [ @min      <integer>         min           ]
+        ]]
+      statement list:
+        := <integer>
+          [ @min      <integer>         min ] <integer>
+          neg <integer>
+            2147483648 <integer>
+        := <integer>
+          [ @max      <integer>         max ] <integer>
+          2147483647 <integer>
+      nested scopes:
+        empty.
+    
 
 
 Done.

@@ -126,7 +126,8 @@ class CParser {
   CAstExpression *term(CAstScope *s);
   CAstExpression *factor(CAstScope *s);
 
-  CAstDesignator *letter(CAstScope *s);
+  CAstDesignator *qualident(CAstScope *s);
+  CAstDesignator *ident(CAstScope *s);
   CAstConstant *number(void);
 
   /// @}

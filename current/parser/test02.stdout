@@ -1,6 +1,66 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test02.mod'...
-syntax error at 20:8 : factor expected.
+successfully parsed.
+  AST:
+    CAstScope: 'test02'
+      symbol table:
+        [[
+          [ @a        <integer>           a           ]
+          [ @b        <integer>           b           ]
+          [ @c        <integer>           c           ]
+        ]]
+      statement list:
+        := <integer>
+          [ @a        <integer>           a ] <integer>
+          1 <integer>
+        := <integer>
+          [ @b        <integer>           b ] <integer>
+          2 <integer>
+        := <integer>
+          [ @c        <integer>           c ] <integer>
+          3 <integer>
+        := <integer>
+          [ @a        <integer>           a ] <integer>
+          add <integer>
+            add <integer>
+              [ @a        <integer>           a ] <integer>
+              [ @b        <integer>           b ] <integer>
+            [ @c        <integer>           c ] <integer>
+        := <integer>
+          [ @b        <integer>           b ] <integer>
+          sub <integer>
+            sub <integer>
+              [ @a        <integer>           a ] <integer>
+              [ @b        <integer>           b ] <integer>
+            [ @c        <integer>           c ] <integer>
+        := <integer>
+          [ @c        <integer>           c ] <integer>
+          add <integer>
+            [ @a        <integer>           a ] <integer>
+            mul <integer>
+              [ @b        <integer>           b ] <integer>
+              [ @c        <integer>           c ] <integer>
+        := <integer>
+          [ @a        <integer>           a ] <integer>
+          neg <integer>
+            [ @a        <integer>           a ] <integer>
+        := <integer>
+          [ @b        <integer>           b ] <integer>
+          div <integer>
+            add <integer>
+              [ @a        <integer>           a ] <integer>
+              [ @b        <integer>           b ] <integer>
+            [ @c        <integer>           c ] <integer>
+        := <integer>
+          [ @c        <integer>           c ] <integer>
+          neg <integer>
+            add <integer>
+              neg <integer>
+                1 <integer>
+              [ @a        <integer>           a ] <integer>
+      nested scopes:
+        empty.
+    
 
 
 Done.

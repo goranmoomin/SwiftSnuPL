@@ -49,34 +49,33 @@ using namespace std;
 
 //--------------------------------------------------------------------------------------------------
 // EBNF of SnuPL/2--
-//   module        =  "module" ident ";"
-//                    { constDeclaration | varDeclaration }
-//                    [ "begin" statSequence ] "end" ident ".".
+//   module            = "module" ident ";"
+//                       { constDeclaration | varDeclaration }
+//                       [ "begin" statSequence ] "end" ident ".".
 //
-//   constDeclaration
-//                 = [ "const" constDeclSequence ].
-//   constDeclSequence
-//                 = constDecl ";" { constDecl ";" }.
-//   constDecl     = varDecl "=" expression.
-//   varDeclaration
-//                 = [ "var" varDeclSequence ";" ].
-//   varDeclSequence
-//                 = varDecl { ";" varDecl }.
-//   varDecl       = ident { "," ident } ":" type.
-
-//   digit         =  "0".."9".
-//   letter        =  "a".."z".
-//   factOp        =  "*" | "/".
-//   termOp        =  "+" | "-".
-//   relOp         =  "=" | "#".
-//   factor        =  digit | "(" expression ")".
-//   term          =  factor { factOp factor }.
-//   simpleexpr    =  term { termOp term }.
-//   expression    =  simpleexpr [ relOp simpleexpr ].
-//   assignment    =  letter ":=" expression.
-//   statement     =  assignment.
-//   statSequence  =  [ statement { ";" statement } ].
-//   whitespace    =  { " " | \n }+.
+//   constDeclaration  = [ "const" constDeclSequence ].
+//   constDeclSequence = constDecl ";" { constDecl ";" }
+//   constDecl         = varDecl "=" expression.
+//
+//   varDeclaration    = [ "var" varDeclSequence ].
+//   varDeclSequence   = varDecl ";" { varDecl ";" }.
+//   varDecl           = ident { "," ident } ":" type.
+//
+//   ident             = tIdent.
+//   number            = tNumber.
+//
+//   qualident         = ident.
+//   factOp            = "*" | "/".
+//   termOp            = "+" | "-".
+//   relOp             = "=" | "#".
+//
+//   factor            = qualident | number | "(" expression ")".
+//   term              = factor { factOp factor }.
+//   simpleexpr        = ["+" | "-"] term { termOp term }.
+//   expression        = simpleexpr [ relOp simpleexpr ].
+//   assignment        = ident ":=" expression.
+//   statement         = assignment.
+//   statSequence      = [ statement { ";" statement } ].
 
 //--------------------------------------------------------------------------------------------------
 // CParser
@@ -204,8 +203,6 @@ void CParser::constDeclaration(CAstScope *s)
   // constDecl ::= varDecl "=" expression.
   // varDecl ::= ident { "," ident } ":" type.
   //
-  // FIRST(varDecl) = { tIdent }
-  //
 
   if (_scanner->Peek().GetType() == tConst) {
     CToken t;
@@ -233,8 +230,6 @@ void CParser::varDeclaration(CAstScope *s)
   // varDeclSequence ::= varDecl ";" { varDecl ";" }.
   // varDecl ::= ident { "," ident } ":" type.
   //
-  // FIRST(varDecl) = { tIdent }
-  //
 
   if (_scanner->Peek().GetType() == tVar) {
     CToken t;
@@ -255,6 +250,8 @@ const CType *CParser::varDecl(vector<string> *idents)
 {
   //
   // varDecl ::= ident { "," ident } ":" type.
+  //
+  // FIRST(varDecl) = { tIdent }
   //
 
   CToken t;
@@ -330,11 +327,11 @@ CAstStatement *CParser::statSequence(CAstScope *s)
 CAstStatAssign *CParser::assignment(CAstScope *s)
 {
   //
-  // assignment ::= letter ":=" expression.
+  // assignment ::= ident ":=" expression.
   //
   CToken t;
 
-  CAstDesignator *lhs = letter(s);
+  CAstDesignator *lhs = ident(s);
   Consume(tAssign, &t);
 
   CAstExpression *rhs = expression(s);
@@ -373,11 +370,20 @@ CAstExpression *CParser::expression(CAstScope *s)
 CAstExpression *CParser::simpleexpr(CAstScope *s)
 {
   //
-  // simpleexpr ::= term { termOp term }.
+  // simpleexpr ::= ["+"|"-"] term { termOp term }.
   //
+  CToken t;
   CAstExpression *n = NULL;
 
+  if (_scanner->Peek().GetType() == tPlusMinus) {
+    Consume(tPlusMinus, &t);
+  }
+
   n = term(s);
+
+  if (t.GetType() == tPlusMinus) {
+    n = new CAstUnaryOp(t, t.GetValue() == "+" ? opPos : opNeg, n);
+  }
 
   while (_scanner->Peek().GetType() == tPlusMinus) {
     CToken t;
@@ -423,15 +429,18 @@ CAstExpression *CParser::term(CAstScope *s)
 CAstExpression *CParser::factor(CAstScope *s)
 {
   //
-  // factor ::= number | "(" expression ")"
+  // factor ::= qualident | number | "(" expression ")"
   //
-  // FIRST(factor) = { tNumber, tLParen }
+  // FIRST(factor) = { tIdent, tNumber, tLParen }
   //
 
   CToken t;
   CAstExpression *n = NULL;
 
   switch (_scanner->Peek().GetType()) {
+    // factor ::= qualident
+    case tIdent: n = qualident(s); break;
+
     // factor ::= number
     case tNumber: n = number(); break;
 
@@ -448,10 +457,19 @@ CAstExpression *CParser::factor(CAstScope *s)
   return n;
 }
 
-CAstDesignator *CParser::letter(CAstScope *s)
+CAstDesignator *CParser::qualident(CAstScope *s)
 {
   //
-  // letter := "a".."z".
+  // qualident ::= ident.
+  //
+
+  return ident(s);
+}
+
+CAstDesignator *CParser::ident(CAstScope *s)
+{
+  //
+  // number ::= tIdent
   //
 
   CToken t;
@@ -476,7 +494,7 @@ CAstDesignator *CParser::letter(CAstScope *s)
 CAstConstant *CParser::number(void)
 {
   //
-  // number ::= "0".."9".
+  // number ::= tNumber
   //
 
   CToken t;
