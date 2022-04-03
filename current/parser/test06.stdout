@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test06.mod'...
-syntax error at 10:1 : expected 'tEnd', got 'tVar'
+syntax error at 11:12 : unexpected token in type
 
 
 Done.

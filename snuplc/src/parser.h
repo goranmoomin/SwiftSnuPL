@@ -113,6 +113,10 @@ class CParser {
 
   CAstModule *module(void);
 
+  void constDeclaration(CAstScope *s);
+  void varDeclaration(CAstScope *s);
+  const CType *varDecl(vector<string> *idents);
+
   CAstStatement *statSequence(CAstScope *s);
 
   CAstStatAssign *assignment(CAstScope *s);

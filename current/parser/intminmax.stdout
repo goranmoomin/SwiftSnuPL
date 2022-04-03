@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/intminmax.mod'...
-syntax error at 10:1 : expected 'tEnd', got 'tVar'
+syntax error at 14:10 : factor expected.
 
 
 Done.
