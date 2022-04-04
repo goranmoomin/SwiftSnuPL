@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/error01.mod'...
-syntax error at 19:1 : expected 'tEnd', got 'tFunction'
+syntax error at 21:5 : unexpected subroutine identifier
 
 
 Done.

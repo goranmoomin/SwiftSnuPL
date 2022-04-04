@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test05.mod'...
-syntax error at 14:1 : expected 'tEnd', got 'tFunction'
+syntax error at 17:3 : statement expected.
 
 
 Done.

@@ -50,19 +50,13 @@ using namespace std;
 //--------------------------------------------------------------------------------------------------
 // EBNF of SnuPL/2--
 //   module            = "module" ident ";"
-//                       { constDeclaration | varDeclaration }
+//                       { constDeclaration | varDeclaration | subrDeclaration }
 //                       [ "begin" statSequence ] "end" ident ".".
-//
-//   constDeclaration  = [ "const" constDeclSequence ].
-//   constDeclSequence = constDecl ";" { constDecl ";" }
-//   constDecl         = varDecl "=" expression.
-//
-//   varDeclaration    = [ "var" varDeclSequence ].
-//   varDeclSequence   = varDecl ";" { varDecl ";" }.
-//   varDecl           = ident { "," ident } ":" type.
 //
 //   ident             = tIdent.
 //   number            = tNumber.
+//   type              = basetype
+//   basetype          = "boolean" | "char" | "integer" | "longint".
 //
 //   qualident         = ident.
 //   factOp            = "*" | "/".
@@ -76,6 +70,23 @@ using namespace std;
 //   assignment        = ident ":=" expression.
 //   statement         = assignment.
 //   statSequence      = [ statement { ";" statement } ].
+//
+//   constDeclaration  = [ "const" constDeclSequence ].
+//   constDeclSequence = constDecl ";" { constDecl ";" }.
+//   constDecl         = varDecl "=" expression.
+//
+//   varDeclaration    = [ "var" varDeclSequence ].
+//   varDeclSequence   = varDecl ";" { varDecl ";" }.
+//   varDecl           = ident { "," ident } ":" type.
+//
+//   subrDeclaration   = ( "procedure" procedureDecl | "function" functionDecl )
+//                       subroutineBody ident ";".
+//   procedureDecl     = ident [ formalParam ] ";".
+//   functionDecl      = ident [ formalParam ] ":" type ";".
+//   formalParam       = "(" [ paramDeclSequence ] ")".
+//   paramDeclSequence = varDecl { ";" varDecl }.
+//   subroutineBody    = constDeclaration varDeclaration
+//                       "begin" statSequence "end".
 
 //--------------------------------------------------------------------------------------------------
 // CParser
@@ -143,6 +154,16 @@ bool CParser::Consume(EToken type, CToken *token)
   return t.GetType() == type;
 }
 
+EToken CParser::PeekType()
+{
+  return _scanner->Peek().GetType();
+}
+
+CToken CParser::Peek()
+{
+  return _scanner->Peek();
+}
+
 void CParser::InitSymbolTable(CSymtab *st)
 {
   // TODO (phase 2)
@@ -155,6 +176,11 @@ CAstModule *CParser::module(void)
   // module ::= "module" ident ";"
   //            { constDeclaration | varDeclaration }
   //            [ "begin" statSequence ] "end" ident ".".
+  // constDeclaration ::= [ "const" constDeclSequence ].
+  // varDeclaration ::= [ "var" varDeclSequence ].
+  //
+  // FIRST(constDeclaration) = { tConst }
+  // FIRST(varDeclaration) = { tVar }
   //
 
   EToken tt;
@@ -169,15 +195,21 @@ CAstModule *CParser::module(void)
   m = new CAstModule(t, t.GetValue());
   InitSymbolTable(m->GetSymbolTable());
 
-  while (tt = _scanner->Peek().GetType(), tt == tConst || tt == tVar) {
+  while (tt = PeekType(), tt == tConst || tt == tVar || tt == tProcedure || tt == tFunction) {
     if (tt == tConst) {
-      constDeclaration(m);
+      Consume(tConst);
+      constDeclSequence(m);
+    } else if (tt == tVar) {
+      Consume(tVar);
+      varDeclSequence(m);
+    } else if (tt == tProcedure || tt == tFunction) {
+      subrDeclaration(m);
     } else {
-      varDeclaration(m);
+      SetError(Peek(), "unreachable state");
     }
   }
 
-  if (_scanner->Peek().GetType() == tBegin) {
+  if (PeekType() == tBegin) {
     Consume(tBegin);
     statseq = statSequence(m);
   }
@@ -195,55 +227,47 @@ CAstModule *CParser::module(void)
   return m;
 }
 
-void CParser::constDeclaration(CAstScope *s)
+void CParser::constDeclSequence(CAstScope *s)
 {
   //
-  // constDeclaration ::= [ "const" constDeclSequence ].
   // constDeclSequence ::= constDecl ";" { constDecl ";" }.
   // constDecl ::= varDecl "=" expression.
-  // varDecl ::= ident { "," ident } ":" type.
   //
 
-  if (_scanner->Peek().GetType() == tConst) {
-    CToken t;
-    vector<string> ts{};
-    CAstExpression *expr;
-    const CType *type;
-    Consume(tConst);
-    do {
-      type = varDecl(&ts);
-      Consume(tRelOp, &t);
-      if (t.GetValue() != "=") {
-        SetError(t, "unexpected operator in constant initializer");
-      }
-      expr = expression(s);
-      // TODO: for each ident in ts, s->CreateConst with the expr->Evaluate()'d values
-      Consume(tSemicolon);
-    } while (_scanner->Peek().GetType() == tIdent);
-  }
+  CToken t;
+  vector<string> ts{};
+  CAstExpression *expr;
+  const CType *vt;
+
+  do {
+    vt = varDecl(&ts);
+    Consume(tRelOp, &t);
+    if (t.GetValue() != "=") {
+      SetError(t, "unexpected operator in constant initializer");
+    }
+    expr = expression(s);
+    // TODO: for each ident in ts, s->CreateConst with the expr->Evaluate()'d values
+    Consume(tSemicolon);
+  } while (PeekType() == tIdent);
 }
 
-void CParser::varDeclaration(CAstScope *s)
+void CParser::varDeclSequence(CAstScope *s)
 {
   //
-  // varDeclaration ::= [ "var" varDeclSequence ].
   // varDeclSequence ::= varDecl ";" { varDecl ";" }.
-  // varDecl ::= ident { "," ident } ":" type.
   //
 
-  if (_scanner->Peek().GetType() == tVar) {
-    CToken t;
-    vector<string> ts{};
-    const CType *type;
-    Consume(tVar);
-    do {
-      type = varDecl(&ts);
-      for (const string &ident : ts) {
-        s->CreateVar(ident, type);
-      }
-      Consume(tSemicolon);
-    } while (_scanner->Peek().GetType() == tIdent);
-  }
+  CToken t;
+  vector<string> ts{};
+  const CType *vt;
+
+  do {
+    vt = varDecl(&ts);
+    for (const string &ident : ts) {
+      s->CreateVar(ident, vt);
+    }
+    Consume(tSemicolon);
+  } while (PeekType() == tIdent);
 }
 
 const CType *CParser::varDecl(vector<string> *idents)
@@ -258,19 +282,138 @@ const CType *CParser::varDecl(vector<string> *idents)
 
   Consume(tIdent, &t);
   idents->push_back(t.GetValue());
-  while (!_abort && _scanner->Peek().GetType() == tComma) {
+  while (!_abort && PeekType() == tComma) {
     Consume(tComma);
     Consume(tIdent, &t);
     idents->push_back(t.GetValue());
   }
   Consume(tColon);
 
-  switch (_scanner->Peek().GetType()) {  // TODO: add type parsing
-    case tInteger: Consume(tInteger); return CTypeManager::Get()->GetInteger();
-    default: SetError(_scanner->Get(), "unexpected token in type"); break;
+  return type();
+}
+
+void CParser::subrDeclaration(CAstScope *s)
+{
+  //
+  // subrDeclaration ::= ( "procedure" procedureDecl | "function" functionDecl )
+  //                     subroutineBody ident ";".
+  // subroutineBody ::= constDeclaration varDeclaration
+  //                    "begin" statSequence "end".
+  //
+
+  CToken t;
+  CAstProcedure *p;
+  CAstStatement *statseq = NULL;
+
+  switch (PeekType()) {
+    case tProcedure:
+      Consume(tProcedure);
+      p = procedureDecl(s);
+      break;
+    case tFunction:
+      Consume(tFunction);
+      p = functionDecl(s);
+      break;
+    default: SetError(Peek(), "unexpected token in subroutine declaration"); return;
   }
 
-  return NULL;
+  if (PeekType() == tConst) {
+    Consume(tConst);
+    constDeclSequence(p);
+  }
+
+  if (PeekType() == tVar) {
+    Consume(tVar);
+    varDeclSequence(p);
+  }
+
+  Consume(tBegin);
+  statseq = statSequence(p);
+  Consume(tEnd);
+  Consume(tIdent, &t);
+  if (p->GetName() != t.GetValue()) {
+    SetError(t, "unexpected subroutine identifier");
+  }
+  Consume(tSemicolon);
+
+  p->SetStatementSequence(statseq);
+}
+
+CAstProcedure *CParser::procedureDecl(CAstScope *s)
+{
+  //
+  // procedureDecl ::= ident [ formalParam ] ";".
+  //
+
+  CToken t;
+  CSymtab *st = s->GetSymbolTable();
+  CSymProc *sym;
+  vector<CSymParam *> params{};
+
+  Consume(tIdent, &t);
+  formalParam(&params);
+  Consume(tSemicolon);
+
+  sym = new CSymProc(t.GetValue(), CTypeManager::Get()->GetNull());
+  st->AddSymbol(sym);
+  for (CSymParam *param : params) {
+    sym->AddParam(param);
+  }
+
+  return new CAstProcedure(t, t.GetValue(), s, sym);
+}
+
+CAstProcedure *CParser::functionDecl(CAstScope *s)
+{
+  //
+  // functionDecl ::= ident [ formalParam ] ":" type ";".
+  //
+
+  CToken t;
+  CSymtab *st = s->GetSymbolTable();
+  CSymProc *sym;
+  const CType *rt;
+  vector<CSymParam *> params{};
+
+  Consume(tIdent, &t);
+  formalParam(&params);
+  Consume(tColon);
+  rt = type();
+  Consume(tSemicolon);
+
+  sym = new CSymProc(t.GetValue(), rt);
+  st->AddSymbol(sym);
+  for (CSymParam *param : params) {
+    sym->AddParam(param);
+  }
+
+  return new CAstProcedure(t, t.GetValue(), s, sym);
+}
+
+void CParser::formalParam(vector<CSymParam *> *params)
+{
+  //
+  // formalParam ::= "(" [ paramDeclSequence ] ")".
+  // paramDeclSequence ::= varDecl { ";" varDecl }.
+  //
+
+  vector<string> ts{};
+  const CType *type;
+  int index = 0;
+
+  Consume(tLParen);
+
+  while (PeekType() != tRParen) {
+    type = varDecl(&ts);
+    for (const string &ident : ts) {
+      params->push_back(new CSymParam(index++, ident, type));
+    }
+    if (PeekType() == tSemicolon) {
+      Consume(tSemicolon);
+    }
+  }
+
+  Consume(tRParen);
 }
 
 CAstStatement *CParser::statSequence(CAstScope *s)
@@ -295,17 +438,17 @@ CAstStatement *CParser::statSequence(CAstScope *s)
   // attach new statements to that tail.
   CAstStatement *head = NULL;
 
-  if (_scanner->Peek().GetType() != tEnd) {
+  if (PeekType() != tEnd) {
     CAstStatement *tail = NULL;
 
     do {
       CAstStatement *st = NULL;
 
-      switch (_scanner->Peek().GetType()) {
+      switch (PeekType()) {
         // statement ::= assignment
         case tIdent: st = assignment(s); break;
 
-        default: SetError(_scanner->Peek(), "statement expected."); break;
+        default: SetError(Peek(), "statement expected."); break;
       }
 
       assert(st != NULL);
@@ -315,7 +458,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
         tail->SetNext(st);
       tail = st;
 
-      if (_scanner->Peek().GetType() == tEnd) break;
+      if (PeekType() == tEnd) break;
 
       Consume(tSemicolon);
     } while (!_abort);
@@ -350,7 +493,7 @@ CAstExpression *CParser::expression(CAstScope *s)
 
   left = simpleexpr(s);
 
-  if (_scanner->Peek().GetType() == tRelOp) {
+  if (PeekType() == tRelOp) {
     Consume(tRelOp, &t);
     right = simpleexpr(s);
 
@@ -375,7 +518,7 @@ CAstExpression *CParser::simpleexpr(CAstScope *s)
   CToken t;
   CAstExpression *n = NULL;
 
-  if (_scanner->Peek().GetType() == tPlusMinus) {
+  if (PeekType() == tPlusMinus) {
     Consume(tPlusMinus, &t);
   }
 
@@ -385,7 +528,7 @@ CAstExpression *CParser::simpleexpr(CAstScope *s)
     n = new CAstUnaryOp(t, t.GetValue() == "+" ? opPos : opNeg, n);
   }
 
-  while (_scanner->Peek().GetType() == tPlusMinus) {
+  while (PeekType() == tPlusMinus) {
     CToken t;
     CAstExpression *l = n, *r;
 
@@ -408,7 +551,7 @@ CAstExpression *CParser::term(CAstScope *s)
 
   n = factor(s);
 
-  EToken tt = _scanner->Peek().GetType();
+  EToken tt = PeekType();
 
   while (tt == tMulDiv) {
     CToken t;
@@ -420,7 +563,7 @@ CAstExpression *CParser::term(CAstScope *s)
 
     n = new CAstBinaryOp(t, t.GetValue() == "*" ? opMul : opDiv, l, r);
 
-    tt = _scanner->Peek().GetType();
+    tt = PeekType();
   }
 
   return n;
@@ -437,7 +580,7 @@ CAstExpression *CParser::factor(CAstScope *s)
   CToken t;
   CAstExpression *n = NULL;
 
-  switch (_scanner->Peek().GetType()) {
+  switch (PeekType()) {
     // factor ::= qualident
     case tIdent: n = qualident(s); break;
 
@@ -451,7 +594,7 @@ CAstExpression *CParser::factor(CAstScope *s)
       Consume(tRParen);
       break;
 
-    default: SetError(_scanner->Peek(), "factor expected."); break;
+    default: SetError(Peek(), "factor expected."); break;
   }
 
   return n;
@@ -506,4 +649,24 @@ CAstConstant *CParser::number(void)
   if (errno != 0) SetError(t, "invalid number.");
 
   return new CAstConstant(t, CTypeManager::Get()->GetInteger(), v);
+}
+
+const CType *CParser::type(void)
+{
+  //
+  // type ::= basetype
+  // basetype ::= "boolean" | "char" | "integer" | "longint".
+  //
+
+  CToken t;
+
+  switch (PeekType()) {
+    case tBoolean: Consume(tBoolean, &t); return CTypeManager::Get()->GetBool();
+    case tChar: Consume(tChar, &t); return CTypeManager::Get()->GetChar();
+    case tInteger: Consume(tInteger, &t); return CTypeManager::Get()->GetInteger();
+    case tLongInt: Consume(tLongInt, &t); return CTypeManager::Get()->GetLongint();
+    default: SetError(Peek(), "unexpected token in type"); break;
+  }
+
+  return NULL;
 }

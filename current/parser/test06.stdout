@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test06.mod'...
-syntax error at 11:12 : unexpected token in type
+syntax error at 23:9 : factor expected.
 
 
 Done.

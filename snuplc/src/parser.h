@@ -104,6 +104,14 @@ class CParser {
   /// @retval false otherwise
   bool Consume(EToken type, CToken *token = NULL);
 
+  /// @brief peek the next token type
+  /// @retval EToken token type
+  EToken PeekType();
+
+  /// @brief peek the next token
+  /// @retval CToken next token
+  CToken Peek();
+
   /// @brief initialize symbol table @a s with predefined procedures and
   ///        global variables
   void InitSymbolTable(CSymtab *s);
@@ -113,9 +121,14 @@ class CParser {
 
   CAstModule *module(void);
 
-  void constDeclaration(CAstScope *s);
-  void varDeclaration(CAstScope *s);
+  void constDeclSequence(CAstScope *s);
+  void varDeclSequence(CAstScope *s);
   const CType *varDecl(vector<string> *idents);
+
+  void subrDeclaration(CAstScope *s);
+  CAstProcedure *procedureDecl(CAstScope *s);
+  CAstProcedure *functionDecl(CAstScope *s);
+  void formalParam(vector<CSymParam *> *params);
 
   CAstStatement *statSequence(CAstScope *s);
 
@@ -127,8 +140,10 @@ class CParser {
   CAstExpression *factor(CAstScope *s);
 
   CAstDesignator *qualident(CAstScope *s);
+
   CAstDesignator *ident(CAstScope *s);
   CAstConstant *number(void);
+  const CType *type(void);
 
   /// @}
 
