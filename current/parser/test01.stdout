@@ -5,6 +5,8 @@ successfully parsed.
     CAstScope: 'test01'
       symbol table:
         [[
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteStr(array of <char>>) --> <NULL>           ]
         ]]
       statement list:
         empty.

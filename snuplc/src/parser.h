@@ -132,7 +132,7 @@ class CParser {
 
   CAstStatement *statSequence(CAstScope *s);
 
-  CAstStatAssign *assignment(CAstScope *s);
+  CAstStatement *identStatement(CAstScope *s);
   CAstStatReturn *returnStatement(CAstScope *s);
 
   CAstExpression *expression(CAstScope *s);

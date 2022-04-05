@@ -5,6 +5,8 @@ successfully parsed.
     CAstScope: 'test05'
       symbol table:
         [[
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteStr(array of <char>>) --> <NULL>           ]
           [ @max      <integer>         max           ]
           [ @min      <integer>         min           ]
         ]]
