@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test08.mod'...
-syntax error at 16:11 : expected 'tAssign', got 'tLParen'
+syntax error at 16:3 : unknown identifier
 
 
 Done.

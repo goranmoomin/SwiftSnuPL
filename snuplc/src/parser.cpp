@@ -67,8 +67,11 @@ using namespace std;
 //   term              = factor { factOp factor }.
 //   simpleexpr        = ["+" | "-"] term { termOp term }.
 //   expression        = simpleexpr [ relOp simpleexpr ].
+//
 //   assignment        = ident ":=" expression.
-//   statement         = assignment.
+//   returnStatement   = "return" [ expression ].
+//
+//   statement         = assignment | returnStatement.
 //   statSequence      = [ statement { ";" statement } ].
 //
 //   constDeclaration  = [ "const" constDeclSequence ].
@@ -260,11 +263,12 @@ void CParser::varDeclSequence(CAstScope *s)
   CToken t;
   vector<string> ts{};
   const CType *vt;
+  CSymtab *st = s->GetSymbolTable();
 
   do {
     vt = varDecl(&ts);
     for (const string &ident : ts) {
-      s->CreateVar(ident, vt);
+      st->AddSymbol(s->CreateVar(ident, vt));
     }
     Consume(tSemicolon);
   } while (PeekType() == tIdent);
@@ -420,7 +424,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
 {
   //
   // statSequence ::= [ statement { ";" statement } ].
-  // statement ::= assignment.
+  // statement ::= assignment | returnStatement.
   //
   // FIRST(statSequence) = { tIdent }
   // FOLLOW(statSequence) = { tEnd }
@@ -447,7 +451,8 @@ CAstStatement *CParser::statSequence(CAstScope *s)
       switch (PeekType()) {
         // statement ::= assignment
         case tIdent: st = assignment(s); break;
-
+        // statement ::= returnStatement
+        case tReturn: st = returnStatement(s); break;
         default: SetError(Peek(), "statement expected."); break;
       }
 
@@ -472,14 +477,33 @@ CAstStatAssign *CParser::assignment(CAstScope *s)
   //
   // assignment ::= ident ":=" expression.
   //
+
   CToken t;
+  CAstDesignator *lhs;
+  CAstExpression *rhs;
 
-  CAstDesignator *lhs = ident(s);
+  lhs = ident(s);
   Consume(tAssign, &t);
-
-  CAstExpression *rhs = expression(s);
+  rhs = expression(s);
 
   return new CAstStatAssign(t, lhs, rhs);
+}
+
+CAstStatReturn *CParser::returnStatement(CAstScope *s)
+{
+  //
+  // returnStatement ::= "return" [ expression ].
+  //
+  // FIRST(returnStatement) = { tReturn }
+  //
+
+  CToken t;
+  CAstExpression *retexpr;
+
+  Consume(tReturn, &t);
+  retexpr = expression(s);
+
+  return new CAstStatReturn(t, s, retexpr);
 }
 
 CAstExpression *CParser::expression(CAstScope *s)
@@ -487,6 +511,7 @@ CAstExpression *CParser::expression(CAstScope *s)
   //
   // expression ::= simpleexpr [ relOp simpleexpr ].
   //
+
   CToken t;
   EOperation relop = opNop;
   CAstExpression *left = NULL, *right = NULL;
@@ -620,16 +645,9 @@ CAstDesignator *CParser::ident(CAstScope *s)
 
   Consume(tIdent, &t);
 
-  // check if symbol exists in (local) symbol table
-  const CSymbol *sym = st->FindSymbol(t.GetValue(), sLocal);
-
-  if (sym == NULL) {
-    // if not, create one and add it to the symbol table
-    CSymbol *nsym = s->CreateVar(t.GetValue(), CTypeManager::Get()->GetInteger());
-    st->AddSymbol(nsym);
-
-    sym = nsym;
-  }
+  // check if symbol exists in the symbol table
+  const CSymbol *sym = st->FindSymbol(t.GetValue());
+  if (sym == NULL) SetError(t, "unknown identifier");
 
   return new CAstDesignator(t, sym);
 }

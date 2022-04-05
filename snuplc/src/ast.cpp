@@ -286,9 +286,14 @@ string CAstModule::dotAttr(void) const
 CAstProcedure::CAstProcedure(CToken t, const string name, CAstScope *parent, CSymProc *symbol)
     : CAstScope(t, name, parent), _symbol(symbol)
 {
+  CSymtab *st;
   assert(GetParent() != NULL);
-  SetSymbolTable(new CSymtab(GetParent()->GetSymbolTable()));
+  st = new CSymtab(GetParent()->GetSymbolTable());
   assert(_symbol != NULL);
+  for (int i = 0; i < _symbol->GetNParams(); i++) {
+    st->AddSymbol(new CSymParam(*_symbol->GetParam(i)));
+  }
+  SetSymbolTable(st);
 }
 
 CSymProc *CAstProcedure::GetSymbol(void) const

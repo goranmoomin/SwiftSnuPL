@@ -1,6 +1,72 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test04.mod'...
-syntax error at 17:3 : statement expected.
+successfully parsed.
+  AST:
+    CAstScope: 'test04'
+      symbol table:
+        [[
+          [ @a        <integer>           a           ]
+          [ @b        <integer>           b           ]
+          [ *bar(<integer>) --> <integer>           ]
+          [ @c        <integer>           c           ]
+          [ *foo() --> <NULL>           ]
+        ]]
+      statement list:
+        := <integer>
+          [ @a        <integer>           a ] <integer>
+          add <integer>
+            [ @b        <integer>           b ] <integer>
+            2 <integer>
+        := <integer>
+          [ @c        <integer>           c ] <integer>
+          mul <integer>
+            [ @a        <integer>           a ] <integer>
+            [ @b        <integer>           b ] <integer>
+      nested scopes:
+        CAstScope: 'bar'
+          symbol table:
+            [[
+              [ %a        <integer>               ]
+              [ $b        <integer>               ]
+            ]]
+          statement list:
+            return <integer>
+              add <integer>
+                [ %a        <integer> ] <integer>
+                [ $b        <integer> ] <integer>
+          nested scopes:
+            empty.
+        
+        CAstScope: 'foo'
+          symbol table:
+            [[
+              [ $a        <integer>               ]
+            ]]
+          statement list:
+            := <integer>
+              [ $a        <integer> ] <integer>
+              add <integer>
+                [ @b        <integer>           b ] <integer>
+                sub <integer>
+                  mul <integer>
+                    3 <integer>
+                    [ @c        <integer>           c ] <integer>
+                  5 <integer>
+            := <integer>
+              [ @b        <integer>           b ] <integer>
+              mul <integer>
+                [ @c        <integer>           c ] <integer>
+                add <integer>
+                  div <integer>
+                    [ @c        <integer>           c ] <integer>
+                    [ @b        <integer>           b ] <integer>
+                  mul <integer>
+                    5 <integer>
+                    [ $a        <integer> ] <integer>
+          nested scopes:
+            empty.
+        
+    
 
 
 Done.
