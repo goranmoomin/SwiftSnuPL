@@ -5,8 +5,6 @@ successfully parsed.
     CAstScope: 'test03'
       symbol table:
         [[
-          [ *WriteLn() --> <NULL>           ]
-          [ *WriteStr(array of <char>>) --> <NULL>           ]
           [ @a        <integer>           a           ]
           [ @b        <integer>           b           ]
           [ *bar(<integer>) --> <integer>           ]

@@ -68,13 +68,10 @@ using namespace std;
 //   simpleexpr        = ["+" | "-"] term { termOp term }.
 //   expression        = simpleexpr [ relOp simpleexpr ].
 //
-//   assign            = ":=" expression.
-//   subrArguments     = "(" [ expression {"," expression} ] ")".
-//   identStatement    = ident ( assign | subrArguments ).
-//
+//   assignment        = ident ":=" expression.
 //   returnStatement   = "return" [ expression ].
 //
-//   statement         = identStatement | returnStatement.
+//   statement         = assignment | returnStatement.
 //   statSequence      = [ statement { ";" statement } ].
 //
 //   constDeclaration  = [ "const" constDeclSequence ].
@@ -172,20 +169,8 @@ CToken CParser::Peek()
 
 void CParser::InitSymbolTable(CSymtab *st)
 {
-  CTypeManager *tm = CTypeManager::Get();
-  const CType *nulltype = tm->GetNull(), *chtype = tm->GetChar(),
-              *strtype = tm->GetArray(CArrayType::OPEN, chtype);
-
-  CSymProc *proc;
-
-  // procedure WriteStr(string: char[]);
-  proc = new CSymProc("WriteStr", nulltype, true);
-  proc->AddParam(new CSymParam(0, "string", strtype));
-  st->AddSymbol(proc);
-
-  // procedure WriteLn();
-  proc = new CSymProc("WriteLn", nulltype, true);
-  st->AddSymbol(proc);
+  // TODO (phase 2)
+  // add predefined functions here
 }
 
 CAstModule *CParser::module(void)
@@ -439,7 +424,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
 {
   //
   // statSequence ::= [ statement { ";" statement } ].
-  // statement ::= identStatement | returnStatement.
+  // statement ::= assignment | returnStatement.
   //
   // FIRST(statSequence) = { tIdent }
   // FOLLOW(statSequence) = { tEnd }
@@ -464,8 +449,8 @@ CAstStatement *CParser::statSequence(CAstScope *s)
       CAstStatement *st = NULL;
 
       switch (PeekType()) {
-        // statement ::= identStatement
-        case tIdent: st = identStatement(s); break;
+        // statement ::= assignment
+        case tIdent: st = assignment(s); break;
         // statement ::= returnStatement
         case tReturn: st = returnStatement(s); break;
         default: SetError(Peek(), "statement expected."); break;
@@ -487,55 +472,21 @@ CAstStatement *CParser::statSequence(CAstScope *s)
   return head;
 }
 
-CAstStatement *CParser::identStatement(CAstScope *s)
+CAstStatAssign *CParser::assignment(CAstScope *s)
 {
   //
-  // assign ::= ":=" expression.
-  // subrArguments ::= "(" [ expression {"," expression} ] ")".
-  // identStatement ::= ident ( assign | subrArguments ).
+  // assignment ::= ident ":=" expression.
   //
 
   CToken t;
-  CSymtab *st = s->GetSymbolTable();
-  CAstStatement *stmt = NULL;
+  CAstDesignator *lhs;
+  CAstExpression *rhs;
 
-  Consume(tIdent, &t);
-  if (PeekType() == tLParen) {
-    // identStatement ::= ident subrArguments
+  lhs = ident(s);
+  Consume(tAssign, &t);
+  rhs = expression(s);
 
-    const CSymProc *proc;
-    CAstFunctionCall *call;
-
-    proc = dynamic_cast<const CSymProc *>(st->FindSymbol(t.GetValue()));
-    if (proc == NULL) SetError(t, "unknown subroutine name");
-    call = new CAstFunctionCall(&t, proc);
-
-    Consume(tLParen);
-    if (PeekType() != tRParen) {
-      call->AddArg(expression(s));
-      while (PeekType() == tComma) {
-        Consume(tComma);
-        call->AddArg(expression(s));
-      }
-    }
-    Consume(tRParen);
-
-    stmt = new CAstStatCall(t, call);
-  } else {
-    // identStatement ::= ident assign
-
-    CAstDesignator *lhs;
-    CAstExpression *rhs;
-    const CSymbol *sym = st->FindSymbol(t.GetValue());
-    if (sym == NULL) SetError(t, "unknown identifier");
-
-    lhs = new CAstDesignator(t, sym);
-    Consume(tAssign);
-    rhs = expression(s);
-    stmt = new CAstStatAssign(t, lhs, rhs);
-  }
-
-  return stmt;
+  return new CAstStatAssign(t, lhs, rhs);
 }
 
 CAstStatReturn *CParser::returnStatement(CAstScope *s)
