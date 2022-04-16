@@ -63,15 +63,16 @@ using namespace std;
 //   termOp            = "+" | "-".
 //   relOp             = "=" | "#".
 //
-//   factor            = qualident | number | "(" expression ")".
+//   factor            = qualident | number | "(" expression ")" | subroutineCall.
 //   term              = factor { factOp factor }.
 //   simpleexpr        = ["+" | "-"] term { termOp term }.
 //   expression        = simpleexpr [ relOp simpleexpr ].
 //
 //   assignment        = ident ":=" expression.
+//   subroutineCall    = ident "(" [ expression {"," expression} ] ")".
 //   returnStatement   = "return" [ expression ].
 //
-//   statement         = assignment | returnStatement.
+//   statement         = assignment | subroutineCall | returnStatement.
 //   statSequence      = [ statement { ";" statement } ].
 //
 //   constDeclaration  = [ "const" constDeclSequence ].
@@ -181,8 +182,22 @@ CToken CParser::PeekNext()
 
 void CParser::InitSymbolTable(CSymtab *st)
 {
-  // TODO (phase 2)
   // add predefined functions here
+
+  CTypeManager *tm = CTypeManager::Get();
+  const CType *nulltype = tm->GetNull(), *chtype = tm->GetChar(),
+              *strtype = tm->GetPointer(tm->GetArray(CArrayType::OPEN, chtype));
+
+  CSymProc *proc;
+
+  // procedure WriteStr(string: char[]);
+  proc = new CSymProc("WriteStr", nulltype, true);
+  proc->AddParam(new CSymParam(0, "string", strtype));
+  st->AddSymbol(proc);
+
+  // procedure WriteLn();
+  proc = new CSymProc("WriteLn", nulltype, true);
+  st->AddSymbol(proc);
 }
 
 CAstModule *CParser::module(void)
@@ -436,7 +451,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
 {
   //
   // statSequence ::= [ statement { ";" statement } ].
-  // statement ::= assignment | returnStatement.
+  // statement ::= assignment | subroutineCall | returnStatement.
   //
   // FIRST(statSequence) = { tIdent }
   // FOLLOW(statSequence) = { tEnd }
@@ -453,6 +468,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
   // In the loop, we track the end of the linked list using 'tail' and
   // attach new statements to that tail.
   CAstStatement *head = NULL;
+  CToken t;
 
   if (PeekType() != tEnd) {
     CAstStatement *tail = NULL;
@@ -461,8 +477,17 @@ CAstStatement *CParser::statSequence(CAstScope *s)
       CAstStatement *st = NULL;
 
       switch (PeekType()) {
-        // statement ::= assignment
-        case tIdent: st = assignment(s); break;
+        // statement ::= assignment | subroutineCall
+        case tIdent:
+          if (PeekNextType() == tLParen) {
+            t = Peek();
+            st = new CAstStatCall(t, subroutineCall(s));
+          } else if (PeekNextType() == tAssign || PeekNextType() == tLBrack) {
+            st = assignment(s);
+          } else {
+            SetError(Peek(), "unexpected token after identifier.");
+          }
+          break;
         // statement ::= returnStatement
         case tReturn: st = returnStatement(s); break;
         default: SetError(Peek(), "statement expected."); break;
@@ -516,6 +541,39 @@ CAstStatReturn *CParser::returnStatement(CAstScope *s)
   retexpr = expression(s);
 
   return new CAstStatReturn(t, s, retexpr);
+}
+
+CAstFunctionCall *CParser::subroutineCall(CAstScope *s)
+{
+  //
+  // subroutineCall ::= ident "(" [ expression {"," expression} ] ")".
+  //
+  // FIRST(subroutineCall) = { tIdent }
+  //
+
+  CToken t;
+  const CSymProc *proc;
+  CAstFunctionCall *call;
+  CSymtab *st = s->GetSymbolTable();
+
+  Consume(tIdent, &t);
+  proc = dynamic_cast<const CSymProc *>(st->FindSymbol(t.GetValue()));
+  if (proc == NULL) {
+    SetError(t, "unknown subroutine name.");
+  }
+  call = new CAstFunctionCall(&t, proc);
+
+  Consume(tLParen);
+  if (PeekType() != tRParen) {
+    call->AddArg(expression(s));
+    while (PeekType() == tComma) {
+      Consume(tComma);
+      call->AddArg(expression(s));
+    }
+  }
+  Consume(tRParen);
+
+  return new CAstFunctionCall(&t, proc);
 }
 
 CAstExpression *CParser::expression(CAstScope *s)
@@ -609,9 +667,11 @@ CAstExpression *CParser::term(CAstScope *s)
 CAstExpression *CParser::factor(CAstScope *s)
 {
   //
-  // factor ::= qualident | number | "(" expression ")"
+  // factor ::= qualident | number | "(" expression ")" | subroutineCall
   //
   // FIRST(factor) = { tIdent, tNumber, tLParen }
+  // FOLLOW(factor) <= { tPlusMinus, tMulDiv, tAnd, tOr, tRelOp, tSemicolon, tComma, tRParen,
+  //                     tRBrack, tEnd, tElse }
   //
 
   CToken t;
@@ -619,7 +679,15 @@ CAstExpression *CParser::factor(CAstScope *s)
 
   switch (PeekType()) {
     // factor ::= qualident
-    case tIdent: n = qualident(s); break;
+    case tIdent:
+      // a factor can never be followed by an tLParen, so if we see one, we can assume that it gets
+      // included in the current factor
+      if (PeekNextType() == tLParen) {
+        n = subroutineCall(s);
+      } else {
+        n = qualident(s);
+      }
+      break;
 
     // factor ::= number
     case tNumber: n = number(); break;

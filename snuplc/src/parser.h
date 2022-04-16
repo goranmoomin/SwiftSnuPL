@@ -143,6 +143,8 @@ class CParser {
   CAstStatAssign *assignment(CAstScope *s);
   CAstStatReturn *returnStatement(CAstScope *s);
 
+  CAstFunctionCall *subroutineCall(CAstScope *s);
+
   CAstExpression *expression(CAstScope *s);
   CAstExpression *simpleexpr(CAstScope *s);
   CAstExpression *term(CAstScope *s);
