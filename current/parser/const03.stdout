@@ -1,6 +1,54 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/const03.mod'...
-syntax error at 11:16 : factor expected.
+successfully parsed.
+  AST:
+    CAstScope: 'const03'
+      symbol table:
+        [[
+          [ @A        array of array of <integer>>>           A           ]
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ =F        <boolean>           ]
+            [ data: 0 ]
+          [ =M        <integer>           ]
+            [ data: 0 ]
+          [ =N        <integer>           ]
+            [ data: 0 ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ =S        array of <char>>           ]
+            [ data: 0 ]
+          [ =T        <boolean>           ]
+            [ data: 0 ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ @_str_1   array 14 of <char>>      _str_1           ]
+            [ data: "Hello, world!" ]
+          [ @_str_2   array 5 of <char>>      _str_2           ]
+            [ data: "N = " ]
+          [ @_str_3   array 5 of <char>>      _str_3           ]
+            [ data: "M = " ]
+        ]]
+      statement list:
+        call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
+          [ =S        array of <char>> ] array of <char>>
+        call [ *WriteLn() --> <NULL> ] <NULL>
+        call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
+          "N = " <INVALID>
+        call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
+          [ =N        <integer> ] <integer>
+        call [ *WriteLn() --> <NULL> ] <NULL>
+        call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
+          "M = " <INVALID>
+        call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
+          [ =M        <integer> ] <integer>
+        call [ *WriteLn() --> <NULL> ] <NULL>
+      nested scopes:
+        empty.
+    
 
 
 Done.

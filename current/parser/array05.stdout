@@ -1,6 +1,172 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/array05.mod'...
-syntax error at 12:26 : factor expected.
+successfully parsed.
+  AST:
+    CAstScope: 'array05'
+      symbol table:
+        [[
+          [ @A        array of array of <integer>>>           A           ]
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *Init(array of array of <integer>>>) --> <NULL>           ]
+          [ *Print(array of array of <integer>>>) --> <NULL>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *Set(array of array of <integer>>>,<integer>,<integer>) --> <NULL>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ @i        <integer>           i           ]
+        ]]
+      statement list:
+        call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
+          11111111 <integer>
+        call [ *WriteLn() --> <NULL> ] <NULL>
+        call [ *Print(array of array of <integer>>>) --> <NULL> ] <NULL>
+          [ @A        array of array of <integer>>>           A ] array of array of <integer>>>
+        call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
+          22222222 <integer>
+        call [ *WriteLn() --> <NULL> ] <NULL>
+        call [ *Init(array of array of <integer>>>) --> <NULL> ] <NULL>
+          [ @A        array of array of <integer>>>           A ] array of array of <integer>>>
+      nested scopes:
+        CAstScope: 'Set'
+          symbol table:
+            [[
+              [ %P        array of array of <integer>>>               ]
+              [ %v        <integer>               ]
+            ]]
+          statement list:
+            := <INVALID>
+              [ %P        array of array of <integer>>> ] <INVALID>
+                [ %v        <integer> ] <integer>
+                [ %v        <integer> ] <integer>
+              1 <integer>
+          nested scopes:
+            empty.
+        
+        CAstScope: 'Print'
+          symbol table:
+            [[
+              [ %A        array of array of <integer>>>               ]
+              [ $M        <integer>               ]
+              [ $N        <integer>               ]
+              [ $i        <integer>               ]
+              [ $j        <integer>               ]
+            ]]
+          statement list:
+            := <integer>
+              [ $N        <integer> ] <integer>
+              call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
+                [ %A        array of array of <integer>>> ] array of array of <integer>>>
+                1 <integer>
+            := <integer>
+              [ $M        <integer> ] <integer>
+              call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
+                [ %A        array of array of <integer>>> ] array of array of <integer>>>
+                2 <integer>
+            := <integer>
+              [ $i        <integer> ] <integer>
+              0 <integer>
+            while cond
+              < <integer>
+                [ $i        <integer> ] <integer>
+                [ $N        <integer> ] <integer>
+            while-body
+              := <integer>
+                [ $j        <integer> ] <integer>
+                0 <integer>
+              while cond
+                < <integer>
+                  [ $j        <integer> ] <integer>
+                  [ $M        <integer> ] <integer>
+              while-body
+                call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
+                  [ %A        array of array of <integer>>> ] <INVALID>
+                    [ $i        <integer> ] <integer>
+                    [ $j        <integer> ] <integer>
+                call [ *WriteLn() --> <NULL> ] <NULL>
+                := <integer>
+                  [ $j        <integer> ] <integer>
+                  add <integer>
+                    [ $j        <integer> ] <integer>
+                    1 <integer>
+              := <integer>
+                [ $i        <integer> ] <integer>
+                add <integer>
+                  [ $i        <integer> ] <integer>
+                  1 <integer>
+          nested scopes:
+            empty.
+        
+        CAstScope: 'Init'
+          symbol table:
+            [[
+              [ $M        <integer>               ]
+              [ $N        <integer>               ]
+              [ %a        array of array of <integer>>>               ]
+              [ $c        <integer>               ]
+              [ $i        <integer>               ]
+              [ $j        <integer>               ]
+            ]]
+          statement list:
+            := <integer>
+              [ $N        <integer> ] <integer>
+              call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
+                [ %a        array of array of <integer>>> ] array of array of <integer>>>
+                1 <integer>
+            := <integer>
+              [ $M        <integer> ] <integer>
+              call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
+                [ %a        array of array of <integer>>> ] array of array of <integer>>>
+                2 <integer>
+            := <integer>
+              [ $c        <integer> ] <integer>
+              0 <integer>
+            := <integer>
+              [ $i        <integer> ] <integer>
+              0 <integer>
+            while cond
+              < <integer>
+                [ $i        <integer> ] <integer>
+                [ $N        <integer> ] <integer>
+            while-body
+              := <integer>
+                [ $j        <integer> ] <integer>
+                0 <integer>
+              while cond
+                < <integer>
+                  [ $j        <integer> ] <integer>
+                  [ $M        <integer> ] <integer>
+              while-body
+                := <INVALID>
+                  [ %a        array of array of <integer>>> ] <INVALID>
+                    [ $i        <integer> ] <integer>
+                    [ $j        <integer> ] <integer>
+                  [ $c        <integer> ] <integer>
+                := <integer>
+                  [ $c        <integer> ] <integer>
+                  add <integer>
+                    [ $c        <integer> ] <integer>
+                    1 <integer>
+                := <integer>
+                  [ $j        <integer> ] <integer>
+                  add <integer>
+                    [ $j        <integer> ] <integer>
+                    1 <integer>
+              := <integer>
+                [ $i        <integer> ] <integer>
+                add <integer>
+                  [ $i        <integer> ] <integer>
+                  1 <integer>
+            call [ *Print(array of array of <integer>>>) --> <NULL> ] <NULL>
+              [ %a        array of array of <integer>>> ] array of array of <integer>>>
+          nested scopes:
+            empty.
+        
+    
 
 
 Done.

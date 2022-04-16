@@ -58,7 +58,7 @@ using namespace std;
 //   char              = tCharConst.
 //   string            = tStringConst.
 //   boolean           = tBoolConst.
-//   type              = basetype { "[" simpleexpr "]" }.
+//   type              = basetype { "[" [ simpleexpr ] "]" }.
 //   basetype          = "boolean" | "char" | "integer" | "longint".
 //
 //   qualident         = ident { "[" simpleexpr "]" }.
@@ -428,7 +428,9 @@ CAstProcedure *CParser::procedureDecl(CAstScope *s)
   vector<CSymParam *> params{};
 
   Consume(tIdent, &t);
-  formalParam(s, &params);
+  if (PeekType() == tLParen) {
+    formalParam(s, &params);
+  }
   Consume(tSemicolon);
 
   sym = new CSymProc(t.GetValue(), CTypeManager::Get()->GetNull());
@@ -453,7 +455,9 @@ CAstProcedure *CParser::functionDecl(CAstScope *s)
   vector<CSymParam *> params{};
 
   Consume(tIdent, &t);
-  formalParam(s, &params);
+  if (PeekType() == tLParen) {
+    formalParam(s, &params);
+  }
   Consume(tColon);
   rt = type(s);
   Consume(tSemicolon);
@@ -947,7 +951,7 @@ CAstStringConstant *CParser::stringConst(CAstScope *s)
 const CType *CParser::type(CAstScope *s)
 {
   //
-  // type ::= basetype { "[" simpleexpr "]" }.
+  // type ::= basetype { "[" [ simpleexpr ] "]" }.
   //
   // FOLLOW(type) = { tSemicolon, tRParen }
   //
@@ -957,7 +961,9 @@ const CType *CParser::type(CAstScope *s)
 
   while (PeekType() == tLBrack) {
     Consume(tLBrack);
-    expr = simpleexpr(s);
+    if (PeekType() != tRBrack) {
+      expr = simpleexpr(s);
+    }
     Consume(tRBrack);
     // TODO: find array size with expr->Evaluate()
     type = CTypeManager::Get()->GetArray(CArrayType::OPEN, type);
