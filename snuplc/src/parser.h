@@ -141,6 +141,7 @@ class CParser {
   CAstStatement *statSequence(CAstScope *s);
 
   CAstStatAssign *assignment(CAstScope *s);
+  CAstStatIf *ifStatement(CAstScope *s);
   CAstStatReturn *returnStatement(CAstScope *s);
 
   CAstFunctionCall *subroutineCall(CAstScope *s);

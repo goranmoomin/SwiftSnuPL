@@ -1,6 +1,140 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test06.mod'...
-syntax error at 38:3 : statement expected.
+successfully parsed.
+  AST:
+    CAstScope: 'test06'
+      symbol table:
+        [[
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ @a        <integer>           a           ]
+          [ @b        <integer>           b           ]
+          [ @b0       <boolean>          b0           ]
+          [ @b1       <boolean>          b1           ]
+          [ *binop(<integer>,<integer>) --> <boolean>           ]
+          [ @c        <integer>           c           ]
+          [ *compare(<integer>,<integer>) --> <boolean>           ]
+          [ *foo(<integer>) --> <NULL>           ]
+          [ *intop(<integer>,<integer>) --> <integer>           ]
+          [ *unary() --> <NULL>           ]
+        ]]
+      statement list:
+        empty.
+      nested scopes:
+        CAstScope: 'foo'
+          symbol table:
+            [[
+              [ %a        <integer>               ]
+              [ $b        <integer>               ]
+            ]]
+          statement list:
+            := <integer>
+              [ $b        <integer> ] <integer>
+              [ @c        <integer>           c ] <integer>
+            := <integer>
+              [ @c        <integer>           c ] <integer>
+              add <integer>
+                [ %a        <integer> ] <integer>
+                [ $b        <integer> ] <integer>
+          nested scopes:
+            empty.
+        
+        CAstScope: 'unary'
+          symbol table:
+            [[
+            ]]
+          statement list:
+            := <integer>
+              [ @a        <integer>           a ] <integer>
+              neg <integer>
+                [ @b        <integer>           b ] <integer>
+            := <boolean>
+              [ @b0       <boolean>          b0 ] <boolean>
+              not <integer>
+                [ @b1       <boolean>          b1 ] <boolean>
+          nested scopes:
+            empty.
+        
+        CAstScope: 'binop'
+          symbol table:
+            [[
+              [ %p0       <integer>               ]
+              [ %p1       <integer>               ]
+            ]]
+          statement list:
+            return <integer>
+              not <integer>
+                or <integer>
+                  > <integer>
+                    add <integer>
+                      neg <integer>
+                        [ %p0       <integer> ] <integer>
+                      [ %p1       <integer> ] <integer>
+                    0 <integer>
+                  and <integer>
+                    > <integer>
+                      [ %p0       <integer> ] <integer>
+                      0 <integer>
+                    < <integer>
+                      [ %p1       <integer> ] <integer>
+                      0 <integer>
+          nested scopes:
+            empty.
+        
+        CAstScope: 'intop'
+          symbol table:
+            [[
+              [ %p0       <integer>               ]
+              [ %p1       <integer>               ]
+            ]]
+          statement list:
+            return <integer>
+              add <integer>
+                neg <integer>
+                  [ %p0       <integer> ] <integer>
+                pos <integer>
+                  [ %p1       <integer> ] <integer>
+          nested scopes:
+            empty.
+        
+        CAstScope: 'compare'
+          symbol table:
+            [[
+              [ %a        <integer>               ]
+              [ %b        <integer>               ]
+            ]]
+          statement list:
+            if cond
+              and <integer>
+                and <integer>
+                  call [ *binop(<integer>,<integer>) --> <boolean> ] <boolean>
+                    [ %a        <integer> ] <integer>
+                    [ %b        <integer> ] <integer>
+                  < <integer>
+                    call [ *intop(<integer>,<integer>) --> <integer> ] <integer>
+                      [ %b        <integer> ] <integer>
+                      [ %a        <integer> ] <integer>
+                    [ %a        <integer> ] <integer>
+                # <integer>
+                  [ %a        <integer> ] <integer>
+                  [ %b        <integer> ] <integer>
+            if-body
+              return <boolean>
+                true <boolean>
+            else-body
+              return <boolean>
+                false <boolean>
+          nested scopes:
+            empty.
+        
+    
 
 
 Done.

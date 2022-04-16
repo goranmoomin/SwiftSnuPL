@@ -74,9 +74,12 @@ using namespace std;
 //
 //   assignment        = qualident ":=" expression.
 //   subroutineCall    = ident "(" [ expression {"," expression} ] ")".
+//   ifStatement       = "if" "(" expression ")" "then" statSequence
+//                       [ "else" statSequence ] "end".
 //   returnStatement   = "return" [ expression ].
 //
-//   statement         = assignment | subroutineCall | returnStatement.
+//   statement         = assignment | subroutineCall | ifStatement
+//                       | returnStatement.
 //   statSequence      = [ statement { ";" statement } ].
 //
 //   constDeclaration  = [ "const" constDeclSequence ].
@@ -493,13 +496,13 @@ CAstStatement *CParser::statSequence(CAstScope *s)
 {
   //
   // statSequence ::= [ statement { ";" statement } ].
-  // statement ::= assignment | subroutineCall | returnStatement.
+  // statement ::= assignment | subroutineCall | ifStatement | returnStatement.
   //
-  // FIRST(statSequence) = { tIdent }
-  // FOLLOW(statSequence) = { tEnd }
+  // FIRST(statSequence) = { tIdent, tIf, tReturn }
+  // FOLLOW(statSequence) = { tEnd, tElse }
   //
-  // FIRST(statement) = { tIdent }
-  // FOLLOW(statement) = { tSemicolon, tEnd }
+  // FIRST(statement) = { tIdent, tIf, tReturn }
+  // FOLLOW(statement) = { tSemicolon, tEnd, tElse }
   //
 
   // The linking of statement sequences is a bit akward here because
@@ -512,7 +515,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
   CAstStatement *head = NULL;
   CToken t;
 
-  if (PeekType() != tEnd) {
+  if (PeekType() != tEnd && PeekType() != tElse) {
     CAstStatement *tail = NULL;
 
     do {
@@ -530,6 +533,8 @@ CAstStatement *CParser::statSequence(CAstScope *s)
             SetError(Peek(), "unexpected token after identifier.");
           }
           break;
+        // statement ::= ifStatement
+        case tIf: st = ifStatement(s); break;
         // statement ::= returnStatement
         case tReturn: st = returnStatement(s); break;
         default: SetError(Peek(), "statement expected."); break;
@@ -542,7 +547,7 @@ CAstStatement *CParser::statSequence(CAstScope *s)
         tail->SetNext(st);
       tail = st;
 
-      if (PeekType() == tEnd) break;
+      if (PeekType() == tEnd || PeekType() == tElse) break;
 
       Consume(tSemicolon);
     } while (!_abort);
@@ -566,6 +571,31 @@ CAstStatAssign *CParser::assignment(CAstScope *s)
   rhs = expression(s);
 
   return new CAstStatAssign(t, lhs, rhs);
+}
+
+CAstStatIf *CParser::ifStatement(CAstScope *s)
+{
+  //
+  // ifStatement ::= "if" "(" expression ")" "then" statSequence [ "else" statSequence ] "end".
+  //
+
+  CToken t;
+  CAstExpression *cond;
+  CAstStatement *ifBody = NULL, *elseBody = NULL;
+
+  Consume(tIf, &t);
+  Consume(tLParen);
+  cond = expression(s);
+  Consume(tRParen);
+  Consume(tThen);
+  ifBody = statSequence(s);
+  if (PeekType() == tElse) {
+    Consume(tElse);
+    elseBody = statSequence(s);
+  }
+  Consume(tEnd);
+
+  return new CAstStatIf(t, cond, ifBody, elseBody);
 }
 
 CAstStatReturn *CParser::returnStatement(CAstScope *s)
