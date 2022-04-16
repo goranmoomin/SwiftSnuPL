@@ -62,12 +62,12 @@ using namespace std;
 //   basetype          = "boolean" | "char" | "integer" | "longint".
 //
 //   qualident         = ident { "[" simpleexpr "]" }.
-//   factOp            = "*" | "/".
-//   termOp            = "+" | "-".
+//   factOp            = "*" | "/" | "&&".
+//   termOp            = "+" | "-" | "||".
 //   relOp             = "=" | "#".
 //
 //   factor            = qualident | number | boolean | char | string |
-//                       "(" expression ")" | subroutineCall.
+//                       "(" expression ")" | subroutineCall | "!" factor.
 //   term              = factor { factOp factor }.
 //   simpleexpr        = ["+" | "-"] term { termOp term }.
 //   expression        = simpleexpr [ relOp simpleexpr ].
@@ -650,10 +650,12 @@ CAstExpression *CParser::expression(CAstScope *s)
 CAstExpression *CParser::simpleexpr(CAstScope *s)
 {
   //
+  // termOp ::= "+" | "-" | "||".
   // simpleexpr ::= ["+"|"-"] term { termOp term }.
   //
   CToken t;
   CAstExpression *n = NULL;
+  EOperation op = opNop;
 
   if (PeekType() == tPlusMinus) {
     Consume(tPlusMinus, &t);
@@ -665,15 +667,22 @@ CAstExpression *CParser::simpleexpr(CAstScope *s)
     n = new CAstUnaryOp(t, t.GetValue() == "+" ? opPos : opNeg, n);
   }
 
-  while (PeekType() == tPlusMinus) {
+  while (PeekType() == tPlusMinus || PeekType() == tOr) {
     CToken t;
     CAstExpression *l = n, *r;
 
-    Consume(tPlusMinus, &t);
-
+    Consume(PeekType(), &t);
     r = term(s);
 
-    n = new CAstBinaryOp(t, t.GetValue() == "+" ? opAdd : opSub, l, r);
+    if (t.GetValue() == "+") {
+      op = opAdd;
+    } else if (t.GetValue() == "-") {
+      op = opSub;
+    } else {
+      op = opOr;
+    }
+
+    n = new CAstBinaryOp(t, op, l, r);
   }
 
   return n;
@@ -682,25 +691,31 @@ CAstExpression *CParser::simpleexpr(CAstScope *s)
 CAstExpression *CParser::term(CAstScope *s)
 {
   //
-  // term ::= factor { ("*"|"/") factor }.
+  // factOp ::= "*" | "/" | "&&".
+  // term ::= factor { factOp factor }.
   //
+
   CAstExpression *n = NULL;
+  EOperation op = opNop;
 
   n = factor(s);
 
-  EToken tt = PeekType();
-
-  while (tt == tMulDiv) {
+  while (PeekType() == tMulDiv || PeekType() == tAnd) {
     CToken t;
     CAstExpression *l = n, *r;
 
-    Consume(tMulDiv, &t);
-
+    Consume(PeekType(), &t);
     r = factor(s);
 
-    n = new CAstBinaryOp(t, t.GetValue() == "*" ? opMul : opDiv, l, r);
+    if (t.GetValue() == "*") {
+      op = opMul;
+    } else if (t.GetValue() == "/") {
+      op = opDiv;
+    } else {
+      op = opAnd;
+    }
 
-    tt = PeekType();
+    n = new CAstBinaryOp(t, op, l, r);
   }
 
   return n;
@@ -710,9 +725,9 @@ CAstExpression *CParser::factor(CAstScope *s)
 {
   //
   // factor ::= qualident | number | boolean | char | string |
-  //            "(" expression ")" | subroutineCall.
+  //            "(" expression ")" | subroutineCall | "!" factor.
   //
-  // FIRST(factor) = { tIdent, tNumber, tBoolConst, tCharConst, tStringConst, tLParen }
+  // FIRST(factor) = { tIdent, tNumber, tBoolConst, tCharConst, tStringConst, tLParen, tNot }
   // FOLLOW(factor) <= { tPlusMinus, tMulDiv, tAnd, tOr, tRelOp, tSemicolon, tComma, tRParen,
   //                     tRBrack, tEnd, tElse }
   //
@@ -749,6 +764,12 @@ CAstExpression *CParser::factor(CAstScope *s)
       Consume(tLParen);
       n = expression(s);
       Consume(tRParen);
+      break;
+
+    // factor ::= "!" factor
+    case tNot:
+      Consume(tNot, &t);
+      n = new CAstUnaryOp(t, opNot, factor(s));
       break;
 
     default: SetError(Peek(), "factor expected."); break;
