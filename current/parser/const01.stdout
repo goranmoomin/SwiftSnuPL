@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/const01.mod'...
-syntax error at 9:15 : expected 'tSemicolon', got 'tLBrack'
+syntax error at 9:16 : unknown identifier
 
 
 Done.

@@ -55,7 +55,7 @@ using namespace std;
 //
 //   ident             = tIdent.
 //   number            = tNumber.
-//   type              = basetype
+//   type              = basetype { "[" simpleexpr "]" }.
 //   basetype          = "boolean" | "char" | "integer" | "longint".
 //
 //   qualident         = ident.
@@ -270,7 +270,7 @@ void CParser::constDeclSequence(CAstScope *s)
   const CType *vt;
 
   do {
-    vt = varDecl(&ts);
+    vt = varDecl(s, &ts);
     Consume(tRelOp, &t);
     if (t.GetValue() != "=") {
       SetError(t, "unexpected operator in constant initializer");
@@ -293,7 +293,7 @@ void CParser::varDeclSequence(CAstScope *s)
   CSymtab *st = s->GetSymbolTable();
 
   do {
-    vt = varDecl(&ts);
+    vt = varDecl(s, &ts);
     for (const string &ident : ts) {
       st->AddSymbol(s->CreateVar(ident, vt));
     }
@@ -301,7 +301,7 @@ void CParser::varDeclSequence(CAstScope *s)
   } while (PeekType() == tIdent);
 }
 
-const CType *CParser::varDecl(vector<string> *idents)
+const CType *CParser::varDecl(CAstScope *s, vector<string> *idents)
 {
   //
   // varDecl ::= ident { "," ident } ":" type.
@@ -320,7 +320,7 @@ const CType *CParser::varDecl(vector<string> *idents)
   }
   Consume(tColon);
 
-  return type();
+  return type(s);
 }
 
 void CParser::subrDeclaration(CAstScope *s)
@@ -382,7 +382,7 @@ CAstProcedure *CParser::procedureDecl(CAstScope *s)
   vector<CSymParam *> params{};
 
   Consume(tIdent, &t);
-  formalParam(&params);
+  formalParam(s, &params);
   Consume(tSemicolon);
 
   sym = new CSymProc(t.GetValue(), CTypeManager::Get()->GetNull());
@@ -407,9 +407,9 @@ CAstProcedure *CParser::functionDecl(CAstScope *s)
   vector<CSymParam *> params{};
 
   Consume(tIdent, &t);
-  formalParam(&params);
+  formalParam(s, &params);
   Consume(tColon);
-  rt = type();
+  rt = type(s);
   Consume(tSemicolon);
 
   sym = new CSymProc(t.GetValue(), rt);
@@ -421,7 +421,7 @@ CAstProcedure *CParser::functionDecl(CAstScope *s)
   return new CAstProcedure(t, t.GetValue(), s, sym);
 }
 
-void CParser::formalParam(vector<CSymParam *> *params)
+void CParser::formalParam(CAstScope *s, vector<CSymParam *> *params)
 {
   //
   // formalParam ::= "(" [ paramDeclSequence ] ")".
@@ -435,7 +435,7 @@ void CParser::formalParam(vector<CSymParam *> *params)
   Consume(tLParen);
 
   while (PeekType() != tRParen) {
-    type = varDecl(&ts);
+    type = varDecl(s, &ts);
     for (const string &ident : ts) {
       params->push_back(new CSymParam(index++, ident, type));
     }
@@ -749,10 +749,31 @@ CAstConstant *CParser::number(void)
   return new CAstConstant(t, CTypeManager::Get()->GetInteger(), v);
 }
 
-const CType *CParser::type(void)
+const CType *CParser::type(CAstScope *s)
 {
   //
-  // type ::= basetype
+  // type ::= basetype { "[" simpleexpr "]" }.
+  //
+  // FOLLOW(type) = { tSemicolon, tRParen }
+  //
+
+  CAstExpression *expr;
+  const CType *type = basetype();
+
+  while (PeekType() == tLBrack) {
+    Consume(tLBrack);
+    expr = simpleexpr(s);
+    Consume(tRBrack);
+    // TODO: find array size with expr->Evaluate()
+    type = CTypeManager::Get()->GetArray(CArrayType::OPEN, type);
+  }
+
+  return type;
+}
+
+const CType *CParser::basetype(void)
+{
+  //
   // basetype ::= "boolean" | "char" | "integer" | "longint".
   //
 

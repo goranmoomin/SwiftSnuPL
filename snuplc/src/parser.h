@@ -131,12 +131,12 @@ class CParser {
 
   void constDeclSequence(CAstScope *s);
   void varDeclSequence(CAstScope *s);
-  const CType *varDecl(vector<string> *idents);
+  const CType *varDecl(CAstScope *s, vector<string> *idents);
 
   void subrDeclaration(CAstScope *s);
   CAstProcedure *procedureDecl(CAstScope *s);
   CAstProcedure *functionDecl(CAstScope *s);
-  void formalParam(vector<CSymParam *> *params);
+  void formalParam(CAstScope *s, vector<CSymParam *> *params);
 
   CAstStatement *statSequence(CAstScope *s);
 
@@ -154,7 +154,8 @@ class CParser {
 
   CAstDesignator *ident(CAstScope *s);
   CAstConstant *number(void);
-  const CType *type(void);
+  const CType *type(CAstScope *s);
+  const CType *basetype(void);
 
   /// @}
 

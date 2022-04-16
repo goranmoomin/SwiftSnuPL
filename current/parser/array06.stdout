@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/array06.mod'...
-syntax error at 9:27 : expected 'tIdent', got 'tLBrack'
+syntax error at 9:28 : factor expected.
 
 
 Done.
