@@ -666,6 +666,8 @@ CAstFunctionCall *CParser::subroutineCall(CAstScope *s)
   const CSymProc *proc;
   CAstFunctionCall *call;
   CSymtab *st = s->GetSymbolTable();
+  CAstExpression *arg;
+  const CType *argt;
 
   Consume(tIdent, &t);
   proc = dynamic_cast<const CSymProc *>(st->FindSymbol(t.GetValue()));
@@ -676,10 +678,22 @@ CAstFunctionCall *CParser::subroutineCall(CAstScope *s)
 
   Consume(tLParen);
   if (PeekType() != tRParen) {
-    call->AddArg(expression(s));
+    t = Peek();
+    arg = expression(s);
+    argt = arg->GetType();
+    if (argt && argt->IsArray()) {
+      arg = new CAstSpecialOp(t, opAddress, arg);
+    }
+    call->AddArg(arg);
     while (PeekType() == tComma) {
       Consume(tComma);
-      call->AddArg(expression(s));
+      t = Peek();
+      arg = expression(s);
+      argt = arg->GetType();
+      if (argt && argt->IsArray()) {
+        arg = new CAstSpecialOp(t, opAddress, arg);
+      }
+      call->AddArg(arg);
     }
   }
   Consume(tRParen);
@@ -891,6 +905,7 @@ CAstDesignator *CParser::qualident(CAstScope *s)
     Consume(tRBrack);
     d->AddIndex(expr);
   }
+  d->IndicesComplete();
 
   return d;
 }

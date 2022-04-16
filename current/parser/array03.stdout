@@ -33,7 +33,8 @@ successfully parsed.
           [ @A        array of <integer>>           A ] <INVALID>
             2 <integer>
         call [ *Set(<ptr(8) to array of <integer>>>,<integer>) --> <NULL> ] <NULL>
-          [ @A        array of <integer>>           A ] array of <integer>>
+          &() <INVALID>
+            [ @A        array of <integer>>           A ] array of <integer>>
           [ @i        <integer>           i ] <integer>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
           22222222 <integer>

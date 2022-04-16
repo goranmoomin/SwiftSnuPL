@@ -150,12 +150,14 @@ successfully parsed.
               11111111 <integer>
             call [ *WriteLn() --> <NULL> ] <NULL>
             call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              [ $x        array of array of <integer>>> ] array of array of <integer>>>
+              &() <INVALID>
+                [ $x        array of array of <integer>>> ] array of array of <integer>>>
             call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
               22222222 <integer>
             call [ *WriteLn() --> <NULL> ] <NULL>
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              [ $x        array of array of <integer>>> ] array of array of <integer>>>
+              &() <INVALID>
+                [ $x        array of array of <integer>>> ] array of array of <integer>>>
           nested scopes:
             empty.
         

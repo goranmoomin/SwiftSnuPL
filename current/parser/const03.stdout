@@ -34,7 +34,8 @@ successfully parsed.
         ]]
       statement list:
         call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
-          [ =S        array of <char>> ] array of <char>>
+          &() <INVALID>
+            [ =S        array of <char>> ] array of <char>>
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
           "N = " <INVALID>

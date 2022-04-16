@@ -23,7 +23,8 @@ successfully parsed.
       statement list:
         call [ *Test() --> <NULL> ] <NULL>
         call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-          [ @sum      array of array of <integer>>>         sum ] array of array of <integer>>>
+          &() <INVALID>
+            [ @sum      array of array of <integer>>>         sum ] array of array of <integer>>>
       nested scopes:
         CAstScope: 'Print'
           symbol table:
@@ -221,13 +222,18 @@ successfully parsed.
             ]]
           statement list:
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              [ $a        array of array of <integer>>> ] array of array of <integer>>>
+              &() <INVALID>
+                [ $a        array of array of <integer>>> ] array of array of <integer>>>
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              [ $b        array of array of <integer>>> ] array of array of <integer>>>
+              &() <INVALID>
+                [ $b        array of array of <integer>>> ] array of array of <integer>>>
             call [ *Add(<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              [ $a        array of array of <integer>>> ] array of array of <integer>>>
-              [ $b        array of array of <integer>>> ] array of array of <integer>>>
-              [ @sum      array of array of <integer>>>         sum ] array of array of <integer>>>
+              &() <INVALID>
+                [ $a        array of array of <integer>>> ] array of array of <integer>>>
+              &() <INVALID>
+                [ $b        array of array of <integer>>> ] array of array of <integer>>>
+              &() <INVALID>
+                [ @sum      array of array of <integer>>>         sum ] array of array of <integer>>>
           nested scopes:
             empty.
         
