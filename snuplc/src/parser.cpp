@@ -992,6 +992,7 @@ const CType *CParser::type(CAstScope *s)
   CAstExpression *expr;
   const CDataInitializer *init;
   const CType *type = basetype();
+  vector<unsigned int> nelems{};
   unsigned int nelem;
 
   while (PeekType() == tLBrack) {
@@ -1011,7 +1012,11 @@ const CType *CParser::type(CAstScope *s)
       nelem = CArrayType::OPEN;
     }
     Consume(tRBrack);
-    type = CTypeManager::Get()->GetArray(nelem, type);
+    nelems.push_back(nelem);
+  }
+
+  for (int i = nelems.size() - 1; i >= 0; i--) {
+    type = CTypeManager::Get()->GetArray(nelems[i], type);
   }
 
   return type;

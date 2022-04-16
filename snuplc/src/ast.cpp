@@ -838,9 +838,54 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg)
 
 const CType *CAstBinaryOp::GetType(void) const
 {
-  // TODO (phase 3)
+  const CType *lt = GetLeft()->GetType(), *rt = GetRight()->GetType();
+  EOperation oper = GetOperation();
+  CTypeManager *tm = CTypeManager::Get();
 
-  return CTypeManager::Get()->GetInteger();
+  if (!lt || !rt) {
+    return NULL;
+  }
+
+  if (lt->IsInt() && rt->IsInt()) {
+    switch (oper) {
+      case opAdd:
+      case opSub:
+      case opMul:
+      case opDiv:
+        if (lt->IsInteger() && rt->IsInteger()) {
+          return tm->GetInteger();
+        } else {
+          return tm->GetLongint();
+        }
+      case opEqual:
+      case opNotEqual:
+      case opLessThan:
+      case opLessEqual:
+      case opBiggerThan:
+      case opBiggerEqual: return tm->GetBool();
+      default: return NULL;
+    }
+  } else if (lt->IsBoolean() && rt->IsBoolean()) {
+    switch (oper) {
+      case opAnd:
+      case opOr:
+      case opEqual:
+      case opNotEqual: return tm->GetBool();
+      default: return NULL;
+    }
+  } else if (lt->IsChar() && rt->IsChar()) {
+    switch (oper) {
+      case opEqual:
+      case opNotEqual:
+      case opLessThan:
+      case opLessEqual:
+      case opBiggerThan:
+      case opBiggerEqual: return tm->GetBool();
+      default: return NULL;
+    }
+  }
+
+  return NULL;
 }
 
 const CDataInitializer *CAstBinaryOp::Evaluate(void) const
@@ -993,9 +1038,21 @@ bool CAstUnaryOp::TypeCheck(CToken *t, string *msg)
 
 const CType *CAstUnaryOp::GetType(void) const
 {
-  // TODO (phase 3)
+  const CType *t = GetOperand()->GetType();
+  EOperation oper = GetOperation();
+  CTypeManager *tm = CTypeManager::Get();
 
-  return CTypeManager::Get()->GetInteger();
+  if (t->IsBoolean()) {
+    return oper == opNot ? tm->GetBool() : NULL;
+  } else if (t->IsInt()) {
+    switch (oper) {
+      case opPos:
+      case opNeg: return t;
+      default: return NULL;
+    }
+  }
+
+  return NULL;
 }
 
 const CDataInitializer *CAstUnaryOp::Evaluate(void) const
@@ -1111,9 +1168,22 @@ bool CAstSpecialOp::TypeCheck(CToken *t, string *msg)
 
 const CType *CAstSpecialOp::GetType(void) const
 {
-  // TODO (phase 3)
+  const CType *t = GetOperand()->GetType();
+  EOperation oper = GetOperation();
+  CTypeManager *tm = CTypeManager::Get();
 
-  return NULL;
+  switch (oper) {
+    case opAddress: return tm->GetPointer(t);
+    case opDeref:
+      if (!t->IsPointer()) {
+        return NULL;
+      }
+      return dynamic_cast<const CPointerType *>(t)->GetBaseType();
+    case opCast:
+    case opWiden:
+    case opNarrow: return _type;
+    default: return NULL;
+  }
 }
 
 const CDataInitializer *CAstSpecialOp::Evaluate(void) const
@@ -1399,9 +1469,23 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg)
 
 const CType *CAstArrayDesignator::GetType(void) const
 {
-  // TODO (phase 3)
+  const CType *t = GetSymbol()->GetDataType();
+  const CPointerType *pt = dynamic_cast<const CPointerType *>(t);
+  const CArrayType *at;
 
-  return NULL;
+  if (pt) {
+    t = pt->GetBaseType();
+  }
+
+  for (size_t i = 0; i < _idx.size(); i++) {
+    at = dynamic_cast<const CArrayType *>(t);
+    if (!at) {
+      return NULL;
+    }
+    t = at->GetInnerType();
+  }
+
+  return t;
 }
 
 ostream &CAstArrayDesignator::print(ostream &out, int indent) const
@@ -1614,9 +1698,7 @@ bool CAstStringConstant::TypeCheck(CToken *t, string *msg)
 
 const CType *CAstStringConstant::GetType(void) const
 {
-  // TODO (phase 3)
-
-  return NULL;
+  return _type;
 }
 
 const CDataInitializer *CAstStringConstant::Evaluate(void) const

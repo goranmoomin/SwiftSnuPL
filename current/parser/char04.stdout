@@ -21,7 +21,7 @@ successfully parsed.
         ]]
       statement list:
         if cond
-          = <integer>
+          = <boolean>
             [ @a        <char>           a ] <char>
             [ @b        <char>           b ] <char>
         if-body
@@ -31,7 +31,7 @@ successfully parsed.
         else-body
           empty.
         if cond
-          # <integer>
+          # <boolean>
             [ @a        <char>           a ] <char>
             [ @b        <char>           b ] <char>
         if-body
@@ -41,7 +41,7 @@ successfully parsed.
         else-body
           empty.
         if cond
-          < <integer>
+          < <boolean>
             [ @a        <char>           a ] <char>
             [ @b        <char>           b ] <char>
         if-body
@@ -51,7 +51,7 @@ successfully parsed.
         else-body
           empty.
         if cond
-          > <integer>
+          > <boolean>
             [ @a        <char>           a ] <char>
             [ @b        <char>           b ] <char>
         if-body
@@ -61,8 +61,8 @@ successfully parsed.
         else-body
           empty.
         if cond
-          < <integer>
-            add <integer>
+          < <INVALID>
+            add <INVALID>
               [ @a        <char>           a ] <char>
               [ @b        <char>           b ] <char>
             57 <char>
@@ -73,8 +73,8 @@ successfully parsed.
         else-body
           empty.
         if cond
-          = <integer>
-            mul <integer>
+          = <INVALID>
+            mul <INVALID>
               [ @a        <char>           a ] <char>
               [ @b        <char>           b ] <char>
             48 <char>

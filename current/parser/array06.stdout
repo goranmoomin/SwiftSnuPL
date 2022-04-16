@@ -45,7 +45,7 @@ successfully parsed.
               [ $i        <integer> ] <integer>
               0 <integer>
             while cond
-              < <integer>
+              < <boolean>
                 [ $i        <integer> ] <integer>
                 [ $N        <integer> ] <integer>
             while-body
@@ -53,12 +53,12 @@ successfully parsed.
                 [ $j        <integer> ] <integer>
                 0 <integer>
               while cond
-                < <integer>
+                < <boolean>
                   [ $j        <integer> ] <integer>
                   [ $M        <integer> ] <integer>
               while-body
                 call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-                  [ %A        <ptr(8) to array of array of <integer>>>> ] <INVALID>
+                  [ %A        <ptr(8) to array of array of <integer>>>> ] <integer>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                 call [ *WriteLn() --> <NULL> ] <NULL>
@@ -103,7 +103,7 @@ successfully parsed.
               [ $i        <integer> ] <integer>
               0 <integer>
             while cond
-              < <integer>
+              < <boolean>
                 [ $i        <integer> ] <integer>
                 [ $N        <integer> ] <integer>
             while-body
@@ -111,12 +111,12 @@ successfully parsed.
                 [ $j        <integer> ] <integer>
                 0 <integer>
               while cond
-                < <integer>
+                < <boolean>
                   [ $j        <integer> ] <integer>
                   [ $M        <integer> ] <integer>
               while-body
-                := <INVALID>
-                  [ %a        <ptr(8) to array of array of <integer>>>> ] <INVALID>
+                := <integer>
+                  [ %a        <ptr(8) to array of array of <integer>>>> ] <integer>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                   [ $c        <integer> ] <integer>
@@ -150,13 +150,13 @@ successfully parsed.
               11111111 <integer>
             call [ *WriteLn() --> <NULL> ] <NULL>
             call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              &() <INVALID>
+              &() <ptr(8) to array 3 of array 3 of <integer>>>>
                 [ $x        array 3 of array 3 of <integer>>> ] array 3 of array 3 of <integer>>>
             call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
               22222222 <integer>
             call [ *WriteLn() --> <NULL> ] <NULL>
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              &() <INVALID>
+              &() <ptr(8) to array 3 of array 3 of <integer>>>>
                 [ $x        array 3 of array 3 of <integer>>> ] array 3 of array 3 of <integer>>>
           nested scopes:
             empty.

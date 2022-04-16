@@ -24,18 +24,18 @@ successfully parsed.
           11111111 <integer>
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *print() --> <NULL> ] <NULL>
-        := <INVALID>
-          [ @A        array 3 of array 3 of <integer>>>           A ] <INVALID>
+        := <integer>
+          [ @A        array 3 of array 3 of <integer>>>           A ] <integer>
             0 <integer>
             0 <integer>
           2 <integer>
         := <integer>
           [ @i        <integer>           i ] <integer>
-          [ @A        array 3 of array 3 of <integer>>>           A ] <INVALID>
+          [ @A        array 3 of array 3 of <integer>>>           A ] <integer>
             0 <integer>
             0 <integer>
         call [ *Set(<ptr(8) to array of array of <integer>>>>,<integer>) --> <NULL> ] <NULL>
-          &() <INVALID>
+          &() <ptr(8) to array 3 of array 3 of <integer>>>>
             [ @A        array 3 of array 3 of <integer>>>           A ] array 3 of array 3 of <integer>>>
           [ @i        <integer>           i ] <integer>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
@@ -50,8 +50,8 @@ successfully parsed.
               [ %v        <integer>               ]
             ]]
           statement list:
-            := <INVALID>
-              [ %P        <ptr(8) to array of array of <integer>>>> ] <INVALID>
+            := <integer>
+              [ %P        <ptr(8) to array of array of <integer>>>> ] <integer>
                 [ %v        <integer> ] <integer>
                 [ %v        <integer> ] <integer>
               1 <integer>
@@ -69,7 +69,7 @@ successfully parsed.
               [ $i        <integer> ] <integer>
               0 <integer>
             while cond
-              < <integer>
+              < <boolean>
                 [ $i        <integer> ] <integer>
                 3 <integer>
             while-body
@@ -77,12 +77,12 @@ successfully parsed.
                 [ $j        <integer> ] <integer>
                 0 <integer>
               while cond
-                < <integer>
+                < <boolean>
                   [ $j        <integer> ] <integer>
                   3 <integer>
               while-body
                 call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-                  [ @A        array 3 of array 3 of <integer>>>           A ] <INVALID>
+                  [ @A        array 3 of array 3 of <integer>>>           A ] <integer>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                 := <integer>

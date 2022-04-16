@@ -23,7 +23,7 @@ successfully parsed.
       statement list:
         call [ *Test() --> <NULL> ] <NULL>
         call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-          &() <INVALID>
+          &() <ptr(8) to array 5 of array 5 of <integer>>>>
             [ @sum      array 5 of array 5 of <integer>>>         sum ] array 5 of array 5 of <integer>>>
       nested scopes:
         CAstScope: 'Print'
@@ -50,7 +50,7 @@ successfully parsed.
               [ $i        <integer> ] <integer>
               0 <integer>
             while cond
-              < <integer>
+              < <boolean>
                 [ $i        <integer> ] <integer>
                 [ $N        <integer> ] <integer>
             while-body
@@ -58,12 +58,12 @@ successfully parsed.
                 [ $j        <integer> ] <integer>
                 0 <integer>
               while cond
-                < <integer>
+                < <boolean>
                   [ $j        <integer> ] <integer>
                   [ $M        <integer> ] <integer>
               while-body
                 call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-                  [ %a        <ptr(8) to array of array of <integer>>>> ] <INVALID>
+                  [ %a        <ptr(8) to array of array of <integer>>>> ] <integer>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                 := <integer>
@@ -107,7 +107,7 @@ successfully parsed.
               [ $i        <integer> ] <integer>
               0 <integer>
             while cond
-              < <integer>
+              < <boolean>
                 [ $i        <integer> ] <integer>
                 [ $N        <integer> ] <integer>
             while-body
@@ -115,12 +115,12 @@ successfully parsed.
                 [ $j        <integer> ] <integer>
                 0 <integer>
               while cond
-                < <integer>
+                < <boolean>
                   [ $j        <integer> ] <integer>
                   [ $M        <integer> ] <integer>
               while-body
-                := <INVALID>
-                  [ %a        <ptr(8) to array of array of <integer>>>> ] <INVALID>
+                := <integer>
+                  [ %a        <ptr(8) to array of array of <integer>>>> ] <integer>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                   [ $c        <integer> ] <integer>
@@ -172,7 +172,7 @@ successfully parsed.
               [ $i        <integer> ] <integer>
               0 <integer>
             while cond
-              < <integer>
+              < <boolean>
                 [ $i        <integer> ] <integer>
                 [ $N        <integer> ] <integer>
             while-body
@@ -180,19 +180,19 @@ successfully parsed.
                 [ $j        <integer> ] <integer>
                 0 <integer>
               while cond
-                < <integer>
+                < <boolean>
                   [ $j        <integer> ] <integer>
                   [ $M        <integer> ] <integer>
               while-body
-                := <INVALID>
-                  [ %d        <ptr(8) to array of array of <integer>>>> ] <INVALID>
+                := <integer>
+                  [ %d        <ptr(8) to array of array of <integer>>>> ] <integer>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                   add <integer>
-                    [ %s1       <ptr(8) to array of array of <integer>>>> ] <INVALID>
+                    [ %s1       <ptr(8) to array of array of <integer>>>> ] <integer>
                       [ $i        <integer> ] <integer>
                       [ $j        <integer> ] <integer>
-                    [ %s2       <ptr(8) to array of array of <integer>>>> ] <INVALID>
+                    [ %s2       <ptr(8) to array of array of <integer>>>> ] <integer>
                       [ $i        <integer> ] <integer>
                       [ $j        <integer> ] <integer>
                 := <integer>
@@ -222,17 +222,17 @@ successfully parsed.
             ]]
           statement list:
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              &() <INVALID>
+              &() <ptr(8) to array 5 of array 5 of <integer>>>>
                 [ $a        array 5 of array 5 of <integer>>> ] array 5 of array 5 of <integer>>>
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              &() <INVALID>
+              &() <ptr(8) to array 5 of array 5 of <integer>>>>
                 [ $b        array 5 of array 5 of <integer>>> ] array 5 of array 5 of <integer>>>
             call [ *Add(<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
-              &() <INVALID>
+              &() <ptr(8) to array 5 of array 5 of <integer>>>>
                 [ $a        array 5 of array 5 of <integer>>> ] array 5 of array 5 of <integer>>>
-              &() <INVALID>
+              &() <ptr(8) to array 5 of array 5 of <integer>>>>
                 [ $b        array 5 of array 5 of <integer>>> ] array 5 of array 5 of <integer>>>
-              &() <INVALID>
+              &() <ptr(8) to array 5 of array 5 of <integer>>>>
                 [ @sum      array 5 of array 5 of <integer>>>         sum ] array 5 of array 5 of <integer>>>
           nested scopes:
             empty.

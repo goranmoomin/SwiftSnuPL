@@ -24,16 +24,16 @@ successfully parsed.
           11111111 <integer>
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *print() --> <NULL> ] <NULL>
-        := <INVALID>
-          [ @A        array 5 of <integer>>           A ] <INVALID>
+        := <integer>
+          [ @A        array 5 of <integer>>           A ] <integer>
             2 <integer>
           3 <integer>
         := <integer>
           [ @i        <integer>           i ] <integer>
-          [ @A        array 5 of <integer>>           A ] <INVALID>
+          [ @A        array 5 of <integer>>           A ] <integer>
             2 <integer>
         call [ *Set(<ptr(8) to array of <integer>>>,<integer>) --> <NULL> ] <NULL>
-          &() <INVALID>
+          &() <ptr(8) to array 5 of <integer>>>
             [ @A        array 5 of <integer>>           A ] array 5 of <integer>>
           [ @i        <integer>           i ] <integer>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
@@ -48,8 +48,8 @@ successfully parsed.
               [ %v        <integer>               ]
             ]]
           statement list:
-            := <INVALID>
-              [ %P        <ptr(8) to array of <integer>>> ] <INVALID>
+            := <integer>
+              [ %P        <ptr(8) to array of <integer>>> ] <integer>
                 [ %v        <integer> ] <integer>
               1 <integer>
           nested scopes:
@@ -65,12 +65,12 @@ successfully parsed.
               [ $i        <integer> ] <integer>
               0 <integer>
             while cond
-              < <integer>
+              < <boolean>
                 [ $i        <integer> ] <integer>
                 5 <integer>
             while-body
               call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-                [ @A        array 5 of <integer>>           A ] <INVALID>
+                [ @A        array 5 of <integer>>           A ] <integer>
                   [ $i        <integer> ] <integer>
               call [ *WriteLn() --> <NULL> ] <NULL>
               := <integer>

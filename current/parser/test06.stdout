@@ -57,7 +57,7 @@ successfully parsed.
                 [ @b        <integer>           b ] <integer>
             := <boolean>
               [ @b0       <boolean>          b0 ] <boolean>
-              not <integer>
+              not <boolean>
                 [ @b1       <boolean>          b1 ] <boolean>
           nested scopes:
             empty.
@@ -69,20 +69,20 @@ successfully parsed.
               [ %p1       <integer>               ]
             ]]
           statement list:
-            return <integer>
-              not <integer>
-                or <integer>
-                  > <integer>
+            return <boolean>
+              not <boolean>
+                or <boolean>
+                  > <boolean>
                     add <integer>
                       neg <integer>
                         [ %p0       <integer> ] <integer>
                       [ %p1       <integer> ] <integer>
                     0 <integer>
-                  and <integer>
-                    > <integer>
+                  and <boolean>
+                    > <boolean>
                       [ %p0       <integer> ] <integer>
                       0 <integer>
-                    < <integer>
+                    < <boolean>
                       [ %p1       <integer> ] <integer>
                       0 <integer>
           nested scopes:
@@ -112,17 +112,17 @@ successfully parsed.
             ]]
           statement list:
             if cond
-              and <integer>
-                and <integer>
+              and <boolean>
+                and <boolean>
                   call [ *binop(<integer>,<integer>) --> <boolean> ] <boolean>
                     [ %a        <integer> ] <integer>
                     [ %b        <integer> ] <integer>
-                  < <integer>
+                  < <boolean>
                     call [ *intop(<integer>,<integer>) --> <integer> ] <integer>
                       [ %b        <integer> ] <integer>
                       [ %a        <integer> ] <integer>
                     [ %a        <integer> ] <integer>
-                # <integer>
+                # <boolean>
                   [ %a        <integer> ] <integer>
                   [ %b        <integer> ] <integer>
             if-body

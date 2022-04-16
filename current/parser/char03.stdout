@@ -22,7 +22,7 @@ successfully parsed.
           [ @i        <integer>           i ] <integer>
           1 <integer>
         while cond
-          # <integer>
+          # <boolean>
             [ @i        <integer>           i ] <integer>
             0 <integer>
         while-body
@@ -55,7 +55,7 @@ successfully parsed.
                 [ %v        <integer> ] <integer>
                 10 <integer>
             if cond
-              > <integer>
+              > <boolean>
                 [ %v        <integer> ] <integer>
                 0 <integer>
             if-body
@@ -64,7 +64,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 0 <integer>
             if-body
@@ -73,7 +73,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 1 <integer>
             if-body
@@ -82,7 +82,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 2 <integer>
             if-body
@@ -91,7 +91,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 3 <integer>
             if-body
@@ -100,7 +100,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 4 <integer>
             if-body
@@ -109,7 +109,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 5 <integer>
             if-body
@@ -118,7 +118,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 6 <integer>
             if-body
@@ -127,7 +127,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 7 <integer>
             if-body
@@ -136,7 +136,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 8 <integer>
             if-body
@@ -145,7 +145,7 @@ successfully parsed.
             else-body
               empty.
             if cond
-              = <integer>
+              = <boolean>
                 [ $r        <integer> ] <integer>
                 9 <integer>
             if-body

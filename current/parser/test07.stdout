@@ -21,10 +21,12 @@ successfully parsed.
         ]]
       statement list:
         call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
-          "Hello, world!" <INVALID>
+          &() <ptr(8) to array 14 of <char>>>
+            "Hello, world!" array 14 of <char>>
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
-          "SnuPL/2 is cool!\n\n" <INVALID>
+          &() <ptr(8) to array 19 of <char>>>
+            "SnuPL/2 is cool!\n\n" array 19 of <char>>
       nested scopes:
         empty.
     

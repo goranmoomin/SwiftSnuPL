@@ -5,7 +5,7 @@ successfully parsed.
     CAstScope: 'const02'
       symbol table:
         [[
-          [ @A        array 30 of array 5 of <integer>>>           A           ]
+          [ @A        array 5 of array 30 of <integer>>>           A           ]
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ =M        <integer>           ]

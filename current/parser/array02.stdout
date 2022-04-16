@@ -17,20 +17,20 @@ successfully parsed.
           [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
         ]]
       statement list:
-        := <INVALID>
-          [ @A        array 5 of array 5 of <integer>>>           A ] <INVALID>
+        := <integer>
+          [ @A        array 5 of array 5 of <integer>>>           A ] <integer>
             2 <integer>
             3 <integer>
           call [ *ReadInt() --> <integer> ] <integer>
-        := <INVALID>
-          [ @A        array 5 of array 5 of <integer>>>           A ] <INVALID>
+        := <integer>
+          [ @A        array 5 of array 5 of <integer>>>           A ] <integer>
             0 <integer>
             1 <integer>
-          [ @A        array 5 of array 5 of <integer>>>           A ] <INVALID>
+          [ @A        array 5 of array 5 of <integer>>>           A ] <integer>
             2 <integer>
             3 <integer>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-          [ @A        array 5 of array 5 of <integer>>>           A ] <INVALID>
+          [ @A        array 5 of array 5 of <integer>>>           A ] <integer>
             0 <integer>
             1 <integer>
         call [ *WriteLn() --> <NULL> ] <NULL>

@@ -5,7 +5,7 @@ successfully parsed.
     CAstScope: 'const03'
       symbol table:
         [[
-          [ @A        array 30 of array 5 of <integer>>>           A           ]
+          [ @A        array 5 of array 30 of <integer>>>           A           ]
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ =F        <boolean>           ]
@@ -34,16 +34,18 @@ successfully parsed.
         ]]
       statement list:
         call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
-          &() <INVALID>
+          &() <ptr(8) to array of <char>>>
             [ =S        array of <char>> ] array of <char>>
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
-          "N = " <INVALID>
+          &() <ptr(8) to array 5 of <char>>>
+            "N = " array 5 of <char>>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
           [ =N        <integer> ] <integer>
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
-          "M = " <INVALID>
+          &() <ptr(8) to array 5 of <char>>>
+            "M = " array 5 of <char>>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
           [ =M        <integer> ] <integer>
         call [ *WriteLn() --> <NULL> ] <NULL>
