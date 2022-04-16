@@ -78,6 +78,11 @@ ostream &CDataInitLongint::print(ostream &out, int indent) const
   return out;
 }
 
+CDataInitLongint *CDataInitLongint::Clone(void) const
+{
+  return new CDataInitLongint(_data);
+}
+
 //--------------------------------------------------------------------------------------------------
 // CDataInitInteger
 //
@@ -98,6 +103,11 @@ ostream &CDataInitInteger::print(ostream &out, int indent) const
   return out;
 }
 
+CDataInitInteger *CDataInitInteger::Clone(void) const
+{
+  return new CDataInitInteger(_data);
+}
+
 //--------------------------------------------------------------------------------------------------
 // CDataInitBoolean
 //
@@ -116,6 +126,11 @@ ostream &CDataInitBoolean::print(ostream &out, int indent) const
 
   out << ind << "[ data: " << (_data ? "true" : "false") << " ]";
   return out;
+}
+
+CDataInitBoolean *CDataInitBoolean::Clone(void) const
+{
+  return new CDataInitBoolean(_data);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -141,6 +156,11 @@ ostream &CDataInitChar::print(ostream &out, int indent) const
   return out;
 }
 
+CDataInitChar *CDataInitChar::Clone(void) const
+{
+  return new CDataInitChar(_data);
+}
+
 //--------------------------------------------------------------------------------------------------
 // CDataInitString
 //
@@ -159,4 +179,9 @@ ostream &CDataInitString::print(ostream &out, int indent) const
 
   out << ind << "[ data: \"" << _data << "\" ]";
   return out;
+}
+
+CDataInitString *CDataInitString::Clone(void) const
+{
+  return new CDataInitString(_data);
 }

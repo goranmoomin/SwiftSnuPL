@@ -18,13 +18,13 @@ successfully parsed.
           [ *WriteLn() --> <NULL>           ]
           [ *WriteLong(<longint>) --> <NULL>           ]
           [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
-          [ @sum      array of array of <integer>>>         sum           ]
+          [ @sum      array 5 of array 5 of <integer>>>         sum           ]
         ]]
       statement list:
         call [ *Test() --> <NULL> ] <NULL>
         call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
           &() <INVALID>
-            [ @sum      array of array of <integer>>>         sum ] array of array of <integer>>>
+            [ @sum      array 5 of array 5 of <integer>>>         sum ] array 5 of array 5 of <integer>>>
       nested scopes:
         CAstScope: 'Print'
           symbol table:
@@ -216,24 +216,24 @@ successfully parsed.
         CAstScope: 'Test'
           symbol table:
             [[
-              [ $a        array of array of <integer>>>               ]
-              [ $b        array of array of <integer>>>               ]
-              [ $c        array of <integer>>               ]
+              [ $a        array 5 of array 5 of <integer>>>               ]
+              [ $b        array 5 of array 5 of <integer>>>               ]
+              [ $c        array 5 of <integer>>               ]
             ]]
           statement list:
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               &() <INVALID>
-                [ $a        array of array of <integer>>> ] array of array of <integer>>>
+                [ $a        array 5 of array 5 of <integer>>> ] array 5 of array 5 of <integer>>>
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               &() <INVALID>
-                [ $b        array of array of <integer>>> ] array of array of <integer>>>
+                [ $b        array 5 of array 5 of <integer>>> ] array 5 of array 5 of <integer>>>
             call [ *Add(<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               &() <INVALID>
-                [ $a        array of array of <integer>>> ] array of array of <integer>>>
+                [ $a        array 5 of array 5 of <integer>>> ] array 5 of array 5 of <integer>>>
               &() <INVALID>
-                [ $b        array of array of <integer>>> ] array of array of <integer>>>
+                [ $b        array 5 of array 5 of <integer>>> ] array 5 of array 5 of <integer>>>
               &() <INVALID>
-                [ @sum      array of array of <integer>>>         sum ] array of array of <integer>>>
+                [ @sum      array 5 of array 5 of <integer>>>         sum ] array 5 of array 5 of <integer>>>
           nested scopes:
             empty.
         

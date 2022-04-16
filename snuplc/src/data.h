@@ -57,10 +57,61 @@ class CDataInitializer {
 
   /// @}
 
+  /// @name property querying
+  /// @{
+
+  /// @brief return @a true for boolean initializers, @a false otherwise
+  virtual bool IsBoolean(void) const
+  {
+    return false;
+  }
+
+  /// @brief return @a true for char initializers, @a false otherwise
+  virtual bool IsChar(void) const
+  {
+    return false;
+  }
+
+  /// @brief return @a true for string initializers, @a false otherwise
+  virtual bool IsString(void) const
+  {
+    return false;
+  }
+
+  /// @brief return @a true for int initializers (integer, longint), @a false otherwise
+  virtual bool IsInt(void) const
+  {
+    return IsInteger() || IsLongint();
+  }
+
+  /// @brief return @a true for integer initializers, @a false otherwise
+  virtual bool IsInteger(void) const
+  {
+    return false;
+  }
+
+  /// @brief return @a true for longint initializers, @a false otherwise
+  virtual bool IsLongint(void) const
+  {
+    return false;
+  }
+
+  /// @brief get int data from int initializers (integer, longint)
+  virtual long long GetIntData(void) const
+  {
+    return 0;
+  }
+
+  /// @}
+
   /// @brief print the data initializer to an output stream
   /// @param out output stream
   /// @param indent indentation
   virtual ostream &print(ostream &out, int indent = 0) const = 0;
+
+  /// @brief clone the data initializer
+  /// @retval cloned data initializer
+  virtual CDataInitializer *Clone(void) const = 0;
 
  private:
 };
@@ -101,6 +152,23 @@ class CDataInitLongint : public CDataInitializer {
 
   /// @}
 
+  /// @name property querying
+  /// @{
+
+  /// @brief return @a true for longint initializers, @a false otherwise
+  virtual bool IsLongint(void) const
+  {
+    return true;
+  }
+
+  /// @brief get int data from int initializers (integer, longint)
+  virtual long long GetIntData(void) const
+  {
+    return _data;
+  }
+
+  /// @}
+
   /// @name data access
   /// @{
 
@@ -114,6 +182,10 @@ class CDataInitLongint : public CDataInitializer {
   /// @param out output stream
   /// @param indent indentation
   virtual ostream &print(ostream &out, int indent = 0) const;
+
+  /// @brief clone the data initializer
+  /// @retval cloned data initializer
+  virtual CDataInitLongint *Clone(void) const;
 
  private:
   long long _data;  ///< longint data
@@ -136,6 +208,23 @@ class CDataInitInteger : public CDataInitializer {
 
   /// @}
 
+  /// @name property querying
+  /// @{
+
+  /// @brief return @a true for integer initializers, @a false otherwise
+  virtual bool IsInteger(void) const
+  {
+    return true;
+  }
+
+  /// @brief get int data from int initializers (integer, longint)
+  virtual long long GetIntData(void) const
+  {
+    return _data;
+  }
+
+  /// @}
+
   /// @name data access
   /// @{
 
@@ -149,6 +238,10 @@ class CDataInitInteger : public CDataInitializer {
   /// @param out output stream
   /// @param indent indentation
   virtual ostream &print(ostream &out, int indent = 0) const;
+
+  /// @brief clone the data initializer
+  /// @retval cloned data initializer
+  virtual CDataInitInteger *Clone(void) const;
 
  private:
   int _data;  ///< integer data
@@ -171,6 +264,17 @@ class CDataInitBoolean : public CDataInitializer {
 
   /// @}
 
+  /// @name property querying
+  /// @{
+
+  /// @brief return @a true for boolean initializers, @a false otherwise
+  virtual bool IsBoolean(void) const
+  {
+    return true;
+  }
+
+  /// @}
+
   /// @name data access
   /// @{
 
@@ -184,6 +288,10 @@ class CDataInitBoolean : public CDataInitializer {
   /// @param out output stream
   /// @param indent indentation
   virtual ostream &print(ostream &out, int indent = 0) const;
+
+  /// @brief clone the data initializer
+  /// @retval cloned data initializer
+  virtual CDataInitBoolean *Clone(void) const;
 
  private:
   bool _data;  ///< boolean data
@@ -206,6 +314,17 @@ class CDataInitChar : public CDataInitializer {
 
   /// @}
 
+  /// @name property querying
+  /// @{
+
+  /// @brief return @a true for char initializers, @a false otherwise
+  virtual bool IsChar(void) const
+  {
+    return true;
+  }
+
+  /// @}
+
   /// @name data access
   /// @{
 
@@ -219,6 +338,10 @@ class CDataInitChar : public CDataInitializer {
   /// @param out output stream
   /// @param indent indentation
   virtual ostream &print(ostream &out, int indent = 0) const;
+
+  /// @brief clone the data initializer
+  /// @retval cloned data initializer
+  virtual CDataInitChar *Clone(void) const;
 
  private:
   char _data;  ///< character data
@@ -241,6 +364,17 @@ class CDataInitString : public CDataInitializer {
 
   /// @}
 
+  /// @name property querying
+  /// @{
+
+  /// @brief return @a true for string initializers, @a false otherwise
+  virtual bool IsString(void) const
+  {
+    return true;
+  }
+
+  /// @}
+
   /// @name data access
   /// @{
 
@@ -254,6 +388,10 @@ class CDataInitString : public CDataInitializer {
   /// @param out output stream
   /// @param indent indentation
   virtual ostream &print(ostream &out, int indent = 0) const;
+
+  /// @brief clone the data initializer
+  /// @retval cloned data initializer
+  virtual CDataInitString *Clone(void) const;
 
  private:
   string _data;  ///< string data

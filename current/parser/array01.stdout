@@ -5,7 +5,7 @@ successfully parsed.
     CAstScope: 'array01'
       symbol table:
         [[
-          [ @A        array of array of <integer>>>           A           ]
+          [ @A        array 5 of array 5 of <integer>>>           A           ]
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ *ReadInt() --> <integer>           ]
@@ -19,22 +19,22 @@ successfully parsed.
         ]]
       statement list:
         := <INVALID>
-          [ @A        array of array of <integer>>>           A ] <INVALID>
+          [ @A        array 5 of array 5 of <integer>>>           A ] <INVALID>
             0 <integer>
             1 <integer>
-          [ @A        array of array of <integer>>>           A ] <INVALID>
+          [ @A        array 5 of array 5 of <integer>>>           A ] <INVALID>
             2 <integer>
             3 <integer>
       nested scopes:
         CAstScope: 'foo'
           symbol table:
             [[
-              [ $B        array of <integer>>               ]
+              [ $B        array 5 of <integer>>               ]
               [ %a        <integer>               ]
             ]]
           statement list:
             := <INVALID>
-              [ $B        array of <integer>> ] <INVALID>
+              [ $B        array 5 of <integer>> ] <INVALID>
                 7 <integer>
               [ %a        <integer> ] <integer>
           nested scopes:

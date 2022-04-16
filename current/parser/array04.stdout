@@ -5,7 +5,7 @@ successfully parsed.
     CAstScope: 'array04'
       symbol table:
         [[
-          [ @A        array of array of <integer>>>           A           ]
+          [ @A        array 3 of array 3 of <integer>>>           A           ]
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ *ReadInt() --> <integer>           ]
@@ -25,18 +25,18 @@ successfully parsed.
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *print() --> <NULL> ] <NULL>
         := <INVALID>
-          [ @A        array of array of <integer>>>           A ] <INVALID>
+          [ @A        array 3 of array 3 of <integer>>>           A ] <INVALID>
             0 <integer>
             0 <integer>
           2 <integer>
         := <integer>
           [ @i        <integer>           i ] <integer>
-          [ @A        array of array of <integer>>>           A ] <INVALID>
+          [ @A        array 3 of array 3 of <integer>>>           A ] <INVALID>
             0 <integer>
             0 <integer>
         call [ *Set(<ptr(8) to array of array of <integer>>>>,<integer>) --> <NULL> ] <NULL>
           &() <INVALID>
-            [ @A        array of array of <integer>>>           A ] array of array of <integer>>>
+            [ @A        array 3 of array 3 of <integer>>>           A ] array 3 of array 3 of <integer>>>
           [ @i        <integer>           i ] <integer>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
           22222222 <integer>
@@ -82,7 +82,7 @@ successfully parsed.
                   3 <integer>
               while-body
                 call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-                  [ @A        array of array of <integer>>>           A ] <INVALID>
+                  [ @A        array 3 of array 3 of <integer>>>           A ] <INVALID>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                 := <integer>

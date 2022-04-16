@@ -309,6 +309,7 @@ void CParser::constDeclSequence(CAstScope *s)
   CToken t;
   vector<string> ts{};
   CAstExpression *expr;
+  const CDataInitializer *init;
   const CType *vt;
   CSymtab *st = s->GetSymbolTable();
 
@@ -320,9 +321,9 @@ void CParser::constDeclSequence(CAstScope *s)
       SetError(t, "unexpected operator in constant initializer");
     }
     expr = expression(s);
+    init = expr->Evaluate();
     for (const string &ident : ts) {
-      // TODO: create init values with expr->Evaluate()
-      st->AddSymbol(s->CreateConst(ident, vt, new CDataInitInteger(0)));
+      st->AddSymbol(s->CreateConst(ident, vt, init));
     }
     Consume(tSemicolon);
   } while (PeekType() == tIdent);
@@ -987,17 +988,30 @@ const CType *CParser::type(CAstScope *s)
   // FOLLOW(type) = { tSemicolon, tRParen }
   //
 
+  CToken t;
   CAstExpression *expr;
+  const CDataInitializer *init;
   const CType *type = basetype();
+  unsigned int nelem;
 
   while (PeekType() == tLBrack) {
     Consume(tLBrack);
     if (PeekType() != tRBrack) {
+      t = Peek();
       expr = simpleexpr(s);
+      init = expr->Evaluate();
+      if (!init) {
+        SetError(t, "size of array is not determinable at compile time.");
+      }
+      if (!init->IsInt()) {
+        SetError(t, "size of array is not an integer type.");
+      }
+      nelem = init->GetIntData();
+    } else {
+      nelem = CArrayType::OPEN;
     }
     Consume(tRBrack);
-    // TODO: find array size with expr->Evaluate()
-    type = CTypeManager::Get()->GetArray(CArrayType::OPEN, type);
+    type = CTypeManager::Get()->GetArray(nelem, type);
   }
 
   return type;

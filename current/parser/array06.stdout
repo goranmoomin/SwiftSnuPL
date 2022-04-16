@@ -143,7 +143,7 @@ successfully parsed.
         CAstScope: 'Test'
           symbol table:
             [[
-              [ $x        array of array of <integer>>>               ]
+              [ $x        array 3 of array 3 of <integer>>>               ]
             ]]
           statement list:
             call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
@@ -151,13 +151,13 @@ successfully parsed.
             call [ *WriteLn() --> <NULL> ] <NULL>
             call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               &() <INVALID>
-                [ $x        array of array of <integer>>> ] array of array of <integer>>>
+                [ $x        array 3 of array 3 of <integer>>> ] array 3 of array 3 of <integer>>>
             call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
               22222222 <integer>
             call [ *WriteLn() --> <NULL> ] <NULL>
             call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               &() <INVALID>
-                [ $x        array of array of <integer>>> ] array of array of <integer>>>
+                [ $x        array 3 of array 3 of <integer>>> ] array 3 of array 3 of <integer>>>
           nested scopes:
             empty.
         

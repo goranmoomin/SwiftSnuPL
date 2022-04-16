@@ -1579,7 +1579,7 @@ class CAstStringConstant : public CAstOperand {
   /// @{
 
   /// @brief performs numerical evaluation of a string constant
-  /// @retval CDataInitializer* pointer to the internal data. Do not delete!
+  /// @retval CDataInitializer* result of evaluation. Delete after use.
   virtual const CDataInitializer *Evaluate(void) const;
 
   /// @}

@@ -5,7 +5,7 @@ successfully parsed.
     CAstScope: 'array03'
       symbol table:
         [[
-          [ @A        array of <integer>>           A           ]
+          [ @A        array 5 of <integer>>           A           ]
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ *ReadInt() --> <integer>           ]
@@ -25,16 +25,16 @@ successfully parsed.
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *print() --> <NULL> ] <NULL>
         := <INVALID>
-          [ @A        array of <integer>>           A ] <INVALID>
+          [ @A        array 5 of <integer>>           A ] <INVALID>
             2 <integer>
           3 <integer>
         := <integer>
           [ @i        <integer>           i ] <integer>
-          [ @A        array of <integer>>           A ] <INVALID>
+          [ @A        array 5 of <integer>>           A ] <INVALID>
             2 <integer>
         call [ *Set(<ptr(8) to array of <integer>>>,<integer>) --> <NULL> ] <NULL>
           &() <INVALID>
-            [ @A        array of <integer>>           A ] array of <integer>>
+            [ @A        array 5 of <integer>>           A ] array 5 of <integer>>
           [ @i        <integer>           i ] <integer>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
           22222222 <integer>
@@ -70,7 +70,7 @@ successfully parsed.
                 5 <integer>
             while-body
               call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-                [ @A        array of <integer>>           A ] <INVALID>
+                [ @A        array 5 of <integer>>           A ] <INVALID>
                   [ $i        <integer> ] <integer>
               call [ *WriteLn() --> <NULL> ] <NULL>
               := <integer>

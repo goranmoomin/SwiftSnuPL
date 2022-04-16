@@ -5,11 +5,11 @@ successfully parsed.
     CAstScope: 'const01'
       symbol table:
         [[
-          [ @A        array of array of <integer>>>           A           ]
+          [ @A        array 5 of array 5 of <integer>>>           A           ]
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ =N        <integer>           ]
-            [ data: 0 ]
+            [ data: 5 ]
           [ *ReadInt() --> <integer>           ]
           [ *ReadLong() --> <longint>           ]
           [ *WriteChar(<char>) --> <NULL>           ]

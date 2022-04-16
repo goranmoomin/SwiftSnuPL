@@ -5,7 +5,7 @@ successfully parsed.
     CAstScope: 'array05'
       symbol table:
         [[
-          [ @A        array of array of <integer>>>           A           ]
+          [ @A        array 3 of array 3 of <integer>>>           A           ]
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL>           ]
@@ -26,13 +26,13 @@ successfully parsed.
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
           &() <INVALID>
-            [ @A        array of array of <integer>>>           A ] array of array of <integer>>>
+            [ @A        array 3 of array 3 of <integer>>>           A ] array 3 of array 3 of <integer>>>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
           22222222 <integer>
         call [ *WriteLn() --> <NULL> ] <NULL>
         call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
           &() <INVALID>
-            [ @A        array of array of <integer>>>           A ] array of array of <integer>>>
+            [ @A        array 3 of array 3 of <integer>>>           A ] array 3 of array 3 of <integer>>>
       nested scopes:
         CAstScope: 'Set'
           symbol table:
