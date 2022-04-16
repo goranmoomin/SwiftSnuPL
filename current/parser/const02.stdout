@@ -1,6 +1,23 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/const02.mod'...
-syntax error at 8:24 : unknown identifier
+successfully parsed.
+  AST:
+    CAstScope: 'const02'
+      symbol table:
+        [[
+          [ @A        array of array of <integer>>>           A           ]
+          [ =M        <integer>           ]
+            [ data: 0 ]
+          [ =N        <integer>           ]
+            [ data: 0 ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+        ]]
+      statement list:
+        empty.
+      nested scopes:
+        empty.
+    
 
 
 Done.

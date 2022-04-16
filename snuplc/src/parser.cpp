@@ -268,6 +268,7 @@ void CParser::constDeclSequence(CAstScope *s)
   vector<string> ts{};
   CAstExpression *expr;
   const CType *vt;
+  CSymtab *st = s->GetSymbolTable();
 
   do {
     vt = varDecl(s, &ts);
@@ -276,7 +277,10 @@ void CParser::constDeclSequence(CAstScope *s)
       SetError(t, "unexpected operator in constant initializer");
     }
     expr = expression(s);
-    // TODO: for each ident in ts, s->CreateConst with the expr->Evaluate()'d values
+    for (const string &ident : ts) {
+      // TODO: create init values with expr->Evaluate()
+      st->AddSymbol(s->CreateConst(ident, vt, new CDataInitInteger(0)));
+    }
     Consume(tSemicolon);
   } while (PeekType() == tIdent);
 }
