@@ -58,7 +58,7 @@ using namespace std;
 //   type              = basetype { "[" simpleexpr "]" }.
 //   basetype          = "boolean" | "char" | "integer" | "longint".
 //
-//   qualident         = ident.
+//   qualident         = ident { "[" simpleexpr "]" }.
 //   factOp            = "*" | "/".
 //   termOp            = "+" | "-".
 //   relOp             = "=" | "#".
@@ -68,7 +68,7 @@ using namespace std;
 //   simpleexpr        = ["+" | "-"] term { termOp term }.
 //   expression        = simpleexpr [ relOp simpleexpr ].
 //
-//   assignment        = ident ":=" expression.
+//   assignment        = qualident ":=" expression.
 //   subroutineCall    = ident "(" [ expression {"," expression} ] ")".
 //   returnStatement   = "return" [ expression ].
 //
@@ -516,14 +516,14 @@ CAstStatement *CParser::statSequence(CAstScope *s)
 CAstStatAssign *CParser::assignment(CAstScope *s)
 {
   //
-  // assignment ::= ident ":=" expression.
+  // assignment ::= qualident ":=" expression.
   //
 
   CToken t;
   CAstDesignator *lhs;
   CAstExpression *rhs;
 
-  lhs = ident(s);
+  lhs = qualident(s);
   Consume(tAssign, &t);
   rhs = expression(s);
 
@@ -671,7 +671,7 @@ CAstExpression *CParser::term(CAstScope *s)
 CAstExpression *CParser::factor(CAstScope *s)
 {
   //
-  // factor ::= qualident | number | "(" expression ")" | subroutineCall
+  // factor ::= qualident | number | "(" expression ")" | subroutineCall.
   //
   // FIRST(factor) = { tIdent, tNumber, tLParen }
   // FOLLOW(factor) <= { tPlusMinus, tMulDiv, tAnd, tOr, tRelOp, tSemicolon, tComma, tRParen,
@@ -712,34 +712,41 @@ CAstExpression *CParser::factor(CAstScope *s)
 CAstDesignator *CParser::qualident(CAstScope *s)
 {
   //
-  // qualident ::= ident.
-  //
-
-  return ident(s);
-}
-
-CAstDesignator *CParser::ident(CAstScope *s)
-{
-  //
-  // number ::= tIdent
+  // ident ::= tIdent.
+  // qualident ::= ident { "[" simpleexpr "]" }.
   //
 
   CToken t;
+  const CSymbol *sym;
   CSymtab *st = s->GetSymbolTable();
+  CAstExpression *expr;
+  CAstArrayDesignator *d;
 
   Consume(tIdent, &t);
 
   // check if symbol exists in the symbol table
-  const CSymbol *sym = st->FindSymbol(t.GetValue());
-  if (sym == NULL) SetError(t, "unknown identifier");
+  sym = st->FindSymbol(t.GetValue());
+  if (sym == NULL) SetError(t, "unknown identifier.");
 
-  return new CAstDesignator(t, sym);
+  if (PeekType() != tLBrack) {
+    return new CAstDesignator(t, sym);
+  }
+
+  d = new CAstArrayDesignator(t, sym);
+  while (PeekType() == tLBrack) {
+    Consume(tLBrack);
+    expr = simpleexpr(s);
+    Consume(tRBrack);
+    d->AddIndex(expr);
+  }
+
+  return d;
 }
 
 CAstConstant *CParser::number(void)
 {
   //
-  // number ::= tNumber
+  // number ::= tNumber.
   //
 
   CToken t;

@@ -1,6 +1,39 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/array01.mod'...
-syntax error at 14:4 : expected 'tAssign', got 'tLBrack'
+successfully parsed.
+  AST:
+    CAstScope: 'array01'
+      symbol table:
+        [[
+          [ @A        array of array of <integer>>>           A           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ *foo(<integer>) --> <NULL>           ]
+        ]]
+      statement list:
+        := <INVALID>
+          [ @A        array of array of <integer>>>           A ] <INVALID>
+            0 <integer>
+            1 <integer>
+          [ @A        array of array of <integer>>>           A ] <INVALID>
+            2 <integer>
+            3 <integer>
+      nested scopes:
+        CAstScope: 'foo'
+          symbol table:
+            [[
+              [ $B        array of <integer>>               ]
+              [ %a        <integer>               ]
+            ]]
+          statement list:
+            := <INVALID>
+              [ $B        array of <integer>> ] <INVALID>
+                7 <integer>
+              [ %a        <integer> ] <integer>
+          nested scopes:
+            empty.
+        
+    
 
 
 Done.

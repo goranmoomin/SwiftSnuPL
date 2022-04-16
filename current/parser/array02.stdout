@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/array02.mod'...
-syntax error at 12:4 : expected 'tAssign', got 'tLBrack'
+syntax error at 12:14 : unknown subroutine name.
 
 
 Done.
