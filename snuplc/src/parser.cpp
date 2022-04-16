@@ -76,10 +76,11 @@ using namespace std;
 //   subroutineCall    = ident "(" [ expression {"," expression} ] ")".
 //   ifStatement       = "if" "(" expression ")" "then" statSequence
 //                       [ "else" statSequence ] "end".
+//   whileStatement    = "while" "(" expression ")" "do" statSequence "end".
 //   returnStatement   = "return" [ expression ].
 //
 //   statement         = assignment | subroutineCall | ifStatement
-//                       | returnStatement.
+//                       | whileStatement | returnStatement.
 //   statSequence      = [ statement { ";" statement } ].
 //
 //   constDeclaration  = [ "const" constDeclSequence ].
@@ -496,12 +497,12 @@ CAstStatement *CParser::statSequence(CAstScope *s)
 {
   //
   // statSequence ::= [ statement { ";" statement } ].
-  // statement ::= assignment | subroutineCall | ifStatement | returnStatement.
+  // statement ::= assignment | subroutineCall | ifStatement | whileStatement | returnStatement.
   //
-  // FIRST(statSequence) = { tIdent, tIf, tReturn }
+  // FIRST(statSequence) = { tIdent, tIf, tWhile, tReturn }
   // FOLLOW(statSequence) = { tEnd, tElse }
   //
-  // FIRST(statement) = { tIdent, tIf, tReturn }
+  // FIRST(statement) = { tIdent, tIf, tWhile, tReturn }
   // FOLLOW(statement) = { tSemicolon, tEnd, tElse }
   //
 
@@ -535,6 +536,8 @@ CAstStatement *CParser::statSequence(CAstScope *s)
           break;
         // statement ::= ifStatement
         case tIf: st = ifStatement(s); break;
+        // statement ::= whileStatement
+        case tWhile: st = whileStatement(s); break;
         // statement ::= returnStatement
         case tReturn: st = returnStatement(s); break;
         default: SetError(Peek(), "statement expected."); break;
@@ -596,6 +599,27 @@ CAstStatIf *CParser::ifStatement(CAstScope *s)
   Consume(tEnd);
 
   return new CAstStatIf(t, cond, ifBody, elseBody);
+}
+
+CAstStatWhile *CParser::whileStatement(CAstScope *s)
+{
+  //
+  // whileStatement ::= "while" "(" expression ")" "do" statSequence "end".
+  //
+
+  CToken t;
+  CAstExpression *cond;
+  CAstStatement *body;
+
+  Consume(tWhile, &t);
+  Consume(tLParen);
+  cond = expression(s);
+  Consume(tRParen);
+  Consume(tDo);
+  body = statSequence(s);
+  Consume(tEnd);
+
+  return new CAstStatWhile(t, cond, body);
 }
 
 CAstStatReturn *CParser::returnStatement(CAstScope *s)

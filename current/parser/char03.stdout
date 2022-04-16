@@ -1,6 +1,162 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/char03.mod'...
-syntax error at 31:3 : statement expected.
+successfully parsed.
+  AST:
+    CAstScope: 'char03'
+      symbol table:
+        [[
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *PrintInt(<integer>) --> <NULL>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ @i        <integer>           i           ]
+        ]]
+      statement list:
+        := <integer>
+          [ @i        <integer>           i ] <integer>
+          1 <integer>
+        while cond
+          # <integer>
+            [ @i        <integer>           i ] <integer>
+            0 <integer>
+        while-body
+          := <integer>
+            [ @i        <integer>           i ] <integer>
+            call [ *ReadInt() --> <integer> ] <integer>
+          call [ *PrintInt(<integer>) --> <NULL> ] <NULL>
+            [ @i        <integer>           i ] <integer>
+          call [ *WriteLn() --> <NULL> ] <NULL>
+      nested scopes:
+        CAstScope: 'PrintInt'
+          symbol table:
+            [[
+              [ $r        <integer>               ]
+              [ %v        <integer>               ]
+            ]]
+          statement list:
+            := <integer>
+              [ $r        <integer> ] <integer>
+              sub <integer>
+                [ %v        <integer> ] <integer>
+                mul <integer>
+                  div <integer>
+                    [ %v        <integer> ] <integer>
+                    10 <integer>
+                  10 <integer>
+            := <integer>
+              [ %v        <integer> ] <integer>
+              div <integer>
+                [ %v        <integer> ] <integer>
+                10 <integer>
+            if cond
+              > <integer>
+                [ %v        <integer> ] <integer>
+                0 <integer>
+            if-body
+              call [ *PrintInt(<integer>) --> <NULL> ] <NULL>
+                [ %v        <integer> ] <integer>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                0 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                48 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                1 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                49 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                2 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                50 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                3 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                51 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                4 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                52 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                5 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                53 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                6 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                54 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                7 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                55 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                8 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                56 <char>
+            else-body
+              empty.
+            if cond
+              = <integer>
+                [ $r        <integer> ] <integer>
+                9 <integer>
+            if-body
+              call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+                57 <char>
+            else-body
+              empty.
+          nested scopes:
+            empty.
+        
+    
 
 
 Done.
