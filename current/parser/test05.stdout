@@ -5,7 +5,14 @@ successfully parsed.
     CAstScope: 'test05'
       symbol table:
         [[
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
           [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
           [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
           [ @a        <integer>           a           ]
           [ @b        <integer>           b           ]
@@ -69,6 +76,9 @@ successfully parsed.
             := <integer>
               [ @c        <integer>           c ] <integer>
               call [ *bar(<integer>) --> <integer> ] <integer>
+                mul <integer>
+                  3 <integer>
+                  [ @b        <integer>           b ] <integer>
           nested scopes:
             empty.
         

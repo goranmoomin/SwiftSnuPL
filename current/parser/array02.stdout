@@ -1,6 +1,42 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/array02.mod'...
-syntax error at 12:14 : unknown subroutine name.
+successfully parsed.
+  AST:
+    CAstScope: 'array02'
+      symbol table:
+        [[
+          [ @A        array of array of <integer>>>           A           ]
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+        ]]
+      statement list:
+        := <INVALID>
+          [ @A        array of array of <integer>>>           A ] <INVALID>
+            2 <integer>
+            3 <integer>
+          call [ *ReadInt() --> <integer> ] <integer>
+        := <INVALID>
+          [ @A        array of array of <integer>>>           A ] <INVALID>
+            0 <integer>
+            1 <integer>
+          [ @A        array of array of <integer>>>           A ] <INVALID>
+            2 <integer>
+            3 <integer>
+        call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
+          [ @A        array of array of <integer>>>           A ] <INVALID>
+            0 <integer>
+            1 <integer>
+        call [ *WriteLn() --> <NULL> ] <NULL>
+      nested scopes:
+        empty.
+    
 
 
 Done.

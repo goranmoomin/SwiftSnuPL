@@ -6,11 +6,18 @@ successfully parsed.
       symbol table:
         [[
           [ @A        array of array of <integer>>>           A           ]
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ =M        <integer>           ]
             [ data: 0 ]
           [ =N        <integer>           ]
             [ data: 0 ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
           [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
           [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
         ]]
       statement list:

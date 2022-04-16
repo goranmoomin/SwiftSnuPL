@@ -185,10 +185,44 @@ void CParser::InitSymbolTable(CSymtab *st)
   // add predefined functions here
 
   CTypeManager *tm = CTypeManager::Get();
-  const CType *nulltype = tm->GetNull(), *chtype = tm->GetChar(),
-              *strtype = tm->GetPointer(tm->GetArray(CArrayType::OPEN, chtype));
+  const CType *nulltype = tm->GetNull(), *anyarrtype = tm->GetVoidPtr(),
+              *strtype = tm->GetPointer(tm->GetArray(CArrayType::OPEN, tm->GetChar()));
 
   CSymProc *proc;
+
+  // function DIM(array: pointer to array, dim: integer): integer;
+  proc = new CSymProc("DIM", tm->GetInteger(), true);
+  proc->AddParam(new CSymParam(0, "array", anyarrtype));
+  proc->AddParam(new CSymParam(1, "dim", tm->GetInteger()));
+  st->AddSymbol(proc);
+
+  // function DOFS(array: pointer to array): integer;
+  proc = new CSymProc("DOFS", tm->GetInteger(), true);
+  proc->AddParam(new CSymParam(0, "array", anyarrtype));
+  st->AddSymbol(proc);
+
+  // function ReadInt(): integer;
+  proc = new CSymProc("ReadInt", tm->GetInteger(), true);
+  st->AddSymbol(proc);
+
+  // function ReadLong(): longint;
+  proc = new CSymProc("ReadLong", tm->GetLongint(), true);
+  st->AddSymbol(proc);
+
+  // procedure WriteInt(v: int);
+  proc = new CSymProc("WriteInt", nulltype, true);
+  proc->AddParam(new CSymParam(0, "v", tm->GetInteger()));
+  st->AddSymbol(proc);
+
+  // procedure WriteLong(v: longint);
+  proc = new CSymProc("WriteLong", nulltype, true);
+  proc->AddParam(new CSymParam(0, "v", tm->GetLongint()));
+  st->AddSymbol(proc);
+
+  // procedure WriteChar(c: char);
+  proc = new CSymProc("WriteChar", nulltype, true);
+  proc->AddParam(new CSymParam(0, "c", tm->GetChar()));
+  st->AddSymbol(proc);
 
   // procedure WriteStr(string: char[]);
   proc = new CSymProc("WriteStr", nulltype, true);
@@ -577,7 +611,7 @@ CAstFunctionCall *CParser::subroutineCall(CAstScope *s)
   }
   Consume(tRParen);
 
-  return new CAstFunctionCall(&t, proc);
+  return call;
 }
 
 CAstExpression *CParser::expression(CAstScope *s)
