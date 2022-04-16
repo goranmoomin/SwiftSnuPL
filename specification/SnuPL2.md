@@ -6,10 +6,11 @@ This document contains the EBNF and an example program. For the full language de
 [[_TOC_]]
 
 ## EBNF
+
     module            = "module" ident ";"
                         { constDeclaration | varDeclaration | subroutineDecl }
                         [ "begin" statSequence ] "end" ident ".".
-    
+
     letter            = "A".."Z" | "a".."z" | "_".
     digit             = "0".."9".
     hexdigit          = digit | "A".."F" | "a".."f".
@@ -17,43 +18,43 @@ This document contains the EBNF and an example program. For the full language de
     hexedcoded        = "\x" hexdigit hexdigit.
     char              = "'" character  | "\0" "'".
     string            = '"' { character } '"'.
-    
+
     ident             = letter { letter | digit }.
     number            = digit { digit } [ "L" ].
     boolean           = "true" | "false".
     type              = basetype | type "[" [ simpleexpr ] "]".
     basetype          = "boolean" | "char" | "integer" | "longint".
-    
+
     qualident         = ident { "[" simpleexpr "]" }.
     factOp            = "*" | "/" | "&&".
     termOp            = "+" | "-" | "||".
     relOp             = "=" | "#" | "<" | "<=" | ">" | ">=".
-    
+
     factor            = qualident | number | boolean | char | string |
                        "(" expression ")" | subroutineCall | "!" factor.
     term              = factor { factOp factor }.
     simpleexpr        = ["+"|"-"] term { termOp term }.
-    expression        = simpleexpr [ relOp simplexpr ].
-    
+    expression        = simpleexpr [ relOp simpleexpr ].
+
     assignment        = qualident ":=" expression.
     subroutineCall    = ident "(" [ expression {"," expression} ] ")".
     ifStatement       = "if" "(" expression ")" "then" statSequence
                         [ "else" statSequence ] "end".
     whileStatement    = "while" "(" expression ")" "do" statSequence "end".
     returnStatement   = "return" [ expression ].
-    
+
     statement         = assignment | subroutineCall | ifStatement
                         | whileStatement | returnStatement.
     statSequence      = [ statement { ";" statement } ].
-    
+
     constDeclaration  = [ "const" constDeclSequence ].
     constDeclSequence = constDecl ";" { constDecl ";" }
     constDecl         = varDecl "=" expression.
-    
+
     varDeclaration    = [ "var" varDeclSequence ";" ].
     varDeclSequence   = varDecl { ";" varDecl }.
     varDecl           = ident { "," ident } ":" type.
-    
+
     subroutineDecl    = (procedureDecl | functionDecl)
                         ( "extern" | subroutineBody ident ) ";".
     procedureDecl     = "procedure" ident [ formalParam ] ";".
@@ -61,7 +62,7 @@ This document contains the EBNF and an example program. For the full language de
     formalParam       = "(" [ varDeclSequence ] ")".
     subroutineBody    = constDeclaration varDeclaration
                         "begin" statSequence "end".
-    
+
     comment           = "//" {[^\n]} \n.
     whitespace        = { " " | \t | \n }.
 
@@ -74,13 +75,13 @@ The following shows a valid test program exercising (almost) all features of the
     //
     // A valid SnuPL/2 test program
     //
-    
+
     module MatrixAdd;
-    
+
     const
       N : integer = 2*(2+2);
       ProgramName : char[] = "Matrix\t Adder\n\n";
-    
+
     procedure minit(m: integer[][]);
     var x,y,v: integer;
     begin
@@ -96,7 +97,7 @@ The following shows a valid test program exercising (almost) all features of the
         y := y+1
       end
     end minit;
-    
+
     procedure madd(sum: integer[N][N]; a,b: integer[N][N]);
     var x,y: integer;
     begin
@@ -110,48 +111,47 @@ The following shows a valid test program exercising (almost) all features of the
         y := y+1
       end
     end madd;
-    
+
     procedure mprint(m: integer[][]; title: char[]);
     const MStr : char[] = ". Matrix ";
     var N,M,x,y: integer;
     begin
       M := DIM(m, 1);
       N := DIM(m, 2);
-    
-      WriteStr(title); WriteStr(MStr); WriteInt(M); WriteChar('x'); WriteInt(N); 
+
+      WriteStr(title); WriteStr(MStr); WriteInt(M); WriteChar('x'); WriteInt(N);
       WriteLn();
       WriteStr("[\n");
-    
+
       while (y < M) do
         WriteStr("  "); WriteInt(y); WriteStr(":  [   ");
-    
+
         x := 0;
         while (x < N) do
           WriteInt(m[y][x]); WriteStr("   ");
           x := x+1
         end;
-    
+
         WriteStr("]\n");
         y := y+1
       end;
-    
+
       WriteStr("]\n\n")
     end mprint;
-    
+
     var
       A, B, C : integer[N][N];
     begin
       WriteStr(ProgramName); WriteLn();
-    
+
       minit(A);
       minit(B);
       minit(C);
-    
+
       mprint(A, "A");
       mprint(B, "B");
-    
+
       madd(C, A, B);
-    
+
       mprint(C, "C = A+B")
     end MatrixAdd.
-
