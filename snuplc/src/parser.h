@@ -153,6 +153,10 @@ class CParser {
   CAstDesignator *qualident(CAstScope *s);
 
   CAstConstant *number(void);
+  CAstConstant *boolean(void);
+  CAstConstant *charConst(void);
+  CAstStringConstant *stringConst(CAstScope *s);
+
   const CType *type(CAstScope *s);
   const CType *basetype(void);
 

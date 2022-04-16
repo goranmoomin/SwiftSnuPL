@@ -55,6 +55,9 @@ using namespace std;
 //
 //   ident             = tIdent.
 //   number            = tNumber.
+//   char              = tCharConst.
+//   string            = tStringConst.
+//   boolean           = tBoolConst.
 //   type              = basetype { "[" simpleexpr "]" }.
 //   basetype          = "boolean" | "char" | "integer" | "longint".
 //
@@ -63,7 +66,8 @@ using namespace std;
 //   termOp            = "+" | "-".
 //   relOp             = "=" | "#".
 //
-//   factor            = qualident | number | "(" expression ")" | subroutineCall.
+//   factor            = qualident | number | boolean | char | string |
+//                       "(" expression ")" | subroutineCall.
 //   term              = factor { factOp factor }.
 //   simpleexpr        = ["+" | "-"] term { termOp term }.
 //   expression        = simpleexpr [ relOp simpleexpr ].
@@ -705,9 +709,10 @@ CAstExpression *CParser::term(CAstScope *s)
 CAstExpression *CParser::factor(CAstScope *s)
 {
   //
-  // factor ::= qualident | number | "(" expression ")" | subroutineCall.
+  // factor ::= qualident | number | boolean | char | string |
+  //            "(" expression ")" | subroutineCall.
   //
-  // FIRST(factor) = { tIdent, tNumber, tLParen }
+  // FIRST(factor) = { tIdent, tNumber, tBoolConst, tCharConst, tStringConst, tLParen }
   // FOLLOW(factor) <= { tPlusMinus, tMulDiv, tAnd, tOr, tRelOp, tSemicolon, tComma, tRParen,
   //                     tRBrack, tEnd, tElse }
   //
@@ -729,6 +734,15 @@ CAstExpression *CParser::factor(CAstScope *s)
 
     // factor ::= number
     case tNumber: n = number(); break;
+
+    // factor ::= boolean
+    case tBoolConst: n = boolean(); break;
+
+    // factor ::= char
+    case tCharConst: n = charConst(); break;
+
+    // factor ::= string
+    case tStringConst: n = stringConst(s); break;
 
     // factor ::= "(" expression ")"
     case tLParen:
@@ -792,6 +806,53 @@ CAstConstant *CParser::number(void)
   if (errno != 0) SetError(t, "invalid number.");
 
   return new CAstConstant(t, CTypeManager::Get()->GetInteger(), v);
+}
+
+CAstConstant *CParser::boolean(void)
+{
+  //
+  // boolean ::= tBoolConst.
+  //
+
+  CToken t;
+  long long v;
+
+  Consume(tBoolConst, &t);
+
+  if (t.GetValue() == "true") {
+    v = 1;
+  } else {
+    v = 0;
+  }
+
+  return new CAstConstant(t, CTypeManager::Get()->GetBool(), v);
+}
+
+CAstConstant *CParser::charConst(void)
+{
+  //
+  // char ::= tCharConst.
+  //
+
+  CToken t;
+  char v;
+
+  Consume(tCharConst, &t);
+  v = CToken::unescape(t.GetValue())[0];
+
+  return new CAstConstant(t, CTypeManager::Get()->GetChar(), v);
+}
+
+CAstStringConstant *CParser::stringConst(CAstScope *s)
+{
+  //
+  // string ::= tStringConst.
+  //
+
+  CToken t;
+
+  Consume(tStringConst, &t);
+  return new CAstStringConstant(t, t.GetValue(), s);
 }
 
 const CType *CParser::type(CAstScope *s)

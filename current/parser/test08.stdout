@@ -1,6 +1,54 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test08.mod'...
-syntax error at 16:12 : factor expected.
+successfully parsed.
+  AST:
+    CAstScope: 'test08'
+      symbol table:
+        [[
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ @_str_1   array 17 of <char>>      _str_1           ]
+            [ data: "Enter your age: " ]
+          [ @_str_2   array 17 of <char>>      _str_2           ]
+            [ data: "Enter the year: " ]
+          [ @_str_3   array 39 of <char>>      _str_3           ]
+            [ data: "You will be 100 years old in the year " ]
+          [ @_str_4   array 3 of <char>>      _str_4           ]
+            [ data: ".\n" ]
+          [ @age      <integer>         age           ]
+          [ @year     <integer>        year           ]
+        ]]
+      statement list:
+        call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
+          "Enter your age: " <INVALID>
+        := <integer>
+          [ @age      <integer>         age ] <integer>
+          call [ *ReadInt() --> <integer> ] <integer>
+        call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
+          "Enter the year: " <INVALID>
+        := <integer>
+          [ @year     <integer>        year ] <integer>
+          call [ *ReadInt() --> <integer> ] <integer>
+        call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
+          "You will be 100 years old in the year " <INVALID>
+        call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
+          sub <integer>
+            add <integer>
+              [ @year     <integer>        year ] <integer>
+              100 <integer>
+            [ @age      <integer>         age ] <integer>
+        call [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL> ] <NULL>
+          ".\n" <INVALID>
+      nested scopes:
+        empty.
+    
 
 
 Done.

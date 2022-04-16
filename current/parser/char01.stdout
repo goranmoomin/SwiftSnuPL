@@ -1,6 +1,36 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/char01.mod'...
-syntax error at 12:8 : factor expected.
+successfully parsed.
+  AST:
+    CAstScope: 'char01'
+      symbol table:
+        [[
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ @c        <char>           c           ]
+        ]]
+      statement list:
+        := <char>
+          [ @c        <char>           c ] <char>
+          49 <char>
+        := <char>
+          [ @c        <char>           c ] <char>
+          9 <char>
+        call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+          [ @c        <char>           c ] <char>
+        call [ *WriteChar(<char>) --> <NULL> ] <NULL>
+          33 <char>
+        call [ *WriteLn() --> <NULL> ] <NULL>
+      nested scopes:
+        empty.
+    
 
 
 Done.
