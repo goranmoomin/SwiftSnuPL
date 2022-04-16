@@ -5,11 +5,11 @@ successfully parsed.
     CAstScope: 'array07'
       symbol table:
         [[
-          [ *Add(array of array of <integer>>>,array of array of <integer>>>,array of array of <integer>>>) --> <NULL>           ]
+          [ *Add(<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>) --> <NULL>           ]
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
-          [ *Init(array of array of <integer>>>) --> <NULL>           ]
-          [ *Print(array of array of <integer>>>) --> <NULL>           ]
+          [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL>           ]
+          [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL>           ]
           [ *ReadInt() --> <integer>           ]
           [ *ReadLong() --> <longint>           ]
           [ *Test() --> <NULL>           ]
@@ -22,7 +22,7 @@ successfully parsed.
         ]]
       statement list:
         call [ *Test() --> <NULL> ] <NULL>
-        call [ *Print(array of array of <integer>>>) --> <NULL> ] <NULL>
+        call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
           [ @sum      array of array of <integer>>>         sum ] array of array of <integer>>>
       nested scopes:
         CAstScope: 'Print'
@@ -30,7 +30,7 @@ successfully parsed.
             [[
               [ $M        <integer>               ]
               [ $N        <integer>               ]
-              [ %a        array of array of <integer>>>               ]
+              [ %a        <ptr(8) to array of array of <integer>>>>               ]
               [ $i        <integer>               ]
               [ $j        <integer>               ]
             ]]
@@ -38,12 +38,12 @@ successfully parsed.
             := <integer>
               [ $N        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %a        array of array of <integer>>> ] array of array of <integer>>>
+                [ %a        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 1 <integer>
             := <integer>
               [ $M        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %a        array of array of <integer>>> ] array of array of <integer>>>
+                [ %a        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 2 <integer>
             := <integer>
               [ $i        <integer> ] <integer>
@@ -62,7 +62,7 @@ successfully parsed.
                   [ $M        <integer> ] <integer>
               while-body
                 call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-                  [ %a        array of array of <integer>>> ] <INVALID>
+                  [ %a        <ptr(8) to array of array of <integer>>>> ] <INVALID>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                 := <integer>
@@ -83,7 +83,7 @@ successfully parsed.
             [[
               [ $M        <integer>               ]
               [ $N        <integer>               ]
-              [ %a        array of array of <integer>>>               ]
+              [ %a        <ptr(8) to array of array of <integer>>>>               ]
               [ $c        <integer>               ]
               [ $i        <integer>               ]
               [ $j        <integer>               ]
@@ -92,12 +92,12 @@ successfully parsed.
             := <integer>
               [ $N        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %a        array of array of <integer>>> ] array of array of <integer>>>
+                [ %a        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 1 <integer>
             := <integer>
               [ $M        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %a        array of array of <integer>>> ] array of array of <integer>>>
+                [ %a        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 2 <integer>
             := <integer>
               [ $c        <integer> ] <integer>
@@ -119,7 +119,7 @@ successfully parsed.
                   [ $M        <integer> ] <integer>
               while-body
                 := <INVALID>
-                  [ %a        array of array of <integer>>> ] <INVALID>
+                  [ %a        <ptr(8) to array of array of <integer>>>> ] <INVALID>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                   [ $c        <integer> ] <integer>
@@ -147,22 +147,22 @@ successfully parsed.
               [ $M        <integer>               ]
               [ $N        <integer>               ]
               [ $c        <integer>               ]
-              [ %d        array of array of <integer>>>               ]
+              [ %d        <ptr(8) to array of array of <integer>>>>               ]
               [ $i        <integer>               ]
               [ $j        <integer>               ]
-              [ %s1       array of array of <integer>>>               ]
-              [ %s2       array of array of <integer>>>               ]
+              [ %s1       <ptr(8) to array of array of <integer>>>>               ]
+              [ %s2       <ptr(8) to array of array of <integer>>>>               ]
             ]]
           statement list:
             := <integer>
               [ $N        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %d        array of array of <integer>>> ] array of array of <integer>>>
+                [ %d        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 1 <integer>
             := <integer>
               [ $M        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %d        array of array of <integer>>> ] array of array of <integer>>>
+                [ %d        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 2 <integer>
             := <integer>
               [ $c        <integer> ] <integer>
@@ -184,14 +184,14 @@ successfully parsed.
                   [ $M        <integer> ] <integer>
               while-body
                 := <INVALID>
-                  [ %d        array of array of <integer>>> ] <INVALID>
+                  [ %d        <ptr(8) to array of array of <integer>>>> ] <INVALID>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                   add <integer>
-                    [ %s1       array of array of <integer>>> ] <INVALID>
+                    [ %s1       <ptr(8) to array of array of <integer>>>> ] <INVALID>
                       [ $i        <integer> ] <integer>
                       [ $j        <integer> ] <integer>
-                    [ %s2       array of array of <integer>>> ] <INVALID>
+                    [ %s2       <ptr(8) to array of array of <integer>>>> ] <INVALID>
                       [ $i        <integer> ] <integer>
                       [ $j        <integer> ] <integer>
                 := <integer>
@@ -220,11 +220,11 @@ successfully parsed.
               [ $c        array of <integer>>               ]
             ]]
           statement list:
-            call [ *Init(array of array of <integer>>>) --> <NULL> ] <NULL>
+            call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               [ $a        array of array of <integer>>> ] array of array of <integer>>>
-            call [ *Init(array of array of <integer>>>) --> <NULL> ] <NULL>
+            call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               [ $b        array of array of <integer>>> ] array of array of <integer>>>
-            call [ *Add(array of array of <integer>>>,array of array of <integer>>>,array of array of <integer>>>) --> <NULL> ] <NULL>
+            call [ *Add(<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>,<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               [ $a        array of array of <integer>>> ] array of array of <integer>>>
               [ $b        array of array of <integer>>> ] array of array of <integer>>>
               [ @sum      array of array of <integer>>>         sum ] array of array of <integer>>>

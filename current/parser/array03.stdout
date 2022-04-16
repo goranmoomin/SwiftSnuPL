@@ -10,7 +10,7 @@ successfully parsed.
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
           [ *ReadInt() --> <integer>           ]
           [ *ReadLong() --> <longint>           ]
-          [ *Set(array of <integer>>,<integer>,<integer>) --> <NULL>           ]
+          [ *Set(<ptr(8) to array of <integer>>>,<integer>) --> <NULL>           ]
           [ *WriteChar(<char>) --> <NULL>           ]
           [ *WriteInt(<integer>) --> <NULL>           ]
           [ *WriteLn() --> <NULL>           ]
@@ -32,7 +32,7 @@ successfully parsed.
           [ @i        <integer>           i ] <integer>
           [ @A        array of <integer>>           A ] <INVALID>
             2 <integer>
-        call [ *Set(array of <integer>>,<integer>,<integer>) --> <NULL> ] <NULL>
+        call [ *Set(<ptr(8) to array of <integer>>>,<integer>) --> <NULL> ] <NULL>
           [ @A        array of <integer>>           A ] array of <integer>>
           [ @i        <integer>           i ] <integer>
         call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
@@ -43,12 +43,12 @@ successfully parsed.
         CAstScope: 'Set'
           symbol table:
             [[
-              [ %P        array of <integer>>               ]
+              [ %P        <ptr(8) to array of <integer>>>               ]
               [ %v        <integer>               ]
             ]]
           statement list:
             := <INVALID>
-              [ %P        array of <integer>> ] <INVALID>
+              [ %P        <ptr(8) to array of <integer>>> ] <INVALID>
                 [ %v        <integer> ] <integer>
               1 <integer>
           nested scopes:

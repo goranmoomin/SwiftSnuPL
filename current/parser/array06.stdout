@@ -7,8 +7,8 @@ successfully parsed.
         [[
           [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
           [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
-          [ *Init(array of array of <integer>>>) --> <NULL>           ]
-          [ *Print(array of array of <integer>>>) --> <NULL>           ]
+          [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL>           ]
+          [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL>           ]
           [ *ReadInt() --> <integer>           ]
           [ *ReadLong() --> <longint>           ]
           [ *Test() --> <NULL>           ]
@@ -24,7 +24,7 @@ successfully parsed.
         CAstScope: 'Print'
           symbol table:
             [[
-              [ %A        array of array of <integer>>>               ]
+              [ %A        <ptr(8) to array of array of <integer>>>>               ]
               [ $M        <integer>               ]
               [ $N        <integer>               ]
               [ $i        <integer>               ]
@@ -34,12 +34,12 @@ successfully parsed.
             := <integer>
               [ $N        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %A        array of array of <integer>>> ] array of array of <integer>>>
+                [ %A        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 1 <integer>
             := <integer>
               [ $M        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %A        array of array of <integer>>> ] array of array of <integer>>>
+                [ %A        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 2 <integer>
             := <integer>
               [ $i        <integer> ] <integer>
@@ -58,7 +58,7 @@ successfully parsed.
                   [ $M        <integer> ] <integer>
               while-body
                 call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
-                  [ %A        array of array of <integer>>> ] <INVALID>
+                  [ %A        <ptr(8) to array of array of <integer>>>> ] <INVALID>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                 call [ *WriteLn() --> <NULL> ] <NULL>
@@ -80,7 +80,7 @@ successfully parsed.
             [[
               [ $M        <integer>               ]
               [ $N        <integer>               ]
-              [ %a        array of array of <integer>>>               ]
+              [ %a        <ptr(8) to array of array of <integer>>>>               ]
               [ $c        <integer>               ]
               [ $i        <integer>               ]
               [ $j        <integer>               ]
@@ -89,12 +89,12 @@ successfully parsed.
             := <integer>
               [ $N        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %a        array of array of <integer>>> ] array of array of <integer>>>
+                [ %a        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 1 <integer>
             := <integer>
               [ $M        <integer> ] <integer>
               call [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer> ] <integer>
-                [ %a        array of array of <integer>>> ] array of array of <integer>>>
+                [ %a        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
                 2 <integer>
             := <integer>
               [ $c        <integer> ] <integer>
@@ -116,7 +116,7 @@ successfully parsed.
                   [ $M        <integer> ] <integer>
               while-body
                 := <INVALID>
-                  [ %a        array of array of <integer>>> ] <INVALID>
+                  [ %a        <ptr(8) to array of array of <integer>>>> ] <INVALID>
                     [ $i        <integer> ] <integer>
                     [ $j        <integer> ] <integer>
                   [ $c        <integer> ] <integer>
@@ -135,8 +135,8 @@ successfully parsed.
                 add <integer>
                   [ $i        <integer> ] <integer>
                   1 <integer>
-            call [ *Print(array of array of <integer>>>) --> <NULL> ] <NULL>
-              [ %a        array of array of <integer>>> ] array of array of <integer>>>
+            call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
+              [ %a        <ptr(8) to array of array of <integer>>>> ] <ptr(8) to array of array of <integer>>>>
           nested scopes:
             empty.
         
@@ -149,12 +149,12 @@ successfully parsed.
             call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
               11111111 <integer>
             call [ *WriteLn() --> <NULL> ] <NULL>
-            call [ *Print(array of array of <integer>>>) --> <NULL> ] <NULL>
+            call [ *Print(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               [ $x        array of array of <integer>>> ] array of array of <integer>>>
             call [ *WriteInt(<integer>) --> <NULL> ] <NULL>
               22222222 <integer>
             call [ *WriteLn() --> <NULL> ] <NULL>
-            call [ *Init(array of array of <integer>>>) --> <NULL> ] <NULL>
+            call [ *Init(<ptr(8) to array of array of <integer>>>>) --> <NULL> ] <NULL>
               [ $x        array of array of <integer>>> ] array of array of <integer>>>
           nested scopes:
             empty.

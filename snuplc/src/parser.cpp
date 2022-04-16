@@ -92,7 +92,7 @@ using namespace std;
 //   varDecl           = ident { "," ident } ":" type.
 //
 //   subrDeclaration   = ( "procedure" procedureDecl | "function" functionDecl )
-//                       subroutineBody ident ";".
+//                       ( "extern" | subroutineBody ident ) ";".
 //   procedureDecl     = ident [ formalParam ] ";".
 //   functionDecl      = ident [ formalParam ] ":" type ";".
 //   formalParam       = "(" [ paramDeclSequence ] ")".
@@ -313,6 +313,7 @@ void CParser::constDeclSequence(CAstScope *s)
   CSymtab *st = s->GetSymbolTable();
 
   do {
+    ts.clear();
     vt = varDecl(s, &ts);
     Consume(tRelOp, &t);
     if (t.GetValue() != "=") {
@@ -339,6 +340,7 @@ void CParser::varDeclSequence(CAstScope *s)
   CSymtab *st = s->GetSymbolTable();
 
   do {
+    ts.clear();
     vt = varDecl(s, &ts);
     for (const string &ident : ts) {
       st->AddSymbol(s->CreateVar(ident, vt));
@@ -373,7 +375,7 @@ void CParser::subrDeclaration(CAstScope *s)
 {
   //
   // subrDeclaration ::= ( "procedure" procedureDecl | "function" functionDecl )
-  //                     subroutineBody ident ";".
+  //                     ( "extern" | subroutineBody ident ) ";".
   // subroutineBody ::= constDeclaration varDeclaration
   //                    "begin" statSequence "end".
   //
@@ -394,26 +396,31 @@ void CParser::subrDeclaration(CAstScope *s)
     default: SetError(Peek(), "unexpected token in subroutine declaration"); return;
   }
 
-  if (PeekType() == tConst) {
-    Consume(tConst);
-    constDeclSequence(p);
-  }
+  if (PeekType() == tExtern) {
+    Consume(tExtern);
+    p->GetSymbol()->SetExternal(true);
+  } else {
+    if (PeekType() == tConst) {
+      Consume(tConst);
+      constDeclSequence(p);
+    }
 
-  if (PeekType() == tVar) {
-    Consume(tVar);
-    varDeclSequence(p);
-  }
+    if (PeekType() == tVar) {
+      Consume(tVar);
+      varDeclSequence(p);
+    }
 
-  Consume(tBegin);
-  statseq = statSequence(p);
-  Consume(tEnd);
-  Consume(tIdent, &t);
-  if (p->GetName() != t.GetValue()) {
-    SetError(t, "unexpected subroutine identifier");
+    Consume(tBegin);
+    statseq = statSequence(p);
+    Consume(tEnd);
+    Consume(tIdent, &t);
+    if (p->GetName() != t.GetValue()) {
+      SetError(t, "unexpected subroutine identifier");
+    }
+
+    p->SetStatementSequence(statseq);
   }
   Consume(tSemicolon);
-
-  p->SetStatementSequence(statseq);
 }
 
 CAstProcedure *CParser::procedureDecl(CAstScope *s)
@@ -485,7 +492,11 @@ void CParser::formalParam(CAstScope *s, vector<CSymParam *> *params)
   Consume(tLParen);
 
   while (PeekType() != tRParen) {
+    ts.clear();
     type = varDecl(s, &ts);
+    if (type->IsArray()) {
+      type = CTypeManager::Get()->GetPointer(type);
+    }
     for (const string &ident : ts) {
       params->push_back(new CSymParam(index++, ident, type));
     }
@@ -891,14 +902,19 @@ CAstConstant *CParser::number(void)
   //
 
   CToken t;
+  const CType *type = CTypeManager::Get()->GetInteger();
 
   Consume(tNumber, &t);
+
+  if (t.GetValue().back() == 'L') {
+    type = CTypeManager::Get()->GetLongint();
+  }
 
   errno = 0;
   long long v = strtoll(t.GetValue().c_str(), NULL, 10);
   if (errno != 0) SetError(t, "invalid number.");
 
-  return new CAstConstant(t, CTypeManager::Get()->GetInteger(), v);
+  return new CAstConstant(t, type, v);
 }
 
 CAstConstant *CParser::boolean(void)
@@ -931,7 +947,7 @@ CAstConstant *CParser::charConst(void)
   char v;
 
   Consume(tCharConst, &t);
-  v = CToken::unescape(t.GetValue())[0];
+  v = CToken::unescape(t.GetValue()).front();
 
   return new CAstConstant(t, CTypeManager::Get()->GetChar(), v);
 }
