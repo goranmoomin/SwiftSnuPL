@@ -1,6 +1,6 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/test06.mod'...
-syntax error at 28:20 : invalid relation.
+syntax error at 38:3 : statement expected.
 
 
 Done.

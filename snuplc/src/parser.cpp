@@ -64,7 +64,7 @@ using namespace std;
 //   qualident         = ident { "[" simpleexpr "]" }.
 //   factOp            = "*" | "/" | "&&".
 //   termOp            = "+" | "-" | "||".
-//   relOp             = "=" | "#".
+//   relOp             = "=" | "#" | "<" | "<=" | ">" | ">=".
 //
 //   factor            = qualident | number | boolean | char | string |
 //                       "(" expression ")" | subroutineCall | "!" factor.
@@ -273,7 +273,7 @@ CAstModule *CParser::module(void)
     } else if (tt == tProcedure || tt == tFunction) {
       subrDeclaration(m);
     } else {
-      SetError(Peek(), "unreachable state");
+      SetError(Peek(), "unreachable token type encountered in module declaration.");
     }
   }
 
@@ -621,11 +621,12 @@ CAstFunctionCall *CParser::subroutineCall(CAstScope *s)
 CAstExpression *CParser::expression(CAstScope *s)
 {
   //
+  // relOp ::= "=" | "#" | "<" | "<=" | ">" | ">=".
   // expression ::= simpleexpr [ relOp simpleexpr ].
   //
 
   CToken t;
-  EOperation relop = opNop;
+  EOperation op = opNop;
   CAstExpression *left = NULL, *right = NULL;
 
   left = simpleexpr(s);
@@ -634,14 +635,23 @@ CAstExpression *CParser::expression(CAstScope *s)
     Consume(tRelOp, &t);
     right = simpleexpr(s);
 
-    if (t.GetValue() == "=")
-      relop = opEqual;
-    else if (t.GetValue() == "#")
-      relop = opNotEqual;
-    else
-      SetError(t, "invalid relation.");
+    if (t.GetValue() == "=") {
+      op = opEqual;
+    } else if (t.GetValue() == "#") {
+      op = opNotEqual;
+    } else if (t.GetValue() == "<") {
+      op = opLessThan;
+    } else if (t.GetValue() == "<=") {
+      op = opLessEqual;
+    } else if (t.GetValue() == ">") {
+      op = opBiggerThan;
+    } else if (t.GetValue() == ">=") {
+      op = opBiggerEqual;
+    } else {
+      SetError(Peek(), "unreachable value encountered in relation operator.");
+    }
 
-    return new CAstBinaryOp(t, relop, left, right);
+    return new CAstBinaryOp(t, op, left, right);
   } else {
     return left;
   }
@@ -678,8 +688,10 @@ CAstExpression *CParser::simpleexpr(CAstScope *s)
       op = opAdd;
     } else if (t.GetValue() == "-") {
       op = opSub;
-    } else {
+    } else if (t.GetValue() == "||") {
       op = opOr;
+    } else {
+      SetError(Peek(), "unreachable value encountered in relation operator.");
     }
 
     n = new CAstBinaryOp(t, op, l, r);
@@ -711,8 +723,10 @@ CAstExpression *CParser::term(CAstScope *s)
       op = opMul;
     } else if (t.GetValue() == "/") {
       op = opDiv;
-    } else {
+    } else if (t.GetValue() == "&&") {
       op = opAnd;
+    } else {
+      SetError(Peek(), "unreachable value encountered in relation operator.");
     }
 
     n = new CAstBinaryOp(t, op, l, r);
