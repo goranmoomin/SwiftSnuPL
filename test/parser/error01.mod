@@ -1,5 +1,5 @@
 //
-// error01 
+// error01
 //
 // parser test: syntax errors
 // - module identifier does not match
@@ -18,18 +18,18 @@ module error01;
 // change "foox" -> "foo" to eliminate
 function foo(): integer;
 begin
-end foox;
+end foo;
 
 // change "procedure" -> "function" to eliminate
-procedure bar: integer;
+function bar: integer;
 begin
 end bar;
 
 // add return type to eliminate
-function foobar();
+function foobar(): integer;
 begin
-  return 1;  // remove semicolon to eliminate
+  return 1  // remove semicolon to eliminate
 end foobar;
 
 // add "begin" to eliminate
-end error0x. // change to "error01" to eliminate
+end error01. // change to "error01" to eliminate

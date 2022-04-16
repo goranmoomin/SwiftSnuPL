@@ -1,6 +1,55 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/error01.mod'...
-syntax error at 21:5 : unexpected subroutine identifier
+successfully parsed.
+  AST:
+    CAstScope: 'error01'
+      symbol table:
+        [[
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ *bar() --> <integer>           ]
+          [ *foo() --> <integer>           ]
+          [ *foobar() --> <integer>           ]
+        ]]
+      statement list:
+        empty.
+      nested scopes:
+        CAstScope: 'foo'
+          symbol table:
+            [[
+            ]]
+          statement list:
+            empty.
+          nested scopes:
+            empty.
+        
+        CAstScope: 'bar'
+          symbol table:
+            [[
+            ]]
+          statement list:
+            empty.
+          nested scopes:
+            empty.
+        
+        CAstScope: 'foobar'
+          symbol table:
+            [[
+            ]]
+          statement list:
+            return <integer>
+              1 <integer>
+          nested scopes:
+            empty.
+        
+    
 
 
 Done.

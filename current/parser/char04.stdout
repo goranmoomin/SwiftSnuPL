@@ -1,6 +1,92 @@
 disabled dot output: use ./ to parse relative files starting with a colon.
 parsing 'test/parser/char04.mod'...
-syntax error at 18:1 : statement expected.
+successfully parsed.
+  AST:
+    CAstScope: 'char04'
+      symbol table:
+        [[
+          [ *DIM(<ptr(8) to <NULL>>,<integer>) --> <integer>           ]
+          [ *DOFS(<ptr(8) to <NULL>>) --> <integer>           ]
+          [ *ReadInt() --> <integer>           ]
+          [ *ReadLong() --> <longint>           ]
+          [ *WriteChar(<char>) --> <NULL>           ]
+          [ *WriteInt(<integer>) --> <NULL>           ]
+          [ *WriteLn() --> <NULL>           ]
+          [ *WriteLong(<longint>) --> <NULL>           ]
+          [ *WriteStr(<ptr(8) to array of <char>>>) --> <NULL>           ]
+          [ @a        <char>           a           ]
+          [ @b        <char>           b           ]
+          [ @c        <char>           c           ]
+          [ @d        <char>           d           ]
+        ]]
+      statement list:
+        if cond
+          = <integer>
+            [ @a        <char>           a ] <char>
+            [ @b        <char>           b ] <char>
+        if-body
+          := <char>
+            [ @a        <char>           a ] <char>
+            48 <char>
+        else-body
+          empty.
+        if cond
+          # <integer>
+            [ @a        <char>           a ] <char>
+            [ @b        <char>           b ] <char>
+        if-body
+          := <char>
+            [ @a        <char>           a ] <char>
+            49 <char>
+        else-body
+          empty.
+        if cond
+          < <integer>
+            [ @a        <char>           a ] <char>
+            [ @b        <char>           b ] <char>
+        if-body
+          := <char>
+            [ @a        <char>           a ] <char>
+            55 <char>
+        else-body
+          empty.
+        if cond
+          > <integer>
+            [ @a        <char>           a ] <char>
+            [ @b        <char>           b ] <char>
+        if-body
+          := <char>
+            [ @a        <char>           a ] <char>
+            54 <char>
+        else-body
+          empty.
+        if cond
+          < <integer>
+            add <integer>
+              [ @a        <char>           a ] <char>
+              [ @b        <char>           b ] <char>
+            57 <char>
+        if-body
+          := <char>
+            [ @a        <char>           a ] <char>
+            54 <char>
+        else-body
+          empty.
+        if cond
+          = <integer>
+            mul <integer>
+              [ @a        <char>           a ] <char>
+              [ @b        <char>           b ] <char>
+            48 <char>
+        if-body
+          := <char>
+            [ @a        <char>           a ] <char>
+            48 <char>
+        else-body
+          empty.
+      nested scopes:
+        empty.
+    
 
 
 Done.
