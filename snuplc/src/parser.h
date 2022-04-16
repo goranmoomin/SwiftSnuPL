@@ -104,13 +104,21 @@ class CParser {
   /// @retval false otherwise
   bool Consume(EToken type, CToken *token = NULL);
 
-  /// @brief peek the next token type
-  /// @retval EToken token type
+  /// @brief peek the current token type
+  /// @retval EToken current token type
   EToken PeekType();
+
+  /// @brief peek the current token
+  /// @retval CToken current token
+  CToken Peek();
+
+  /// @brief peek the next token type
+  /// @retval EToken next token type
+  EToken PeekNextType();
 
   /// @brief peek the next token
   /// @retval CToken next token
-  CToken Peek();
+  CToken PeekNext();
 
   /// @brief initialize symbol table @a s with predefined procedures and
   ///        global variables

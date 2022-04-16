@@ -98,6 +98,7 @@ CParser::CParser(CScanner *scanner)
 {
   _scanner = scanner;
   _module = NULL;
+  _token = _scanner->Get();
 }
 
 CAstNode *CParser::Parse(void)
@@ -146,7 +147,8 @@ bool CParser::Consume(EToken type, CToken *token)
 {
   if (_abort) return false;
 
-  CToken t = _scanner->Get();
+  CToken t = _token;
+  _token = _scanner->Get();
 
   if (t.GetType() != type) {
     SetError(t, "expected '" + CToken::Name(type) + "', got '" + t.GetName() + "'");
@@ -159,10 +161,20 @@ bool CParser::Consume(EToken type, CToken *token)
 
 EToken CParser::PeekType()
 {
-  return _scanner->Peek().GetType();
+  return _token.GetType();
 }
 
 CToken CParser::Peek()
+{
+  return _token;
+}
+
+EToken CParser::PeekNextType()
+{
+  return _scanner->Peek().GetType();
+}
+
+CToken CParser::PeekNext()
 {
   return _scanner->Peek();
 }
