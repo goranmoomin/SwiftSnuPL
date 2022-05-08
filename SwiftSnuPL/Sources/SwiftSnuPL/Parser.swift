@@ -104,12 +104,17 @@ class Parser {
         let message: String?
     }
 
+    func report(message: String) {
+        hasError = true
+        errors.append(ParseError(token: token, message: message))
+    }
+
     func expected(_ kinds: Token.Kind..., at place: String? = nil) -> Recover {
         var message = "unexpected "
         if let token = token { message += "\(token.kind)" } else { message += "end of file" }
-        message += ": expected \(kinds.map { "\($0)" }.joined())"
+        message += ": expected \(kinds.map { "\($0)" }.joined(separator: ", "))"
         if let place = place { message += " at \(place)." } else { message += "." }
-        errors.append(ParseError(token: token, message: message))
+        report(message: message)
         return Recover.tryRecover
     }
 
@@ -121,7 +126,7 @@ class Parser {
         } else {
             message = "unexpected \(token?.string ?? "end of file"): expected \(string)."
         }
-        errors.append(ParseError(token: token, message: message))
+        report(message: message)
         return Recover.tryRecover
     }
 
@@ -589,17 +594,25 @@ class Parser {
         // TODO: Handle .charConstInv and .stringConstInv as well
         if let token = match(.number) {
             if token.string.last == "L" {
-                return .longint(Int64(token.string.trimmingCharacters(in: ["L"]))!)
+                guard let longint = Int64(token.string.trimmingCharacters(in: ["L"])) else {
+                    report(message: "unexpected longint literal: longint literals must not be greater than 9223372036854775807L.")
+                    throw Recover.tryRecover
+                }
+                return .longint(longint)
             } else {
-                // FIXME: Handle overflow
-                return .integer(Int32(token.string)!)
+                guard let integer = Int32(token.string) else {
+                    report(message: "unexpected integer literal: integer literals must not be greater than 2147483647.")
+                    throw Recover.tryRecover
+                }
+                return .integer(integer)
             }
         } else if let token = match(.boolConst) {
             return .boolean(token.string == "true")
         } else if let token = match(.charConst) {
             return .char(Token.unescape(token.string)[0])
         } else if let token = match(.stringConst) {
-            return .string(Token.unescape(token.string))
+            // remove trailing NUL character
+            return .string(Token.unescape(token.string).dropLast())
         }
         throw expected(.number, .boolConst, .charConst, .stringConst, at: "start of literal")
     }

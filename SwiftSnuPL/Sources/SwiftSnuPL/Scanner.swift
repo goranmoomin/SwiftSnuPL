@@ -108,12 +108,12 @@ struct Token: Identifiable, Equatable, Hashable {
     static func unescape(_ string: String) -> [UInt8] {
         var unescaped_value: UnsafeMutablePointer<UInt8>!
         UnescapedSnuPLTokenValue(string, &unescaped_value)
-        var value: [UInt8] = []  // without an ending NUL
+        var value: [UInt8] = []  // NUL terminated
         var index = 0
-        while unescaped_value[index] != .zero {
+        repeat {
             value.append(unescaped_value[index])
             index += 1
-        }
+        } while value.last != .zero
         free(unescaped_value)
         return value
     }
