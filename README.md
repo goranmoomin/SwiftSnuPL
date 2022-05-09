@@ -32,3 +32,8 @@ Refer to the description of [Phase 2: Syntax Analysis](2.Syntax.Analysis.md)
 ## Phase 3: Semantic Analysis
 
 Refer to the description of [Phase 3: Semantic Analysis](3.Semantic.Analysis.md)
+
+
+## Phase 4: Semantic Analysis
+
+Refer to the description of [Phase 4: Intermediate Code Generation](4.Intermediate.Code.Generation.md)
