@@ -84,7 +84,25 @@ CScalarType::CScalarType(const string name) : CType(name)
 bool CScalarType::Match(const CType *t) const
 {
   // TODO (phase 3)
-
+  if (IsPointer() && t->IsPointer()) {
+    const CPointerType* pt = dynamic_cast<const CPointerType *>(this);
+    assert(pt != nullptr);
+    return pt->Match(t);
+  } else if (IsArray() && t->IsArray()) {
+    const CArrayType* at = dynamic_cast<const CArrayType *>(this);
+    assert(at != nullptr);
+    return at->Match(t);
+  } else if (IsBoolean() && t->IsBoolean()) {
+    return true;
+  } else if (IsChar() && t->IsChar()) {
+    return true;
+  } else if (IsInteger() && t->IsInteger()) {
+    return true;
+  } else if (IsLongint() && t->IsLongint()) {
+    return true;
+  } else if (IsNull() && t->IsNull()) {
+    return true;
+  }
   return false;
 }
 
@@ -216,6 +234,7 @@ bool CPointerType::Match(const CType *t) const
   // match if:
   // - this is a void pointer or
   // - the types are compatible with respect to Match()
+  if (!GetBaseType() || GetBaseType()->Match(pt->GetBaseType())) return true;
 
   return false;
 }
@@ -233,7 +252,7 @@ bool CPointerType::Compare(const CType *t) const
   // comparison: match if
   // - this is a void pointer or
   // - the types are compatible with respect to Compare()
-
+  if (!GetBaseType() || GetBaseType()->Compare(pt->GetBaseType())) return true;
   return false;
 }
 
@@ -318,7 +337,9 @@ bool CArrayType::Match(const CType *t) const
   // match if:
   // - (this is an open array or the number of elements match) and
   // - the inner types are compatible with respect to Match()
-
+  if (GetNElem() == OPEN || at->GetNElem() == OPEN || GetNElem() == at->GetNElem()) {
+    return GetInnerType()->Match(at->GetInnerType());
+  }
   return false;
 }
 
@@ -335,7 +356,7 @@ bool CArrayType::Compare(const CType *t) const
   // comparison: match if
   // - the number of elements match and
   // - the inner types are compatible with respect to Compare()
-
+  if (GetNElem() == at->GetNElem() && GetInnerType()->Compare(at->GetInnerType())) return true;
   return false;
 }
 

@@ -36,9 +36,12 @@
 #include "ast.h"
 
 #include <cassert>
+#include <cstddef>
 #include <cstring>
 #include <iostream>
 #include <typeinfo>
+#include "ir.h"
+#include "type.h"
 using namespace std;
 
 //--------------------------------------------------------------------------------------------------
@@ -148,7 +151,7 @@ bool CAstScope::RemoveChild(CAstScope *child)
   while ((it != _children.end()) && (*it != child)) it++;
 
   bool res = it != _children.end();
-
+  
   if (res) _children.erase(it);
   return res;
 }
@@ -179,7 +182,18 @@ bool CAstScope::TypeCheck(CToken *t, string *msg) const
   bool result = true;
 
   // TODO (phase 3)
+  CAstStatement *s = _statseq;
+  while (result && s != NULL) {
+    result = s->TypeCheck(t, msg);
+    s = s->GetNext();
+  }
 
+  vector<CAstScope*>::const_iterator it = _children.begin();
+  while (result && it != _children.end()) {
+    result = (*it)->TypeCheck(t, msg);
+    it++;
+  }
+  
   return result;
 }
 
@@ -388,8 +402,21 @@ CAstExpression *CAstStatAssign::GetRHS(void) const
 bool CAstStatAssign::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
-
-  return true;
+  if (GetLHS()->TypeCheck(t, msg) && GetRHS()->TypeCheck(t, msg)) {
+    if (GetLHS()->GetType()->Match(GetRHS()->GetType())) {
+      if (GetLHS()->GetType()->IsArray()) {
+        if (t != NULL) *t = GetToken();
+        if (msg != NULL) *msg = "Array assignments not supported.";
+        return false;
+      }
+      return true;
+    } else {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "Incompatible types in assignment.";
+      return false;
+    }
+  }
+  return false;
 }
 
 const CType *CAstStatAssign::GetType(void) const
@@ -511,7 +538,31 @@ CAstExpression *CAstStatReturn::GetExpression(void) const
 bool CAstStatReturn::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
+  const CType *st = GetScope()->GetType();
+  CAstExpression *e = GetExpression();
 
+  if (st->Match(CTypeManager::Get()->GetNull())) {
+    if (e != NULL) {
+      if (t != NULL) *t = e->GetToken();
+      if (msg != NULL) *msg = "Superfluous expression after return.";
+      return false;
+    }
+  } else {
+    if (e == NULL) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "Expression expected after return.";
+      return false;
+    }
+
+    if (!e->TypeCheck(t, msg)) return false;
+
+    if (!st->Match(e->GetType())) {
+      if (t != NULL) *t = e->GetToken();
+      if (msg != NULL) *msg = "Return type mismatch.";
+      return false;
+    }
+  }
+  
   return true;
 }
 
@@ -600,8 +651,24 @@ CAstStatement *CAstStatIf::GetElseBody(void) const
 bool CAstStatIf::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
+  CAstExpression *e = GetCondition();
+  
+  if (e == NULL) {
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "No condition at if-body";
+    return false;
+  }
+  if (!e->TypeCheck(t, msg)) return false;
+  if (!e->GetType()->Match(CTypeManager::Get()->GetBool())) {
+    if (t != NULL) *t = e->GetToken();
+    if (msg != NULL) *msg = "Conditions are not boolean expression.";
+    return false;
+  }
 
-  return true;
+  CAstStatement *ifbody = GetIfBody();
+  CAstStatement *elsebody = GetElseBody();
+  if ((ifbody == NULL || ifbody->TypeCheck(t, msg)) && (elsebody == NULL || elsebody->TypeCheck(t, msg))) return true;
+  return false;
 }
 
 ostream &CAstStatIf::print(ostream &out, int indent) const
@@ -702,8 +769,23 @@ CAstStatement *CAstStatWhile::GetBody(void) const
 bool CAstStatWhile::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
+  CAstExpression *e = GetCondition();
+  
+  if (e == NULL) {
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "No condition at while-body";
+    return false;
+  }
+  if (!e->TypeCheck(t, msg)) return false;
+  if (!e->GetType()->Match(CTypeManager::Get()->GetBool())) {
+    if (t != NULL) *t = e->GetToken();
+    if (msg != NULL) *msg = "Conditions are not boolean expression.";
+    return false;
+  }
 
-  return true;
+  CAstStatement *body = GetBody();
+  if (body == NULL || body->TypeCheck(t, msg)) return true;
+  return false;
 }
 
 ostream &CAstStatWhile::print(ostream &out, int indent) const
@@ -832,8 +914,73 @@ CAstExpression *CAstBinaryOp::GetRight(void) const
 bool CAstBinaryOp::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
+  if (!GetLeft()->TypeCheck(t, msg) || !GetRight()->TypeCheck(t, msg)) return false;
 
-  return true;
+  const CType *lt = GetLeft()->GetType(), *rt = GetRight()->GetType();
+  EOperation oper = GetOperation();
+  if (!lt || !rt) {
+    assert(false);
+    return false;
+  }
+
+  if (lt->IsInt() && rt->IsInt()) {
+    switch (oper) {
+      case opAdd:
+      case opSub:
+      case opMul:
+      case opDiv:
+      case opEqual:
+      case opNotEqual:
+      case opLessThan:
+      case opLessEqual:
+      case opBiggerThan:
+      case opBiggerEqual:
+        if ((lt->IsInteger() && rt->IsInteger()) || (lt->IsLongint() && rt->IsLongint())) {
+          return true;
+        } else {
+          if (t != NULL) *t = GetToken();
+          if (msg != NULL) *msg = "Type mismatch.";
+          return false;
+        }
+      default: {
+        if (t != NULL) *t = GetToken();
+        if (msg != NULL) *msg = "Incompatible operator of integer/longint type.";
+        return false;
+      }
+    }
+  } else if (lt->IsBoolean() && rt->IsBoolean()) {
+    switch (oper) {
+      case opAnd:
+      case opOr:
+      case opEqual:
+      case opNotEqual:
+        return true;
+      default: {
+        if (t != NULL) *t = GetToken();
+        if (msg != NULL) *msg = "Incompatible operator of boolean type.";
+        return false;
+      }
+    }
+  } else if (lt->IsChar() && rt->IsChar()) {
+    switch (oper) {
+      case opEqual:
+      case opNotEqual:
+      case opLessThan:
+      case opLessEqual:
+      case opBiggerThan:
+      case opBiggerEqual:
+        return true;
+      default: {
+        if (t != NULL) *t = GetToken();
+        if (msg != NULL) *msg = "Incompatible operator of boolean type.";
+        return false;
+      }
+    }
+  } else {
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "Type mismatch.";
+    return false;
+  }
 }
 
 const CType *CAstBinaryOp::GetType(void) const
@@ -1032,8 +1179,31 @@ CAstExpression *CAstUnaryOp::GetOperand(void) const
 bool CAstUnaryOp::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
+  const CType *type = GetOperand()->GetType();
+  EOperation oper = GetOperation();
 
-  return true;
+  if (type->IsBoolean()) {
+    if (oper != opNot) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "Incompatible unary operator for boolean type.";
+      return false;
+    }
+    return true;
+  } else if (type->IsInt()) {
+    switch (oper) {
+      case opPos:
+      case opNeg:
+        return true;
+      default:
+        if (t != NULL) *t = GetToken();
+        if (msg != NULL) *msg = "Incompatible unary operator for int type.";
+        return false;
+    }
+  } else {
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) *msg = "Incompatible type for unary operator.";
+    return false;
+  }
 }
 
 const CType *CAstUnaryOp::GetType(void) const
@@ -1162,8 +1332,24 @@ CAstExpression *CAstSpecialOp::GetOperand(void) const
 bool CAstSpecialOp::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
+  const CType *type = GetOperand()->GetType();
+  EOperation oper = GetOperation();
 
-  return true;
+  switch (oper) {
+    case opAddress:
+      return true;
+    case opDeref:
+      if (!type->IsPointer()) {
+        return false;
+      }
+      return dynamic_cast<const CPointerType *>(type)->GetBaseType() != nullptr;
+    case opCast:
+    case opWiden:
+    case opNarrow:
+      return true;
+    default:
+      return false;
+  }
 }
 
 const CType *CAstSpecialOp::GetType(void) const
@@ -1189,7 +1375,7 @@ const CType *CAstSpecialOp::GetType(void) const
 const CDataInitializer *CAstSpecialOp::Evaluate(void) const
 {
   // TODO (phase 3)
-
+  assert(false);
   return NULL;
 }
 
@@ -1252,7 +1438,10 @@ const CSymProc *CAstFunctionCall::GetSymbol(void) const
 void CAstFunctionCall::AddArg(CAstExpression *arg)
 {
   // TODO (phase 3)
-
+  // const CType *argt = arg->GetType();
+  // if (argt && argt->IsArray()) {
+  //   arg = new CAstSpecialOp(arg->GetToken(), opAddress, arg);
+  // }
   _arg.push_back(arg);
 }
 
@@ -1277,8 +1466,44 @@ void CAstFunctionCall::SetArg(unsigned int index, CAstExpression *arg)
 bool CAstFunctionCall::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
+  const CSymProc *sym = GetSymbol();
+  // function definition matches with function call
+  if (sym->GetNParams() == GetNArgs()) {
+    for (size_t i=0; i<GetNArgs(); ++i) {
+      if (!GetArg(i)->TypeCheck(t, msg)) return false;
 
-  return true;
+      if (!sym->GetParam(i)->GetDataType()->Match(GetArg(i)->GetType())) {
+        if (t != NULL) *t = GetToken();
+        if (msg != NULL) *msg = "Argument " + to_string(i+1) + " type mismatch.";
+        return false;
+      }
+      
+      // check arg is sub-array
+      const CAstSpecialOp *sop = dynamic_cast<const CAstSpecialOp *>(GetArg(i));
+      if (sop && sop->GetOperation() == opAddress) {
+        const CAstExpression *expr = sop->GetOperand();
+        if (expr) {
+          const CAstArrayDesignator *arrdes = dynamic_cast<const CAstArrayDesignator *>(expr);
+          if (arrdes && arrdes->GetNIndices() > 0) {
+            if (t != NULL) *t = GetToken();
+            if (msg != NULL) *msg = "Subarrays cannot be passed.";
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  } else {
+    if (t != NULL) *t = GetToken();
+    if (msg != NULL) {
+      if (sym->GetNParams() > GetNArgs()) {
+        *msg = "More parameters required.";
+      } else {
+        *msg = "Too many parameters.";
+      }
+    }
+    return false;
+  }
 }
 
 const CType *CAstFunctionCall::GetType(void) const
@@ -1361,7 +1586,7 @@ const CSymbol *CAstDesignator::GetSymbol(void) const
 bool CAstDesignator::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
-
+  
   return true;
 }
 
@@ -1461,9 +1686,36 @@ CAstExpression *CAstArrayDesignator::GetIndex(unsigned int index) const
 bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg)
 {
   assert(_done);
-
+  
   // TODO (phase 3)
+  const CType *type = GetSymbol()->GetDataType();
+  const CPointerType *pt = dynamic_cast<const CPointerType *>(type);
+  const CArrayType *at;
+  
+  if (pt) {
+    type = pt->GetBaseType();
+  }
 
+  for (size_t i = 0; i < _idx.size(); i++) {
+    at = dynamic_cast<const CArrayType *>(type);
+    if (!at) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) {
+        if (i == 0) *msg = "Not an array.";
+        else *msg = "Dimension error.";
+      }
+      return false;
+    }
+
+    if (!CTypeManager::Get()->GetInteger()->Match(GetIndex(i)->GetType())) {
+      if (t != NULL) *t = GetToken();
+      if (msg != NULL) *msg = "Array subscription is only allowed with integer type.";
+      return false;
+    }
+    
+    type = at->GetInnerType();
+  }
+  
   return true;
 }
 
@@ -1484,7 +1736,6 @@ const CType *CAstArrayDesignator::GetType(void) const
     }
     t = at->GetInnerType();
   }
-
   return t;
 }
 

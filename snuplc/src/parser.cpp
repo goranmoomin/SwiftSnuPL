@@ -44,6 +44,10 @@
 #include <exception>
 #include <iostream>
 #include <vector>
+#include "ast.h"
+#include "scanner.h"
+#include "symtab.h"
+#include "type.h"
 
 using namespace std;
 
@@ -340,10 +344,20 @@ void CParser::varDeclSequence(CAstScope *s)
   const CType *vt;
   CSymtab *st = s->GetSymbolTable();
 
+  t = Peek();
   do {
     ts.clear();
     vt = varDecl(s, &ts);
+    if (vt->IsArray()) {
+      const CArrayType *at = dynamic_cast<const CArrayType *>(vt);
+      if (at->GetDataSize() == 0) {
+        SetError(t, "open array is not allowed here");
+      }
+    }
     for (const string &ident : ts) {
+      if (st->FindSymbol(ident, sLocal) != NULL) {
+        SetError(t, "duplicated identifier: " + ident);
+      }
       st->AddSymbol(s->CreateVar(ident, vt));
     }
     Consume(tSemicolon);
@@ -359,7 +373,6 @@ const CType *CParser::varDecl(CAstScope *s, vector<string> *idents)
   //
 
   CToken t;
-
   Consume(tIdent, &t);
   idents->push_back(t.GetValue());
   while (!_abort && PeekType() == tComma) {
@@ -469,6 +482,10 @@ CAstProcedure *CParser::functionDecl(CAstScope *s)
   Consume(tColon);
   rt = type(s);
   Consume(tSemicolon);
+
+  if (!rt->IsScalar()) {
+    SetError(t, "Composite type cannot be return type of function.");
+  }
 
   sym = new CSymProc(t.GetValue(), rt);
   st->AddSymbol(sym);
@@ -650,9 +667,21 @@ CAstStatReturn *CParser::returnStatement(CAstScope *s)
   CAstExpression *retexpr;
 
   Consume(tReturn, &t);
-  retexpr = expression(s);
 
-  return new CAstStatReturn(t, s, retexpr);
+  switch (PeekType()) {
+  case tPlusMinus:
+  case tIdent:
+  case tNumber:
+  case tBoolConst:
+  case tCharConst:
+  case tStringConst:
+  case tLParen:
+  case tNot:
+    retexpr = expression(s);
+    return new CAstStatReturn(t, s, retexpr);
+  default:
+    return new CAstStatReturn(t, s, NULL);
+  }
 }
 
 CAstFunctionCall *CParser::subroutineCall(CAstScope *s)
@@ -929,6 +958,10 @@ CAstConstant *CParser::number(void)
   errno = 0;
   long long v = strtoll(t.GetValue().c_str(), NULL, 10);
   if (errno != 0) SetError(t, "invalid number.");
+
+  if (t.GetValue().back() != 'L' && v > INT_MAX) {
+    SetError(t, "Overflow in integer constant");
+  }
 
   return new CAstConstant(t, type, v);
 }
