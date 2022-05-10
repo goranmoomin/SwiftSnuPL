@@ -3,10 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftSnuPL",
-    products: [
-        .executable(name: "SwiftSnuPL", targets: ["SwiftSnuPL"])
-    ],
+    name: "SwiftSnuPL", products: [.executable(name: "SwiftSnuPL", targets: ["SwiftSnuPL"])],
     targets: [
         .target(name: "CppSnuPL", dependencies: []),
         .executableTarget(name: "SwiftSnuPL", dependencies: ["CppSnuPL"]),

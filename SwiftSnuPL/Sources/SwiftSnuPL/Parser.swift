@@ -4,7 +4,7 @@ class Parser {
     var token: Token? = nil
     var scanner: AnyIterator<Token>
 
-    var hasError = false
+    var hasError: Bool { errors.count > 0 }
     var errors: [ParseError] = []
 
     convenience init(tokens: [Token]) { self.init(scanner: tokens.makeIterator()) }
@@ -104,10 +104,7 @@ class Parser {
         let message: String?
     }
 
-    func report(message: String) {
-        hasError = true
-        errors.append(ParseError(token: token, message: message))
-    }
+    func report(message: String) { errors.append(ParseError(token: token, message: message)) }
 
     func expected(_ kinds: Token.Kind..., at place: String? = nil) -> Recover {
         var message = "unexpected "
@@ -136,7 +133,6 @@ class Parser {
         rethrows
     {
         do { try body() } catch Recover.tryRecover {
-            hasError = true  // just to be sure
             while !check(starts + ends) { advance() }
             _ = match(ends)
         }
@@ -595,13 +591,19 @@ class Parser {
         if let token = match(.number) {
             if token.string.last == "L" {
                 guard let longint = Int64(token.string.trimmingCharacters(in: ["L"])) else {
-                    report(message: "unexpected longint literal: longint literals must not be greater than 9223372036854775807L.")
+                    report(
+                        message:
+                            "unexpected longint literal: longint literals must not be greater than 9223372036854775807L."
+                    )
                     throw Recover.tryRecover
                 }
                 return .longint(longint)
             } else {
                 guard let integer = Int32(token.string) else {
-                    report(message: "unexpected integer literal: integer literals must not be greater than 2147483647.")
+                    report(
+                        message:
+                            "unexpected integer literal: integer literals must not be greater than 2147483647."
+                    )
                     throw Recover.tryRecover
                 }
                 return .integer(integer)

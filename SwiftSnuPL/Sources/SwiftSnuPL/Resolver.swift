@@ -1,4 +1,3 @@
-
 import Foundation
 
 class Resolver {
@@ -244,8 +243,11 @@ class Resolver {
             let leftIndex = signature.firstIndex(of: "(")!
             let rightIndex = signature.lastIndex(of: ")")!
             let name = signature[signature.startIndex..<leftIndex]
-            let token = Token(id: "builtin:\(name)", kind: .ident, string: String(name), lineNumber: 0, charPosition: 0)
-            let parameters = signature[signature.index(after: leftIndex)..<rightIndex].split(separator: " ")
+            let token = Token(
+                id: "builtin:\(name)", kind: .ident, string: String(name), lineNumber: 0,
+                charPosition: 0)
+            let parameters = signature[signature.index(after: leftIndex)..<rightIndex]
+                .split(separator: " ")
             let `return` = signature[signature.index(after: rightIndex)..<signature.endIndex]
             var parameterTypes: [`Type`] = []
             for parameter in parameters {
@@ -263,7 +265,8 @@ class Resolver {
                         index = parameter.index(after: index)
                         let sizeIndex = index
                         while parameter[index] != "]" { index = parameter.index(after: index) }
-                        let size: Int32? = sizeIndex < index ? Int32(parameter[sizeIndex..<index])! : nil
+                        let size: Int32? =
+                            sizeIndex < index ? Int32(parameter[sizeIndex..<index])! : nil
                         type = .array(base: type, size: size)
                     default: fatalError()
                     }
@@ -273,8 +276,7 @@ class Resolver {
             }
             let type: `Type`
             switch `return` {
-            case "":
-                type = .procedure(parameters: parameterTypes)
+            case "": type = .procedure(parameters: parameterTypes)
             case "I": type = .function(parameters: parameterTypes, return: .integer)
             case "L": type = .function(parameters: parameterTypes, return: .longint)
             case "C": type = .function(parameters: parameterTypes, return: .char)
@@ -285,14 +287,10 @@ class Resolver {
         }
 
         let globalSymbols: Set<Symbol> = [
-            builtin(withSignature: "DIM(_[] I)I"),
-            builtin(withSignature: "DOFS(_[])I"),
-            builtin(withSignature: "ReadInt()I"),
-            builtin(withSignature: "ReadLong()L"),
-            builtin(withSignature: "WriteInt(I)"),
-            builtin(withSignature: "WriteLong(L)"),
-            builtin(withSignature: "WriteChar(C)"),
-            builtin(withSignature: "WriteStr(C[])"),
+            builtin(withSignature: "DIM(_[] I)I"), builtin(withSignature: "DOFS(_[])I"),
+            builtin(withSignature: "ReadInt()I"), builtin(withSignature: "ReadLong()L"),
+            builtin(withSignature: "WriteInt(I)"), builtin(withSignature: "WriteLong(L)"),
+            builtin(withSignature: "WriteChar(C)"), builtin(withSignature: "WriteStr(C[])"),
             builtin(withSignature: "WriteLn()"),
         ]
 
@@ -313,8 +311,8 @@ class Resolver {
                     return try evaluate(expression: initializer)
                 }
                 scope.addConst(
-                        token: name, type: try withScope(scope) { try evaluate(type: type) },
-                        initializer: initializerValue)
+                    token: name, type: try withScope(scope) { try evaluate(type: type) },
+                    initializer: initializerValue)
             case .procedure(let name, let parameters, let block):
                 // TODO: Check if type evaluation requires scope
                 let parameterTypes = try withScope(scope) {
@@ -328,7 +326,9 @@ class Resolver {
                     for (parameter, type) in zip(parameters, parameterTypes) {
                         symbols.insert(.`var`(token: parameter.name, type: type))
                     }
-                    try withScope(scope) { try resolve(block: block, symbols: symbols, return: nil) }
+                    try withScope(scope) {
+                        try resolve(block: block, symbols: symbols, return: nil)
+                    }
                 }
             case .function(let name, let parameters, return: let `return`, let block):
                 // TODO: Check if type evaluation requires scope
@@ -337,8 +337,7 @@ class Resolver {
                 }
                 let returnType = try withScope(scope) { try evaluate(type: `return`) }
                 scope.addVar(
-                        token: name, type: .function(parameters: parameterTypes, return: returnType)
-                    )
+                    token: name, type: .function(parameters: parameterTypes, return: returnType))
                 if let block = block {
                     var symbols: Set<Symbol> = []
                     // TODO: Add itself to symbols
@@ -346,7 +345,9 @@ class Resolver {
                     for (parameter, type) in zip(parameters, parameterTypes) {
                         symbols.insert(.`var`(token: parameter.name, type: type))
                     }
-                    try withScope(scope) { try resolve(block: block, symbols: symbols, return: returnType) }
+                    try withScope(scope) {
+                        try resolve(block: block, symbols: symbols, return: returnType)
+                    }
                 }
             }
         }
@@ -524,9 +525,7 @@ class Resolver {
         case .char: resolveType(of: expression, as: .char)
         case .string(let string):
             // TODO: Check if this is correct
-            resolveType(
-                of: expression,
-                as: .array(base: .char, size: Int32(string.count) + 1))
+            resolveType(of: expression, as: .array(base: .char, size: Int32(string.count) + 1))
         }
     }
 
