@@ -93,38 +93,106 @@ class Resolver {
 
     // MARK: - Comptime evaluation
 
+    func evaluate<T: Hashable>(expression: Parser.Expression, as type: T.Type) throws -> T {
+        try evaluate(expression: expression) as! T
+    }
+
     func evaluate(expression: Parser.Expression) throws -> AnyHashable {
         // TODO: Implement everything
         switch expression {
         case .unary(operator: let `operator`, let value):
-            if `operator`.string == "!" {
-                guard try resolvedType(of: value) == .boolean else { fatalError() }
-                return !(try evaluate(expression: value) as! Bool)
+            let type = try resolvedType(of: value)
+            if type == .integer {
+                guard `operator`.string == "-" else { fatalError() }
+                return try -evaluate(expression: value, as: Int32.self)
+            } else if type == .longint {
+                guard `operator`.string == "-" else { fatalError() }
+                return try -evaluate(expression: value, as: Int64.self)
+            } else if type == .boolean {
+                guard `operator`.string == "!" else { fatalError() }
+                return try !evaluate(expression: value, as: Bool.self)
             } else {
                 fatalError()
             }
         case .binary(operator: let `operator`, let left, let right):
-            if `operator`.string == "+" {
-                guard try resolvedType(of: left) == .integer && resolvedType(of: right) == .integer
-                else { fatalError() }
-                return (try evaluate(expression: left) as! Int32)
-                    + (try evaluate(expression: right) as! Int32)
-            } else if `operator`.string == "-" {
-                guard try resolvedType(of: left) == .integer && resolvedType(of: right) == .integer
-                else { fatalError() }
-                return (try evaluate(expression: left) as! Int32)
-                    - (try evaluate(expression: right) as! Int32)
-            } else if `operator`.string == "*" {
-                guard try resolvedType(of: left) == .integer && resolvedType(of: right) == .integer
-                else { fatalError() }
-                return (try evaluate(expression: left) as! Int32)
-                    * (try evaluate(expression: right) as! Int32)
-            } else if `operator`.string == "/" {
-                guard try resolvedType(of: left) == .integer && resolvedType(of: right) == .integer
-                else { fatalError() }
-                // TODO: handle division-by-zero
-                return (try evaluate(expression: left) as! Int32)
-                    / (try evaluate(expression: right) as! Int32)
+            let leftType = try resolvedType(of: left)
+            let rightType = try resolvedType(of: right)
+
+            // implement short-circuiting, though compile time evaluation won't cause any side effects
+            if `operator`.string == "&&" {
+                guard leftType == .boolean && rightType == .boolean else { fatalError() }
+                if try evaluate(expression: left, as: Bool.self) {
+                    return try evaluate(expression: right, as: Bool.self)
+                } else {
+                    return false
+                }
+            } else if `operator`.string == "||" {
+                guard leftType == .boolean && rightType == .boolean else { fatalError() }
+                if try evaluate(expression: left, as: Bool.self) {
+                    return true
+                } else {
+                    return try evaluate(expression: right, as: Bool.self)
+                }
+            }
+
+            func arithmetic<T: BinaryInteger>(as type: T.Type) throws -> T {
+                let leftValue = try evaluate(expression: left, as: T.self)
+                let rightValue = try evaluate(expression: right, as: T.self)
+                // TODO: handle overflows that happen in compile time
+                switch `operator`.string {
+                case "+": return leftValue + rightValue
+                case "-": return leftValue - rightValue
+                case "*": return leftValue * rightValue
+                case "/": return leftValue / rightValue  // TODO: handle division-by-zero and rounding
+                default: fatalError()
+                }
+            }
+
+            func equality<T: Equatable & Hashable>(as type: T.Type) throws -> Bool {
+                let leftValue = try evaluate(expression: left, as: T.self)
+                let rightValue = try evaluate(expression: right, as: T.self)
+                switch `operator`.string {
+                case "=": return leftValue == rightValue
+                case "#": return leftValue != rightValue
+                default: fatalError()
+                }
+            }
+
+            func relational<T: Comparable & Hashable>(as type: T.Type) throws -> Bool {
+                let leftValue = try evaluate(expression: left, as: T.self)
+                let rightValue = try evaluate(expression: right, as: T.self)
+                switch `operator`.string {
+                case "=": return leftValue == rightValue
+                case "#": return leftValue != rightValue
+                default: fatalError()
+                }
+            }
+
+            if leftType == .integer && rightType == .integer {
+                switch `operator`.string {
+                case "+", "-", "*", "/": return try arithmetic(as: Int32.self)
+                case "=", "#": return try equality(as: Int32.self)
+                case "<", "<=", ">=", ">": return try relational(as: Int32.self)
+                default: fatalError()
+                }
+            } else if leftType == .longint && rightType == .longint {
+                switch `operator`.string {
+                case "+", "-", "*", "/": return try arithmetic(as: Int64.self)
+                case "=", "#": return try equality(as: Int64.self)
+                case "<", "<=", ">=", ">": return try relational(as: Int64.self)
+                default: fatalError()
+                }
+            } else if leftType == .char && rightType == .char {
+                switch `operator`.string {
+                case "=", "#": return try equality(as: UInt8.self)
+                case "<", "<=", ">=", ">": return try relational(as: UInt8.self)
+                default: fatalError()
+                }
+            } else if leftType == .boolean && rightType == .boolean {
+                switch `operator`.string {
+                case "=", "#": return try equality(as: Bool.self)
+                default: fatalError()
+                }
             } else {
                 fatalError()
             }
