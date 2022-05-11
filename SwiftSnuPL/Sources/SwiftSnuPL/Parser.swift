@@ -22,11 +22,22 @@ class Parser {
         case `subscript`(array: Expression, index: Expression)
         case call(function: Expression, arguments: [Expression])
         case variable(name: Token)
-        case integer(Int32)
-        case longint(Int64)
-        case boolean(Bool)
-        case char(UInt8)
-        case string([UInt8])
+        case integer(Int32, Token)
+        case longint(Int64, Token)
+        case boolean(Bool, Token)
+        case char(UInt8, Token)
+        case string([UInt8], Token)
+
+        var token: Token {
+            switch self {
+            case .unary(let `operator`, _): return `operator`
+            case .binary(_, let left, _): return left.token
+            case .subscript(let array, _): return array.token
+            case .call(let function, _): return function.token
+            case .variable(let name): return name
+            case .integer(_, let token), .longint(_, let token), .boolean(_, let token), .char(_, let token), .string(_, let token): return token
+            }
+        }
     }
 
     indirect enum Statement: Equatable, Hashable {
@@ -597,7 +608,7 @@ class Parser {
                     )
                     throw Recover.tryRecover
                 }
-                return .longint(longint)
+                return .longint(longint, token)
             } else {
                 guard let integer = Int32(token.string) else {
                     report(
@@ -606,15 +617,15 @@ class Parser {
                     )
                     throw Recover.tryRecover
                 }
-                return .integer(integer)
+                return .integer(integer, token)
             }
         } else if let token = match(.boolConst) {
-            return .boolean(token.string == "true")
+            return .boolean(token.string == "true", token)
         } else if let token = match(.charConst) {
-            return .char(Token.unescape(token.string)[0])
+            return .char(Token.unescape(token.string)[0], token)
         } else if let token = match(.stringConst) {
             // remove trailing NUL character
-            return .string(Token.unescape(token.string).dropLast())
+            return .string(Token.unescape(token.string).dropLast(), token)
         }
         throw expected(.number, .boolConst, .charConst, .stringConst, at: "start of literal")
     }
@@ -785,11 +796,11 @@ func format(expression: Parser.Expression) -> String {
         return
             "\(format(expression: function))(\(arguments.map(format(expression:)).joined(separator: ", ")))"
     case .variable(let name): return "\(name.string)"
-    case .integer(let integer): return "\(integer)"
-    case .longint(let longint): return "\(longint)L"
-    case .boolean(let boolean): return "\(boolean ? "true" : "false")"
-    case .char(let char): return "'\(Token.escape(char))'"
-    case .string(let string):
+    case .integer(let integer, _): return "\(integer)"
+    case .longint(let longint, _): return "\(longint)L"
+    case .boolean(let boolean, _): return "\(boolean ? "true" : "false")"
+    case .char(let char, _): return "'\(Token.escape(char))'"
+    case .string(let string, _):
         return """
             "\(Token.escape(string))"
             """
