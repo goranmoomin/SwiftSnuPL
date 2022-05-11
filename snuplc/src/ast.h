@@ -1409,6 +1409,16 @@ class CAstArrayDesignator : public CAstDesignator {
 
   /// @}
 
+  /// @name numerical evaluation
+  /// @{
+
+  /// @brief performs numerical evaluation of a designator
+  /// @retval CDataInitializer* result of evaluation. Delete after use.
+  /// @retval NULL if numerical evaluation cannot be performed
+  virtual const CDataInitializer *Evaluate(void) const;
+
+  /// @}
+
   /// @name output
   /// @{
 

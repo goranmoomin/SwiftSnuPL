@@ -40,6 +40,7 @@
 #include <cstring>
 #include <iostream>
 #include <typeinfo>
+#include "data.h"
 #include "ir.h"
 #include "type.h"
 using namespace std;
@@ -1340,14 +1341,18 @@ bool CAstSpecialOp::TypeCheck(CToken *t, string *msg)
       return true;
     case opDeref:
       if (!type->IsPointer()) {
+        if (t != NULL) *t = GetToken();
+        if (msg != NULL) *msg = "Cannot dereference non-pointer type.";
         return false;
       }
       return dynamic_cast<const CPointerType *>(type)->GetBaseType() != nullptr;
     case opCast:
     case opWiden:
     case opNarrow:
+      assert(false);
       return true;
     default:
+      assert(false);
       return false;
   }
 }
@@ -1737,6 +1742,26 @@ const CType *CAstArrayDesignator::GetType(void) const
     t = at->GetInnerType();
   }
   return t;
+}
+
+const CDataInitializer* CAstArrayDesignator::Evaluate() const 
+{
+  const CDataInitString *arr = dynamic_cast<const CDataInitString *>(GetSymbol()->GetData());
+  const CDataInitInteger *idx;
+  char ch;
+
+  if (!arr || GetNIndices() != 1) {
+    return NULL;
+  }
+
+  idx = dynamic_cast<const CDataInitInteger *>(GetIndex(0)->Evaluate());
+
+  if (!idx) {
+    return NULL;
+  }
+
+  ch = arr->GetData().at(idx->GetData());
+  return new CDataInitChar(ch);
 }
 
 ostream &CAstArrayDesignator::print(ostream &out, int indent) const

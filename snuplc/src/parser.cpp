@@ -44,6 +44,7 @@
 #include <exception>
 #include <iostream>
 #include <vector>
+#include <set>
 #include "ast.h"
 #include "scanner.h"
 #include "symtab.h"
@@ -313,23 +314,49 @@ void CParser::constDeclSequence(CAstScope *s)
   CToken t;
   vector<string> ts{};
   CAstExpression *expr;
-  const CDataInitializer *init;
   const CType *vt;
   CSymtab *st = s->GetSymbolTable();
 
   do {
     ts.clear();
+    
     vt = varDecl(s, &ts);
+    
     Consume(tRelOp, &t);
     if (t.GetValue() != "=") {
       SetError(t, "unexpected operator in constant initializer");
     }
+    
     expr = expression(s);
-    init = expr->Evaluate();
+    assert(expr != NULL);
+    
+    Consume(tSemicolon);
+
+    const CDataInitializer *init = expr->Evaluate();
+    if (init == NULL) {
+      SetError(t, "Cannot evaluate constant in compile time.");
+    }
+    
+    const CType *exp_t = expr->GetType();
+    if (!vt->Match(exp_t)) {
+      SetError(t, "Type mismatch.");
+    }
+
+    // string with no bounds
+    const CArrayType *at = dynamic_cast<const CArrayType *>(vt);
+    if (at) {
+      if (at->GetInnerType()->IsChar() && at->GetNElem() == CArrayType::OPEN) {
+        vt = exp_t;
+      }
+    }
+    
     for (const string &ident : ts) {
+      if (st->FindSymbol(ident, sLocal) != NULL) {
+        SetError(t, "Duplicated identifier: " + ident);
+      }
       st->AddSymbol(s->CreateConst(ident, vt, init));
     }
-    Consume(tSemicolon);
+    
   } while (PeekType() == tIdent);
 }
 
@@ -351,12 +378,12 @@ void CParser::varDeclSequence(CAstScope *s)
     if (vt->IsArray()) {
       const CArrayType *at = dynamic_cast<const CArrayType *>(vt);
       if (at->GetDataSize() == 0) {
-        SetError(t, "open array is not allowed here");
+        SetError(t, "Open array is not allowed here");
       }
     }
     for (const string &ident : ts) {
       if (st->FindSymbol(ident, sLocal) != NULL) {
-        SetError(t, "duplicated identifier: " + ident);
+        SetError(t, "Duplicated identifier: " + ident);
       }
       st->AddSymbol(s->CreateVar(ident, vt));
     }
@@ -456,8 +483,14 @@ CAstProcedure *CParser::procedureDecl(CAstScope *s)
 
   sym = new CSymProc(t.GetValue(), CTypeManager::Get()->GetNull());
   st->AddSymbol(sym);
+  
+  set<string> param_set;
   for (CSymParam *param : params) {
+    if (param_set.find(param->GetName()) != param_set.end()) {
+      SetError(t, "Duplicated parameter: " + param->GetName());
+    }
     sym->AddParam(param);
+    param_set.insert(param->GetName());
   }
 
   return new CAstProcedure(t, t.GetValue(), s, sym);
@@ -489,8 +522,14 @@ CAstProcedure *CParser::functionDecl(CAstScope *s)
 
   sym = new CSymProc(t.GetValue(), rt);
   st->AddSymbol(sym);
+  
+  set<string> param_set;
   for (CSymParam *param : params) {
+    if (param_set.find(param->GetName()) != param_set.end()) {
+      SetError(t, "Duplicated parameter: " + param->GetName());
+    }
     sym->AddParam(param);
+    param_set.insert(param->GetName());
   }
 
   return new CAstProcedure(t, t.GetValue(), s, sym);
@@ -957,10 +996,10 @@ CAstConstant *CParser::number(void)
 
   errno = 0;
   long long v = strtoll(t.GetValue().c_str(), NULL, 10);
-  if (errno != 0) SetError(t, "invalid number.");
+  if (errno != 0) SetError(t, "Invalid number.");
 
   if (t.GetValue().back() != 'L' && v > INT_MAX) {
-    SetError(t, "Overflow in integer constant");
+    SetError(t, "Overflow in integer constant.");
   }
 
   return new CAstConstant(t, type, v);
