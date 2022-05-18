@@ -47,6 +47,7 @@
 #include "scanner.h"
 #include "symtab.h"
 #include "type.h"
+
 using namespace std;
 
 class CAstStatement;

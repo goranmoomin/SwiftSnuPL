@@ -36,19 +36,14 @@
 
 #include "parser.h"
 
-#include <errno.h>
-#include <limits.h>
-
 #include <cassert>
+#include <cerrno>
+#include <climits>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
-#include <vector>
 #include <set>
-#include "ast.h"
-#include "scanner.h"
-#include "symtab.h"
-#include "type.h"
+#include <vector>
 
 using namespace std;
 
@@ -319,24 +314,24 @@ void CParser::constDeclSequence(CAstScope *s)
 
   do {
     ts.clear();
-    
+
     vt = varDecl(s, &ts);
-    
+
     Consume(tRelOp, &t);
     if (t.GetValue() != "=") {
       SetError(t, "unexpected operator in constant initializer");
     }
-    
+
     expr = expression(s);
     assert(expr != NULL);
-    
+
     Consume(tSemicolon);
 
     const CDataInitializer *init = expr->Evaluate();
     if (init == NULL) {
       SetError(t, "Cannot evaluate constant in compile time.");
     }
-    
+
     const CType *exp_t = expr->GetType();
     if (!vt->Match(exp_t)) {
       SetError(t, "Type mismatch.");
@@ -349,14 +344,14 @@ void CParser::constDeclSequence(CAstScope *s)
         vt = exp_t;
       }
     }
-    
+
     for (const string &ident : ts) {
       if (st->FindSymbol(ident, sLocal) != NULL) {
         SetError(t, "Duplicated identifier: " + ident);
       }
       st->AddSymbol(s->CreateConst(ident, vt, init));
     }
-    
+
   } while (PeekType() == tIdent);
 }
 
@@ -483,7 +478,7 @@ CAstProcedure *CParser::procedureDecl(CAstScope *s)
 
   sym = new CSymProc(t.GetValue(), CTypeManager::Get()->GetNull());
   st->AddSymbol(sym);
-  
+
   set<string> param_set;
   for (CSymParam *param : params) {
     if (param_set.find(param->GetName()) != param_set.end()) {
@@ -522,7 +517,7 @@ CAstProcedure *CParser::functionDecl(CAstScope *s)
 
   sym = new CSymProc(t.GetValue(), rt);
   st->AddSymbol(sym);
-  
+
   set<string> param_set;
   for (CSymParam *param : params) {
     if (param_set.find(param->GetName()) != param_set.end()) {
@@ -708,18 +703,15 @@ CAstStatReturn *CParser::returnStatement(CAstScope *s)
   Consume(tReturn, &t);
 
   switch (PeekType()) {
-  case tPlusMinus:
-  case tIdent:
-  case tNumber:
-  case tBoolConst:
-  case tCharConst:
-  case tStringConst:
-  case tLParen:
-  case tNot:
-    retexpr = expression(s);
-    return new CAstStatReturn(t, s, retexpr);
-  default:
-    return new CAstStatReturn(t, s, NULL);
+    case tPlusMinus:
+    case tIdent:
+    case tNumber:
+    case tBoolConst:
+    case tCharConst:
+    case tStringConst:
+    case tLParen:
+    case tNot: retexpr = expression(s); return new CAstStatReturn(t, s, retexpr);
+    default: return new CAstStatReturn(t, s, NULL);
   }
 }
 

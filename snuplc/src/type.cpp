@@ -36,6 +36,7 @@
 #include <cassert>
 
 #include "environment.h"
+
 using namespace std;
 
 //--------------------------------------------------------------------------------------------------
@@ -85,11 +86,11 @@ bool CScalarType::Match(const CType *t) const
 {
   // TODO (phase 3)
   if (IsPointer() && t->IsPointer()) {
-    const CPointerType* pt = dynamic_cast<const CPointerType *>(this);
+    const CPointerType *pt = dynamic_cast<const CPointerType *>(this);
     assert(pt != nullptr);
     return pt->Match(t);
   } else if (IsArray() && t->IsArray()) {
-    const CArrayType* at = dynamic_cast<const CArrayType *>(this);
+    const CArrayType *at = dynamic_cast<const CArrayType *>(this);
     assert(at != nullptr);
     return at->Match(t);
   } else if (IsBoolean() && t->IsBoolean()) {

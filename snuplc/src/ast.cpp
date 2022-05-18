@@ -40,9 +40,7 @@
 #include <cstring>
 #include <iostream>
 #include <typeinfo>
-#include "data.h"
-#include "ir.h"
-#include "type.h"
+
 using namespace std;
 
 //--------------------------------------------------------------------------------------------------
@@ -152,7 +150,7 @@ bool CAstScope::RemoveChild(CAstScope *child)
   while ((it != _children.end()) && (*it != child)) it++;
 
   bool res = it != _children.end();
-  
+
   if (res) _children.erase(it);
   return res;
 }
@@ -189,12 +187,12 @@ bool CAstScope::TypeCheck(CToken *t, string *msg) const
     s = s->GetNext();
   }
 
-  vector<CAstScope*>::const_iterator it = _children.begin();
+  vector<CAstScope *>::const_iterator it = _children.begin();
   while (result && it != _children.end()) {
     result = (*it)->TypeCheck(t, msg);
     it++;
   }
-  
+
   return result;
 }
 
@@ -563,7 +561,7 @@ bool CAstStatReturn::TypeCheck(CToken *t, string *msg)
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -653,7 +651,7 @@ bool CAstStatIf::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
   CAstExpression *e = GetCondition();
-  
+
   if (e == NULL) {
     if (t != NULL) *t = GetToken();
     if (msg != NULL) *msg = "No condition at if-body";
@@ -668,7 +666,9 @@ bool CAstStatIf::TypeCheck(CToken *t, string *msg)
 
   CAstStatement *ifbody = GetIfBody();
   CAstStatement *elsebody = GetElseBody();
-  if ((ifbody == NULL || ifbody->TypeCheck(t, msg)) && (elsebody == NULL || elsebody->TypeCheck(t, msg))) return true;
+  if ((ifbody == NULL || ifbody->TypeCheck(t, msg)) &&
+      (elsebody == NULL || elsebody->TypeCheck(t, msg)))
+    return true;
   return false;
 }
 
@@ -771,7 +771,7 @@ bool CAstStatWhile::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
   CAstExpression *e = GetCondition();
-  
+
   if (e == NULL) {
     if (t != NULL) *t = GetToken();
     if (msg != NULL) *msg = "No condition at while-body";
@@ -954,8 +954,7 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg)
       case opAnd:
       case opOr:
       case opEqual:
-      case opNotEqual:
-        return true;
+      case opNotEqual: return true;
       default: {
         if (t != NULL) *t = GetToken();
         if (msg != NULL) *msg = "Incompatible operator of boolean type.";
@@ -969,8 +968,7 @@ bool CAstBinaryOp::TypeCheck(CToken *t, string *msg)
       case opLessThan:
       case opLessEqual:
       case opBiggerThan:
-      case opBiggerEqual:
-        return true;
+      case opBiggerEqual: return true;
       default: {
         if (t != NULL) *t = GetToken();
         if (msg != NULL) *msg = "Incompatible operator of boolean type.";
@@ -1193,8 +1191,7 @@ bool CAstUnaryOp::TypeCheck(CToken *t, string *msg)
   } else if (type->IsInt()) {
     switch (oper) {
       case opPos:
-      case opNeg:
-        return true;
+      case opNeg: return true;
       default:
         if (t != NULL) *t = GetToken();
         if (msg != NULL) *msg = "Incompatible unary operator for int type.";
@@ -1337,8 +1334,7 @@ bool CAstSpecialOp::TypeCheck(CToken *t, string *msg)
   EOperation oper = GetOperation();
 
   switch (oper) {
-    case opAddress:
-      return true;
+    case opAddress: return true;
     case opDeref:
       if (!type->IsPointer()) {
         if (t != NULL) *t = GetToken();
@@ -1348,12 +1344,8 @@ bool CAstSpecialOp::TypeCheck(CToken *t, string *msg)
       return dynamic_cast<const CPointerType *>(type)->GetBaseType() != nullptr;
     case opCast:
     case opWiden:
-    case opNarrow:
-      assert(false);
-      return true;
-    default:
-      assert(false);
-      return false;
+    case opNarrow: assert(false); return true;
+    default: assert(false); return false;
   }
 }
 
@@ -1474,15 +1466,15 @@ bool CAstFunctionCall::TypeCheck(CToken *t, string *msg)
   const CSymProc *sym = GetSymbol();
   // function definition matches with function call
   if (sym->GetNParams() == GetNArgs()) {
-    for (size_t i=0; i<GetNArgs(); ++i) {
+    for (size_t i = 0; i < GetNArgs(); ++i) {
       if (!GetArg(i)->TypeCheck(t, msg)) return false;
 
       if (!sym->GetParam(i)->GetDataType()->Match(GetArg(i)->GetType())) {
         if (t != NULL) *t = GetToken();
-        if (msg != NULL) *msg = "Argument " + to_string(i+1) + " type mismatch.";
+        if (msg != NULL) *msg = "Argument " + to_string(i + 1) + " type mismatch.";
         return false;
       }
-      
+
       // check arg is sub-array
       const CAstSpecialOp *sop = dynamic_cast<const CAstSpecialOp *>(GetArg(i));
       if (sop && sop->GetOperation() == opAddress) {
@@ -1591,7 +1583,7 @@ const CSymbol *CAstDesignator::GetSymbol(void) const
 bool CAstDesignator::TypeCheck(CToken *t, string *msg)
 {
   // TODO (phase 3)
-  
+
   return true;
 }
 
@@ -1691,12 +1683,12 @@ CAstExpression *CAstArrayDesignator::GetIndex(unsigned int index) const
 bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg)
 {
   assert(_done);
-  
+
   // TODO (phase 3)
   const CType *type = GetSymbol()->GetDataType();
   const CPointerType *pt = dynamic_cast<const CPointerType *>(type);
   const CArrayType *at;
-  
+
   if (pt) {
     type = pt->GetBaseType();
   }
@@ -1706,8 +1698,10 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg)
     if (!at) {
       if (t != NULL) *t = GetToken();
       if (msg != NULL) {
-        if (i == 0) *msg = "Not an array.";
-        else *msg = "Dimension error.";
+        if (i == 0)
+          *msg = "Not an array.";
+        else
+          *msg = "Dimension error.";
       }
       return false;
     }
@@ -1717,10 +1711,10 @@ bool CAstArrayDesignator::TypeCheck(CToken *t, string *msg)
       if (msg != NULL) *msg = "Array subscription is only allowed with integer type.";
       return false;
     }
-    
+
     type = at->GetInnerType();
   }
-  
+
   return true;
 }
 
@@ -1744,7 +1738,7 @@ const CType *CAstArrayDesignator::GetType(void) const
   return t;
 }
 
-const CDataInitializer* CAstArrayDesignator::Evaluate() const 
+const CDataInitializer *CAstArrayDesignator::Evaluate() const
 {
   const CDataInitString *arr = dynamic_cast<const CDataInitString *>(GetSymbol()->GetData());
   const CDataInitInteger *idx;

@@ -28,15 +28,16 @@
 /// DAMAGE.
 //--------------------------------------------------------------------------------------------------
 
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
 #include <cassert>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iostream>
 
-#include "scanner.h"
-#include "parser.h"
 #include "ir.h"
+#include "parser.h"
+#include "scanner.h"
+
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -65,22 +66,21 @@ int main(int argc, char *argv[])
 
     if (p->HasError()) {
       const CToken *error = p->GetErrorToken();
-      cout << "syntax error at " << error->GetLineNumber() << ":"
-           << error->GetCharPosition() << " : " << p->GetErrorMessage() << endl;
+      cout << "syntax error at " << error->GetLineNumber() << ":" << error->GetCharPosition()
+           << " : " << p->GetErrorMessage() << endl;
 
       delete n;
     } else {
-      CAstModule *ast = dynamic_cast<CAstModule*>(n);
+      CAstModule *ast = dynamic_cast<CAstModule *>(n);
       assert(ast != NULL);
 
-      cout << "successfully parsed." << endl
-           << "running semantic analysis..." << endl;
+      cout << "successfully parsed." << endl << "running semantic analysis..." << endl;
 
       CToken t;
       string msg;
       if (!ast->TypeCheck(&t, &msg)) {
-        cout << "semantic error at " << t.GetLineNumber() << ":"
-          << t.GetCharPosition() << " : " << msg << endl;
+        cout << "semantic error at " << t.GetLineNumber() << ":" << t.GetCharPosition() << " : "
+             << msg << endl;
       } else {
         cout << "semantic analysis completed." << endl;
 
@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
             << "  edge  [fontname=\"Times New Roman\",fontsize=10];" << endl
             << endl;
         m->toDot(out, 2);
-        const vector<CScope*> &proc = m->GetSubscopes();
-        for (size_t p=0; p<proc.size(); p++) {
+        const vector<CScope *> &proc = m->GetSubscopes();
+        for (size_t p = 0; p < proc.size(); p++) {
           proc[p]->toDot(out, 2);
         }
         out << "}" << endl;

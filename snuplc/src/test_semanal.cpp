@@ -28,14 +28,15 @@
 /// DAMAGE.
 //--------------------------------------------------------------------------------------------------
 
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
 #include <cassert>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iostream>
 
-#include "scanner.h"
 #include "parser.h"
+#include "scanner.h"
+
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -64,25 +65,23 @@ int main(int argc, char *argv[])
 
     if (p->HasError()) {
       const CToken *error = p->GetErrorToken();
-      cout << "syntax error at " << error->GetLineNumber() << ":"
-           << error->GetCharPosition() << " : " << p->GetErrorMessage() << endl;
+      cout << "syntax error at " << error->GetLineNumber() << ":" << error->GetCharPosition()
+           << " : " << p->GetErrorMessage() << endl;
 
       delete n;
     } else {
-      CAstModule *m = dynamic_cast<CAstModule*>(n);
+      CAstModule *m = dynamic_cast<CAstModule *>(n);
       assert(m != NULL);
 
-      cout << "successfully parsed." << endl
-           << "running semantic analysis..." << endl;
+      cout << "successfully parsed." << endl << "running semantic analysis..." << endl;
 
       CToken t;
       string msg;
       if (!m->TypeCheck(&t, &msg)) {
-        cout << "semantic error at " << t.GetLineNumber() << ":"
-          << t.GetCharPosition() << " : " << msg << endl;
+        cout << "semantic error at " << t.GetLineNumber() << ":" << t.GetCharPosition() << " : "
+             << msg << endl;
       } else {
-        cout << "semantic analysis completed." << endl
-          << "  AST:" << endl;
+        cout << "semantic analysis completed." << endl << "  AST:" << endl;
         m->print(cout, 4);
         cout << endl << endl;
 
