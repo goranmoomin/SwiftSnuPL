@@ -305,6 +305,7 @@ class Resolver {
             switch declaration {
             case .`var`(let name, let type):
                 scope.addVar(token: name, type: try withScope(scope) { try evaluate(type: type) })
+                try withScope(scope) { try resolveSymbol(of: name) }
             case .const(let name, let type, let initializer):
                 let initializerValue: AnyHashable = try withScope(scope) {
                     try resolve(expression: initializer)
@@ -313,6 +314,7 @@ class Resolver {
                 scope.addConst(
                     token: name, type: try withScope(scope) { try evaluate(type: type) },
                     initializer: initializerValue)
+                try withScope(scope) { try resolveSymbol(of: name) }
             case .procedure(let name, let parameters, let block):
                 // TODO: Check if type evaluation requires scope
                 let parameterTypes = try withScope(scope) {
@@ -330,6 +332,7 @@ class Resolver {
                         try resolve(block: block, symbols: symbols, return: nil)
                     }
                 }
+                try withScope(scope) { try resolveSymbol(of: name) }
             case .function(let name, let parameters, return: let `return`, let block):
                 // TODO: Check if type evaluation requires scope
                 let parameterTypes = try withScope(scope) {
@@ -349,6 +352,7 @@ class Resolver {
                         try resolve(block: block, symbols: symbols, return: returnType)
                     }
                 }
+                try withScope(scope) { try resolveSymbol(of: name) }
             }
         }
         // TODO: Check if return statement exits
