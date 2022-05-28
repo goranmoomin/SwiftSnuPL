@@ -294,6 +294,9 @@ class Resolver {
             builtin(withSignature: "WriteLn()"),
         ]
 
+        // TODO: Check the implications of this
+        resolveSymbol(of: module.name, as: builtin(withSignature: "main()"))
+
         // TODO: Check if main should be returnable
         try resolve(block: module.block, symbols: globalSymbols, return: nil)
     }
@@ -536,12 +539,14 @@ class Resolver {
     func resolveSymbol(of token: Token) throws {
         for scope in scopes.reversed() {
             if let symbol = scope.findSymbol(named: token.string) {
-                resolvedSymbols[token] = symbol
+                resolveSymbol(of: token, as: symbol)
                 return
             }
         }
         fatalError()
     }
+
+    func resolveSymbol(of token: Token, as symbol: Symbol) { resolvedSymbols[token] = symbol }
 
     func resolveType(of expression: Parser.Expression, as type: `Type`) {
         resolvedTypes[expression] = type

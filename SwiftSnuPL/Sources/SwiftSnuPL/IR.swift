@@ -34,8 +34,8 @@ class Generator {
         case notEqual
         case lessThan
         case lessEqual
-        case biggerThan
-        case biggerEqual
+        case greaterThan
+        case greaterEqual
     }
 
     enum Operand {
@@ -64,7 +64,25 @@ class Generator {
 
     // MARK: - Generating Instructions
 
-    func generate() -> [Instruction] { return makeInstructions(module: module) }
+    func generate() -> [Resolver.Symbol: [Instruction]] {
+        var instructions: [Resolver.Symbol: [Instruction]] = [:]
+        for declaration in module.block.declarations {
+            switch declaration {
+            case .procedure(let name, let parameters, let block):
+                guard let block = block else { continue }
+                let symbol = resolvedSymbol(of: name)
+                instructions[symbol] = makeInstructions(parameters: parameters, block: block)
+            case .function(let name, let parameters, _, let block):
+                guard let block = block else { continue }
+                let symbol = resolvedSymbol(of: name)
+                instructions[symbol] = makeInstructions(parameters: parameters, block: block)
+            default: continue
+            }
+        }
+        let symbol = resolvedSymbol(of: module.name)
+        instructions[symbol] = makeInstructions(module: module)
+        return instructions
+    }
 
     var labelID = 0
     var operandID = 0
@@ -138,12 +156,15 @@ class Generator {
     func makeInstructions(statement: Parser.Statement) -> [Instruction] {
         switch statement {
         case .assignment(let target, let value):
-            let valueOperand = makeOperand()
-            var instructions = makeInstructions(expression: value, to: valueOperand)
+            var instructions: [Instruction] = []
             if case .variable(name: let name) = target {
-                let targetOperand: Operand = .symbol(resolvedSymbol(of: name))
-                instructions.append(.move(dst: targetOperand, src: valueOperand))
+                let operand: Operand = .symbol(resolvedSymbol(of: name))
+                instructions.append(contentsOf: makeInstructions(expression: value, to: operand))
             } else if case .subscript = target {
+                let valueOperand = makeOperand()
+                instructions.append(
+                    contentsOf: makeInstructions(expression: value, to: valueOperand))
+
                 var variable = target
                 var indexOperands: [Operand] = []
                 while case .subscript(array: let array, index: let index) = variable {
@@ -276,8 +297,8 @@ class Generator {
                 case "/": op = .div
                 case "=": op = .equal
                 case "#": op = .notEqual
-                case "<": op = .biggerThan
-                case "<=": op = .biggerEqual
+                case "<": op = .greaterThan
+                case "<=": op = .greaterEqual
                 case ">": op = .lessThan
                 case ">=": op = .lessEqual
                 default: fatalError()
@@ -368,5 +389,81 @@ class Generator {
     func resolvedType(of expression: Parser.Expression) -> Resolver.`Type` {
         guard let type = resolvedTypes[expression] else { fatalError() }
         return type
+    }
+}
+
+// MARK: - Pretty Printer
+
+extension String {
+    fileprivate func indented(with prefix: String = "  ") -> String {
+        self.split(separator: "\n").map({ prefix + $0 }).joined(separator: "\n")
+    }
+}
+
+func format(symbol: Resolver.Symbol, instructions: [Generator.Instruction]) -> String {
+    """
+    \(symbol.token.string):
+    \(instructions.map(format(instruction:)).joined(separator: "\n").indented())
+    """
+}
+
+func format(instruction: Generator.Instruction) -> String {
+    switch instruction {
+    case .move(let dst, let src): return "mov \(format(operand: dst)) \(format(operand: src))"
+    case .unary(let op, let dst, let src):
+        return "\(format(unaryOp: op)) \(format(operand: dst)) \(format(operand: src))"
+    case .binary(let op, let dst, let src1, let src2):
+        return
+            "\(format(binaryOp: op)) \(format(operand: dst)) \(format(operand: src1)) \(format(operand: src2))"
+    case .parameter(let dst, let index): return "param #\(index) \(format(operand: dst))"
+    case .jump(let dst): return "jmp \(dst)"
+    case .branch(let dst, let src1, let src2):
+        return "beq \(dst) \(format(operand: src1)) \(format(operand: src2))"
+    case .call(_, let symbol, let arguments):
+        return
+            "call \(symbol.token.string) \(arguments.map(format(operand:)).joined(separator: ", "))"
+    case .return(let value):
+        if let value = value { return "ret \(format(operand: value))" } else { return "ret" }
+    case .load(let dst, let symbol, let indices):
+        return
+            "ld \(format(operand: dst)) \(symbol.token.string)[\(indices.map(format(operand:)).joined(separator: ","))]"
+    case .store(let symbol, let indices, let src):
+        return
+            "st \(symbol.token.string)[\(indices.map(format(operand:)).joined(separator: ","))] \(format(operand: src))"
+    case .label(let name): return "\(name):"
+    }
+}
+
+func format(operand: Generator.Operand) -> String {
+    switch operand {
+    case .constant(let value): return "#\(value)"
+    case .temporary(let name): return "\(name)"
+    case .string(let name): return "=\(name)"
+    case .symbol(let symbol): return "\(symbol.token.string)"
+    }
+}
+
+func format(unaryOp: Generator.UnaryOp) -> String {
+    switch unaryOp {
+    case .neg: return "neg"
+    case .pos: return "pos"
+    case .not: return "not"
+    }
+}
+
+func format(binaryOp: Generator.BinaryOp) -> String {
+    switch binaryOp {
+    case .add: return "add"
+    case .sub: return "sub"
+    case .mul: return "mul"
+    case .div: return "div"
+    case .and: return "and"
+    case .or: return "or"
+    case .equal: return "eq"
+    case .notEqual: return "neq"
+    case .lessThan: return "lt"
+    case .lessEqual: return "leq"
+    case .greaterThan: return "gt"
+    case .greaterEqual: return "geq"
     }
 }

@@ -25,5 +25,11 @@ for testSourceURL in try FileManager.default
         print("error: resolving failed.")
         continue
     }
+
+    let generator = Generator(
+        module: module, resolvedSymbols: resolver.resolvedSymbols,
+        resolvedTypes: resolver.resolvedTypes)
+    let tac = generator.generate()
+    for (symbol, instructions) in tac { print(format(symbol: symbol, instructions: instructions)) }
     print("succesfully resolved \(testSourceURL.lastPathComponent).")
 }
