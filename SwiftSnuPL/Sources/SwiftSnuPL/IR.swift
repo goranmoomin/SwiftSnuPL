@@ -30,12 +30,12 @@ class Generator {
         case and
         case or
 
-        case equal
-        case notEqual
-        case lessThan
-        case lessEqual
-        case greaterThan
-        case greaterEqual
+        case eq
+        case neq
+        case lt
+        case leq
+        case gt
+        case geq
     }
 
     enum Operand {
@@ -46,18 +46,18 @@ class Generator {
     }
 
     enum Instruction {
-        case move(dst: Operand, src: Operand)
-        case unary(op: UnaryOp, dst: Operand, src: Operand)
-        case binary(op: BinaryOp, dst: Operand, src1: Operand, src2: Operand)
-        case parameter(dst: Operand, index: Int)  // always 64-bit
+        case move(destination: Operand, source: Operand)
+        case unary(op: UnaryOp, destination: Operand, source: Operand)
+        case binary(op: BinaryOp, destination: Operand, source1: Operand, source2: Operand)
+        case parameter(destination: Operand, index: Int)  // always 64-bit
 
-        case jump(dst: String)
-        case branch(dst: String, src1: Operand, src2: Operand)  // branch if equal
-        case call(dst: Operand?, symbol: Resolver.Symbol, arguments: [Operand])
+        case jump(destination: String)
+        case branch(destination: String, source1: Operand, source2: Operand)  // branch if equal
+        case call(destination: Operand?, symbol: Resolver.Symbol, arguments: [Operand])
         case `return`(value: Operand?)
 
-        case load(dst: Operand, symbol: Resolver.Symbol, indices: [Operand])
-        case store(symbol: Resolver.Symbol, indices: [Operand], src: Operand)
+        case load(destination: Operand, symbol: Resolver.Symbol, indices: [Operand])
+        case store(symbol: Resolver.Symbol, indices: [Operand], source: Operand)
 
         case label(name: String)
     }
@@ -115,10 +115,11 @@ class Generator {
 
     func makeInstructions(parameters: [Parser.Parameter], block: Parser.Block) -> [Instruction] {
         var instructions: [Instruction] = []
-        for (index, parameter) in parameters.enumerated() {
-            let symbol = resolvedSymbol(of: parameter.name)
-            instructions.append(.parameter(dst: .symbol(symbol), index: index))
-        }
+        // TODO: Resolve parameters in Resolver
+        //        for (index, parameter) in parameters.enumerated() {
+        //            let symbol = resolvedSymbol(of: parameter.name)
+        //            instructions.append(.parameter(destination: .symbol(symbol), index: index))
+        //        }
         instructions.append(contentsOf: makeInstructions(block: block))
         return instructions
     }
@@ -126,6 +127,7 @@ class Generator {
     func makeInstructions(block: Parser.Block) -> [Instruction] {
         var instructions: [Instruction] = []
         for declaration in block.declarations {
+            // TODO: Add array initialization
             switch declaration {
             case .const(let name, _, _):
                 let symbol = resolvedSymbol(of: name)
@@ -140,8 +142,7 @@ class Generator {
                     initializerOperand = makeLiteral(string: initializer)
                 default: fatalError()
                 }
-                instructions.append(
-                    .move(dst: .symbol(resolvedSymbol(of: name)), src: initializerOperand))
+                instructions.append(.move(destination: .symbol(symbol), source: initializerOperand))
             default: continue
             }
         }
@@ -158,8 +159,9 @@ class Generator {
         case .assignment(let target, let value):
             var instructions: [Instruction] = []
             if case .variable(name: let name) = target {
-                let operand: Operand = .symbol(resolvedSymbol(of: name))
-                instructions.append(contentsOf: makeInstructions(expression: value, to: operand))
+                let symbol = resolvedSymbol(of: name)
+                instructions.append(
+                    contentsOf: makeInstructions(expression: value, to: .symbol(symbol)))
             } else if case .subscript = target {
                 let valueOperand = makeOperand()
                 instructions.append(
@@ -177,7 +179,7 @@ class Generator {
                 guard case .variable(name: let name) = variable else { fatalError() }
                 let symbol = resolvedSymbol(of: name)
                 instructions.append(
-                    .store(symbol: symbol, indices: indexOperands, src: valueOperand))
+                    .store(symbol: symbol, indices: indexOperands, source: valueOperand))
             }
             return instructions
 
@@ -190,8 +192,9 @@ class Generator {
                 argumentOperands.append(operand)
             }
             guard case .variable(name: let name) = procedure else { fatalError() }
+            let symbol = resolvedSymbol(of: name)
             instructions.append(
-                .call(dst: nil, symbol: resolvedSymbol(of: name), arguments: argumentOperands))
+                .call(destination: nil, symbol: symbol, arguments: argumentOperands))
             return instructions
 
         case .if(let condition, let thenBody, let elseBody):
@@ -208,9 +211,10 @@ class Generator {
             let elseLabel = makeLabel()
             let endLabel = makeLabel()
             instructions.append(contentsOf: makeInstructions(expression: condition, to: operand))
-            instructions.append(.branch(dst: elseLabel, src1: operand, src2: .constant(0)))
+            instructions.append(
+                .branch(destination: elseLabel, source1: operand, source2: .constant(0)))
             instructions.append(contentsOf: makeInstructions(statements: thenBody))
-            instructions.append(.jump(dst: endLabel))
+            instructions.append(.jump(destination: endLabel))
             instructions.append(.label(name: elseLabel))
             instructions.append(contentsOf: makeInstructions(statements: elseBody))
             instructions.append(.label(name: endLabel))
@@ -229,9 +233,10 @@ class Generator {
             let endLabel = makeLabel()
             instructions.append(.label(name: conditionLabel))
             instructions.append(contentsOf: makeInstructions(expression: condition, to: operand))
-            instructions.append(.branch(dst: endLabel, src1: operand, src2: .constant(0)))
+            instructions.append(
+                .branch(destination: endLabel, source1: operand, source2: .constant(0)))
             instructions.append(contentsOf: makeInstructions(statements: body))
-            instructions.append(.jump(dst: conditionLabel))
+            instructions.append(.jump(destination: conditionLabel))
             instructions.append(.label(name: endLabel))
             return instructions
 
@@ -248,13 +253,17 @@ class Generator {
 
     func makeInstructions(expression: Parser.Expression, to operand: Operand) -> [Instruction] {
         switch expression {
-        case .integer(let integer): return [.move(dst: operand, src: .constant(Int64(integer)))]
-        case .longint(let longint): return [.move(dst: operand, src: .constant(longint))]
-        case .boolean(let boolean): return [.move(dst: operand, src: .constant(boolean ? 1 : 0))]
-        case .char(let char): return [.move(dst: operand, src: .constant(Int64(char)))]
-        case .string(let string): return [.move(dst: operand, src: makeLiteral(string: string))]
+        case .integer(let integer):
+            return [.move(destination: operand, source: .constant(Int64(integer)))]
+        case .longint(let longint): return [.move(destination: operand, source: .constant(longint))]
+        case .boolean(let boolean):
+            return [.move(destination: operand, source: .constant(boolean ? 1 : 0))]
+        case .char(let char): return [.move(destination: operand, source: .constant(Int64(char)))]
+        case .string(let string):
+            return [.move(destination: operand, source: makeLiteral(string: string))]
         case .variable(let name):
-            return [.move(dst: operand, src: .symbol(resolvedSymbol(of: name)))]
+            let symbol = resolvedSymbol(of: name)
+            return [.move(destination: operand, source: .symbol(symbol))]
         case .binary(operator: let `operator`, let left, let right):
             // [ .makeInstructions(left, to: <_tmp0>)
             // , .makeInstructions(right, to: <_tmp1>)
@@ -279,11 +288,12 @@ class Generator {
                 let branchOperand: Operand = .constant(`operator`.string == "&&" ? 0 : 1)
                 let op: BinaryOp = `operator`.string == "&&" ? .and : .or
                 instructions.append(contentsOf: makeInstructions(expression: left, to: operand))
-                instructions.append(.branch(dst: branchLabel, src1: operand, src2: branchOperand))
+                instructions.append(
+                    .branch(destination: branchLabel, source1: operand, source2: branchOperand))
                 instructions.append(
                     contentsOf: makeInstructions(expression: right, to: rightOperand))
                 instructions.append(
-                    .binary(op: op, dst: operand, src1: rightOperand, src2: operand))
+                    .binary(op: op, destination: operand, source1: rightOperand, source2: operand))
                 instructions.append(.label(name: branchLabel))
             } else {
                 instructions.append(contentsOf: makeInstructions(expression: left, to: leftOperand))
@@ -295,16 +305,17 @@ class Generator {
                 case "-": op = .sub
                 case "*": op = .mul
                 case "/": op = .div
-                case "=": op = .equal
-                case "#": op = .notEqual
-                case "<": op = .greaterThan
-                case "<=": op = .greaterEqual
-                case ">": op = .lessThan
-                case ">=": op = .lessEqual
+                case "=": op = .eq
+                case "#": op = .neq
+                case "<": op = .gt
+                case "<=": op = .geq
+                case ">": op = .lt
+                case ">=": op = .leq
                 default: fatalError()
                 }
                 instructions.append(
-                    .binary(op: op, dst: operand, src1: leftOperand, src2: rightOperand))
+                    .binary(
+                        op: op, destination: operand, source1: leftOperand, source2: rightOperand))
             }
             return instructions
 
@@ -322,7 +333,7 @@ class Generator {
             case "!": op = .not
             default: fatalError()
             }
-            instructions.append(.unary(op: op, dst: operand, src: valueOperand))
+            instructions.append(.unary(op: op, destination: operand, source: valueOperand))
             return instructions
 
         case .subscript:
@@ -348,10 +359,11 @@ class Generator {
             }
             guard case .variable(name: let name) = variable else { fatalError() }
             let symbol = resolvedSymbol(of: name)
-            instructions.append(.load(dst: operand, symbol: symbol, indices: indexOperands))
+            instructions.append(.load(destination: operand, symbol: symbol, indices: indexOperands))
             if resolvedType(of: expression) == .boolean {
                 instructions.append(
-                    .binary(op: .and, dst: operand, src1: operand, src2: .constant(1)))
+                    .binary(op: .and, destination: operand, source1: operand, source2: .constant(1))
+                )
             }
             return instructions
 
@@ -375,8 +387,9 @@ class Generator {
                 argumentOperands.append(operand)
             }
             guard case .variable(name: let name) = function else { fatalError() }
+            let symbol = resolvedSymbol(of: name)
             instructions.append(
-                .call(dst: operand, symbol: resolvedSymbol(of: name), arguments: argumentOperands))
+                .call(destination: operand, symbol: symbol, arguments: argumentOperands))
             return instructions
         }
     }
@@ -402,68 +415,79 @@ extension String {
 
 func format(symbol: Resolver.Symbol, instructions: [Generator.Instruction]) -> String {
     """
-    \(symbol.token.string):
-    \(instructions.map(format(instruction:)).joined(separator: "\n").indented())
+    <\(symbol.token)>:
+    \(instructions.map(String.init(describing:)).joined(separator: "\n"))
     """
 }
 
-func format(instruction: Generator.Instruction) -> String {
-    switch instruction {
-    case .move(let dst, let src): return "mov \(format(operand: dst)) \(format(operand: src))"
-    case .unary(let op, let dst, let src):
-        return "\(format(unaryOp: op)) \(format(operand: dst)) \(format(operand: src))"
-    case .binary(let op, let dst, let src1, let src2):
-        return
-            "\(format(binaryOp: op)) \(format(operand: dst)) \(format(operand: src1)) \(format(operand: src2))"
-    case .parameter(let dst, let index): return "param #\(index) \(format(operand: dst))"
-    case .jump(let dst): return "jmp \(dst)"
-    case .branch(let dst, let src1, let src2):
-        return "beq \(dst) \(format(operand: src1)) \(format(operand: src2))"
-    case .call(_, let symbol, let arguments):
-        return
-            "call \(symbol.token.string) \(arguments.map(format(operand:)).joined(separator: ", "))"
-    case .return(let value):
-        if let value = value { return "ret \(format(operand: value))" } else { return "ret" }
-    case .load(let dst, let symbol, let indices):
-        return
-            "ld \(format(operand: dst)) \(symbol.token.string)[\(indices.map(format(operand:)).joined(separator: ","))]"
-    case .store(let symbol, let indices, let src):
-        return
-            "st \(symbol.token.string)[\(indices.map(format(operand:)).joined(separator: ","))] \(format(operand: src))"
-    case .label(let name): return "\(name):"
+extension Generator.Instruction: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .move(let destination, let source): return "\tmov \(destination) \(source)"
+        case .unary(let op, let destination, let source): return "\t\(op) \(destination) \(source)"
+        case .binary(let op, let destination, let source1, let source2):
+            return "\t\(op) \(destination) \(source1) \(source2)"
+        case .parameter(let destination, let index): return "\tparam #\(index) \(destination)"
+        case .jump(let destination): return "\tjmp .\(destination)"
+        case .branch(let destination, let source1, let source2):
+            return "\tbeq \(destination) \(source1) \(source2)"
+        case .call(let destination, let symbol, let arguments):
+            let argumentsDescription = arguments.map(String.init(describing:))
+                .joined(separator: ",")
+            if let destination = destination {
+                return "\tcall \(destination) \(symbol.token)(\(argumentsDescription))"
+            } else {
+                return "\tcall \(symbol.token)(\(argumentsDescription))"
+            }
+        case .return(let value):
+            if let value = value { return "\tret \(value)" } else { return "\tret" }
+        case .load(let destination, let symbol, let indices):
+            return
+                "\tld \(destination) \(symbol.token)[\(indices.map(String.init(describing:)).joined(separator: ","))]"
+        case .store(let symbol, let indices, let source):
+            return
+                "\tst \(symbol.token)[\(indices.map(String.init(describing:)).joined(separator: ","))] \(source)"
+        case .label(let name): return "\(name):"
+        }
     }
 }
 
-func format(operand: Generator.Operand) -> String {
-    switch operand {
-    case .constant(let value): return "#\(value)"
-    case .temporary(let name): return "\(name)"
-    case .string(let name): return "=\(name)"
-    case .symbol(let symbol): return "\(symbol.token.string)"
+extension Generator.Operand: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .constant(let value): return "#\(value)"
+        case .temporary(let name): return "\(name)"
+        case .string(let name): return "=\(name)"
+        case .symbol(let symbol): return "\(symbol.token)"
+        }
     }
 }
 
-func format(unaryOp: Generator.UnaryOp) -> String {
-    switch unaryOp {
-    case .neg: return "neg"
-    case .pos: return "pos"
-    case .not: return "not"
+extension Generator.UnaryOp: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .neg: return "neg"
+        case .pos: return "pos"
+        case .not: return "not"
+        }
     }
 }
 
-func format(binaryOp: Generator.BinaryOp) -> String {
-    switch binaryOp {
-    case .add: return "add"
-    case .sub: return "sub"
-    case .mul: return "mul"
-    case .div: return "div"
-    case .and: return "and"
-    case .or: return "or"
-    case .equal: return "eq"
-    case .notEqual: return "neq"
-    case .lessThan: return "lt"
-    case .lessEqual: return "leq"
-    case .greaterThan: return "gt"
-    case .greaterEqual: return "geq"
+extension Generator.BinaryOp: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .add: return "add"
+        case .sub: return "sub"
+        case .mul: return "mul"
+        case .div: return "div"
+        case .and: return "and"
+        case .or: return "or"
+        case .eq: return "eq"
+        case .neq: return "neq"
+        case .lt: return "lt"
+        case .leq: return "leq"
+        case .gt: return "gt"
+        case .geq: return "geq"
+        }
     }
 }

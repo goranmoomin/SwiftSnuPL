@@ -152,3 +152,5 @@ class Scanner: IteratorProtocol {
             string: String(cString: value), lineNumber: Int(line_num), charPosition: Int(char_pos))
     }
 }
+
+extension Token: CustomStringConvertible { var description: String { string } }
