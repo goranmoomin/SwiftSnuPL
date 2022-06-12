@@ -326,10 +326,11 @@ class Resolver {
                 scope.addVar(token: name, type: .procedure(parameters: parameterTypes))
                 if let block = block {
                     var symbols: Set<Symbol> = []
-                    // TODO: Add itself to symbols
                     // TODO: Check if parameters do not clash
                     for (parameter, type) in zip(parameters, parameterTypes) {
-                        symbols.insert(.`var`(token: parameter.name, type: type))
+                        let symbol: Symbol = .`var`(token: parameter.name, type: type)
+                        resolveSymbol(of: parameter.name, as: symbol)
+                        symbols.insert(symbol)
                     }
                     try withScope(scope) {
                         try resolve(block: block, symbols: symbols, return: nil)
@@ -346,10 +347,11 @@ class Resolver {
                     token: name, type: .function(parameters: parameterTypes, return: returnType))
                 if let block = block {
                     var symbols: Set<Symbol> = []
-                    // TODO: Add itself to symbols
                     // TODO: Check if parameters do not clash
                     for (parameter, type) in zip(parameters, parameterTypes) {
-                        symbols.insert(.`var`(token: parameter.name, type: type))
+                        let symbol: Symbol = .`var`(token: parameter.name, type: type)
+                        resolveSymbol(of: parameter.name, as: symbol)
+                        symbols.insert(symbol)
                     }
                     try withScope(scope) {
                         try resolve(block: block, symbols: symbols, return: returnType)

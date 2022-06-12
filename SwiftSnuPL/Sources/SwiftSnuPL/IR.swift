@@ -115,11 +115,10 @@ class Generator {
 
     func makeInstructions(parameters: [Parser.Parameter], block: Parser.Block) -> [Instruction] {
         var instructions: [Instruction] = []
-        // TODO: Resolve parameters in Resolver
-        //        for (index, parameter) in parameters.enumerated() {
-        //            let symbol = resolvedSymbol(of: parameter.name)
-        //            instructions.append(.parameter(destination: .symbol(symbol), index: index))
-        //        }
+        for (index, parameter) in parameters.enumerated() {
+            let symbol = resolvedSymbol(of: parameter.name)
+            instructions.append(.parameter(destination: .symbol(symbol), index: index))
+        }
         instructions.append(contentsOf: makeInstructions(block: block))
         return instructions
     }
