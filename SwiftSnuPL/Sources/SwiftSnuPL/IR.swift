@@ -56,8 +56,9 @@ class Generator {
         case call(destination: Operand?, symbol: Resolver.Symbol, arguments: [Operand])
         case `return`(value: Operand?)
 
-        case load(destination: Operand, symbol: Resolver.Symbol, indices: [Operand])
-        case store(symbol: Resolver.Symbol, indices: [Operand], source: Operand)
+        case allocate(address: Operand, size: Int64)
+        case load(destination: Operand, source: Operand)
+        case store(source: Operand, destination: Operand)
 
         case label(name: String)
     }
@@ -126,8 +127,15 @@ class Generator {
     func makeInstructions(block: Parser.Block) -> [Instruction] {
         var instructions: [Instruction] = []
         for declaration in block.declarations {
-            // TODO: Add array initialization
             switch declaration {
+            case .`var`(let name, _):
+                let symbol = resolvedSymbol(of: name)
+                guard case .`var`(_, let type) = symbol else { fatalError() }
+                if case .array(let base, _) = type {
+                    instructions.append(.allocate(address: .symbol(symbol), size: type.size))
+                    instructions.append(
+                        .store(source: .constant(base!.size), destination: .symbol(symbol)))  // size=4
+                }
             case .const(let name, _, _):
                 let symbol = resolvedSymbol(of: name)
                 guard case .const(_, _, let initializer) = symbol else { fatalError() }
@@ -161,24 +169,32 @@ class Generator {
                 let symbol = resolvedSymbol(of: name)
                 instructions.append(
                     contentsOf: makeInstructions(expression: value, to: .symbol(symbol)))
-            } else if case .subscript = target {
+            } else if case .subscript(let array, let index) = target {
                 let valueOperand = makeOperand()
                 instructions.append(
                     contentsOf: makeInstructions(expression: value, to: valueOperand))
-
-                var variable = target
-                var indexOperands: [Operand] = []
-                while case .subscript(array: let array, index: let index) = variable {
-                    variable = array
-                    let indexOperand = makeOperand()
-                    instructions.append(
-                        contentsOf: makeInstructions(expression: index, to: indexOperand))
-                    indexOperands.append(indexOperand)
-                }
-                guard case .variable(name: let name) = variable else { fatalError() }
-                let symbol = resolvedSymbol(of: name)
+                let targetOperand = makeOperand()
                 instructions.append(
-                    .store(symbol: symbol, indices: indexOperands, source: valueOperand))
+                    contentsOf: makeInstructions(expression: array, to: targetOperand))
+                let offsetOperand = makeOperand()
+                let indexOperand = makeOperand()
+                instructions.append(.load(destination: offsetOperand, source: targetOperand))  // size=4
+                instructions.append(
+                    contentsOf: makeInstructions(expression: index, to: indexOperand))
+                instructions.append(
+                    .binary(
+                        op: .mul, destination: offsetOperand, source1: offsetOperand,
+                        source2: indexOperand))
+                instructions.append(
+                    .binary(
+                        op: .add, destination: offsetOperand, source1: offsetOperand,
+                        source2: .constant(4)))
+                instructions.append(
+                    .binary(
+                        op: .add, destination: targetOperand, source1: targetOperand,
+                        source2: offsetOperand))
+
+                instructions.append(.store(source: valueOperand, destination: targetOperand))  // size=??
             }
             return instructions
 
@@ -335,7 +351,7 @@ class Generator {
             instructions.append(.unary(op: op, destination: operand, source: valueOperand))
             return instructions
 
-        case .subscript:
+        case .subscript(let array, let index):
             // temp: pointerAddr, resultAddr
             // .binary(.mul, from: indexAddr, .const(size(of: resolvedType(of: array).base)), to: pointerAddr)
             // .dereference(from: pointerAddr, size: size(of: resolvedType(of: array).base) to: resultAddr)
@@ -347,19 +363,26 @@ class Generator {
             // ldrb (if unsigned char)
             // ldrb; and (if boolean)
             var instructions: [Instruction] = []
-            var indexOperands: [Operand] = []
-            var variable = expression
-            while case .subscript(array: let array, index: let index) = variable {
-                variable = array
-                let indexOperand = makeOperand()
-                instructions.append(
-                    contentsOf: makeInstructions(expression: index, to: indexOperand))
-                indexOperands.append(indexOperand)
+            let type = resolvedType(of: expression)
+            let offsetOperand = makeOperand()
+            let indexOperand = makeOperand()
+            instructions.append(contentsOf: makeInstructions(expression: array, to: operand))
+            instructions.append(.load(destination: offsetOperand, source: operand))  // size=4
+            instructions.append(contentsOf: makeInstructions(expression: index, to: indexOperand))
+            instructions.append(
+                .binary(
+                    op: .mul, destination: offsetOperand, source1: offsetOperand,
+                    source2: indexOperand))
+            instructions.append(
+                .binary(
+                    op: .add, destination: offsetOperand, source1: offsetOperand,
+                    source2: .constant(4)))
+            instructions.append(
+                .binary(op: .add, destination: operand, source1: operand, source2: offsetOperand))
+            if type.isScalar {
+                instructions.append(.load(destination: operand, source: operand))  // size=??
             }
-            guard case .variable(name: let name) = variable else { fatalError() }
-            let symbol = resolvedSymbol(of: name)
-            instructions.append(.load(destination: operand, symbol: symbol, indices: indexOperands))
-            if resolvedType(of: expression) == .boolean {
+            if type == .boolean {
                 instructions.append(
                     .binary(op: .and, destination: operand, source1: operand, source2: .constant(1))
                 )
@@ -404,13 +427,23 @@ class Generator {
     }
 }
 
-// MARK: - Pretty Printer
+// MARK: - Type Layout
 
-extension String {
-    fileprivate func indented(with prefix: String = "  ") -> String {
-        self.split(separator: "\n").map({ prefix + $0 }).joined(separator: "\n")
+extension Resolver.`Type` {
+    var size: Int64 {
+        switch self {
+        case .boolean: return 1
+        case .char: return 1
+        case .integer: return 4
+        case .longint: return 8
+        case .array(let base, let size): return 4 + (base?.size ?? 0) * Int64(size ?? 0)
+        case .procedure: return 8
+        case .function: return 8
+        }
     }
 }
+
+// MARK: - Pretty Printer
 
 func format(symbol: Resolver.Symbol, instructions: [Generator.Instruction]) -> String {
     """
@@ -440,12 +473,9 @@ extension Generator.Instruction: CustomStringConvertible {
             }
         case .return(let value):
             if let value = value { return "\tret \(value)" } else { return "\tret" }
-        case .load(let destination, let symbol, let indices):
-            return
-                "\tld \(destination) \(symbol.token)[\(indices.map(String.init(describing:)).joined(separator: ","))]"
-        case .store(let symbol, let indices, let source):
-            return
-                "\tst \(symbol.token)[\(indices.map(String.init(describing:)).joined(separator: ","))] \(source)"
+        case .allocate(let address, let size): return "\talloca \(address) \(size)"
+        case .load(let destination, let source): return "\tld \(source) \(destination)"
+        case .store(let source, let destination): return "\tst \(destination) \(source)"
         case .label(let name): return "\(name):"
         }
     }
