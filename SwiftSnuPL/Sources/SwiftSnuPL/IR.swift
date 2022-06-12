@@ -46,6 +46,12 @@ class IRGenerator {
         case symbol(Resolver.Symbol)
     }
 
+    enum MemorySize: Equatable, Hashable {
+        case byte
+        case word
+        case doubleWord
+    }
+
     enum Instruction: Equatable, Hashable {
         case move(destination: Operand, source: Operand)
         case unary(op: UnaryOp, destination: Operand, source: Operand)
@@ -57,8 +63,8 @@ class IRGenerator {
         case call(destination: Operand?, symbol: Resolver.Symbol, arguments: [Operand])
         case `return`(value: Operand?)
 
-        case load(destination: Operand, source: Operand)
-        case store(source: Operand, destination: Operand)
+        case load(destination: Operand, source: Operand, size: MemorySize)
+        case store(source: Operand, destination: Operand, size: MemorySize)
 
         case label(name: String)
     }
@@ -146,7 +152,7 @@ class IRGenerator {
                             destination: .symbol(symbol), source: makeAllocation(ofSize: type.size))
                     )
                     instructions.append(
-                        .store(source: .constant(base!.size), destination: .symbol(symbol)))  // size=4
+                        .store(source: .constant(base!.size), destination: .symbol(symbol), size: .word))
                 }
             case .const(let name, _, _):
                 let symbol = resolvedSymbol(of: name)
@@ -190,7 +196,7 @@ class IRGenerator {
                     contentsOf: makeInstructions(expression: array, to: targetOperand))
                 let offsetOperand = makeTemporary()
                 let indexOperand = makeTemporary()
-                instructions.append(.load(destination: offsetOperand, source: targetOperand))  // size=4
+                instructions.append(.load(destination: offsetOperand, source: targetOperand, size: .word))
                 instructions.append(
                     contentsOf: makeInstructions(expression: index, to: indexOperand))
                 instructions.append(
@@ -206,7 +212,8 @@ class IRGenerator {
                         op: .add, destination: targetOperand, source1: targetOperand,
                         source2: offsetOperand))
 
-                instructions.append(.store(source: valueOperand, destination: targetOperand))  // size=??
+                // TODO: Add dynamic store
+                instructions.append(.store(source: valueOperand, destination: targetOperand, size: .doubleWord))
             }
             return instructions
 
@@ -379,7 +386,7 @@ class IRGenerator {
             let offsetOperand = makeTemporary()
             let indexOperand = makeTemporary()
             instructions.append(contentsOf: makeInstructions(expression: array, to: operand))
-            instructions.append(.load(destination: offsetOperand, source: operand))  // size=4
+            instructions.append(.load(destination: offsetOperand, source: operand, size: .word))
             instructions.append(contentsOf: makeInstructions(expression: index, to: indexOperand))
             instructions.append(
                 .binary(
@@ -392,7 +399,8 @@ class IRGenerator {
             instructions.append(
                 .binary(op: .add, destination: operand, source1: operand, source2: offsetOperand))
             if type.isScalar {
-                instructions.append(.load(destination: operand, source: operand))  // size=??
+                // TODO: Add dynamic load
+                instructions.append(.load(destination: operand, source: operand, size: .doubleWord))
             }
             if type == .boolean {
                 instructions.append(
@@ -485,8 +493,8 @@ extension IRGenerator.Instruction: CustomStringConvertible {
             }
         case .return(let value):
             if let value = value { return "\tret \(value)" } else { return "\tret" }
-        case .load(let destination, let source): return "\tld \(source) \(destination)"
-        case .store(let source, let destination): return "\tst \(destination) \(source)"
+        case .load(let destination, let source, _): return "\tld \(source) \(destination)"
+        case .store(let source, let destination, _): return "\tst \(destination) \(source)"
         case .label(let name): return "\(name):"
         }
     }

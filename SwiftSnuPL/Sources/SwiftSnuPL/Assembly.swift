@@ -30,7 +30,7 @@ class AssemblyGenerator {
             stackMapping[operand] = stackSize
             stackSize += size
         }
-        if stackSize % 16 != 0 { stackSize += 8 }
+        if stackSize % 16 != 0 { stackSize += 16 - (stackSize % 16) }
         func withOperands(
             load sourceOperands: [IRGenerator.Operand] = [], to sourceRegisters: [String] = [],
             store destinationOperands: [IRGenerator.Operand] = [],
@@ -43,20 +43,20 @@ class AssemblyGenerator {
                 switch operand {
                 case .constant(let value): assembly += "\tmov \(register), #\(value)\n"
                 case .temporary, .symbol:
-                    assembly += "\tldr \(register), [sp, #\(stackMapping[operand]!)]\n"
+                    assembly += "\tldr \(register), [sp, #\(stackMapping[operand]!)] // \(operand)\n"
                 case .string(let name):
                     assembly += """
                         \tadrp \(register), \(name)
                         \tadd \(register), \(register), :lo12:\(name)\n
                         """
-                case .allocation: assembly += "\tadd \(register), sp, #\(stackMapping[operand]!)\n"
+                case .allocation: assembly += "\tadd \(register), sp, #\(stackMapping[operand]!) // \(operand)\n"
                 }
             }
             if let body = body { assembly += body() }
             for (operand, register) in zip(destinationOperands, destinationRegisters) {
                 switch operand {
                 case .temporary, .symbol:
-                    assembly += "\tstr \(register), [sp, #\(stackMapping[operand]!)]\n"
+                    assembly += "\tstr \(register), [sp, #\(stackMapping[operand]!)] // \(operand)\n"
                 default: break
                 }
             }
@@ -83,10 +83,16 @@ class AssemblyGenerator {
                     """
                 }
             case .binary(let op, let destination, let source1, let source2):
-                guard op == .add else { fatalError() }
+                guard op == .add || op == .mul else { fatalError() }
                 assembly += withOperands(
                     load: [source1, source2], to: ["x8", "x9"], store: [destination], from: ["x8"]
-                ) { "\tadd x8, x8, x9\n" }
+                ) {
+                    switch op {
+                    case .add: return "\tadd x8, x8, x9\n"
+                    case .mul: return "\tmul x8, x8, x9\n"
+                    default: fatalError()
+                    }
+                }
             case .parameter(let destination, let index):
                 guard index < 8 else { fatalError() }
                 assembly += withOperands(store: [destination], from: ["x\(index)"])
@@ -121,13 +127,27 @@ class AssemblyGenerator {
                     \tret\n
                     """
                 }
-            case .load(let destination, let source):
+            case .load(let destination, let source, let size):
                 assembly += withOperands(
                     load: [source], to: ["x8"], store: [destination], from: ["x8"]
-                ) { "\tldr x8, [x8]\n" }
-            case .store(let source, let destination):
+                ) {
+                    switch size {
+                    case .byte: fatalError()
+                    case .word:
+                        return "\tldrsw x8, [x8]\n"
+                    case .doubleWord:
+                        return "\tldr x8, [x8]\n"
+                    }
+                }
+            case .store(let source, let destination, let size):
                 assembly += withOperands(load: [source, destination], to: ["x8", "x9"]) {
-                    "\tstr x8, [x9]\n"
+                    switch size {
+                    case .byte: fatalError()
+                    case .word:
+                        return "\tstr w8, [x9]\n"
+                    case .doubleWord:
+                        return "\tstr x8, [x9]\n"
+                    }
                 }
             case .label(let name): assembly += ".\(name):\n"
             }
@@ -162,7 +182,7 @@ class AssemblyGenerator {
             if let destination = destination { operands.insert(destination) }
             return operands
         case .return(let value): if let value = value { return [value] } else { return [] }
-        case .load(let destination, let source), .store(let source, let destination):
+        case .load(let destination, let source, _), .store(let source, let destination, _):
             return [source, destination]
         case .label: return []
         }
