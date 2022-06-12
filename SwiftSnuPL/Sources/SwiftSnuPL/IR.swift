@@ -1,6 +1,6 @@
 import Foundation
 
-class Generator {
+class IRGenerator {
     let module: Parser.Module
     let resolvedSymbols: [Token: Resolver.Symbol]
     let resolvedTypes: [Parser.Expression: Resolver.`Type`]
@@ -16,13 +16,13 @@ class Generator {
 
     // MARK: - Types
 
-    enum UnaryOp {
+    enum UnaryOp: Equatable, Hashable {
         case neg
         case pos
         case not
     }
 
-    enum BinaryOp {
+    enum BinaryOp: Equatable, Hashable {
         case add
         case sub
         case mul
@@ -38,14 +38,15 @@ class Generator {
         case geq
     }
 
-    enum Operand {
+    enum Operand: Equatable, Hashable {
         case constant(Int64)
         case temporary(name: String)
         case string(name: String)
+        case allocation(name: String)
         case symbol(Resolver.Symbol)
     }
 
-    enum Instruction {
+    enum Instruction: Equatable, Hashable {
         case move(destination: Operand, source: Operand)
         case unary(op: UnaryOp, destination: Operand, source: Operand)
         case binary(op: BinaryOp, destination: Operand, source1: Operand, source2: Operand)
@@ -56,7 +57,6 @@ class Generator {
         case call(destination: Operand?, symbol: Resolver.Symbol, arguments: [Operand])
         case `return`(value: Operand?)
 
-        case allocate(address: Operand, size: Int64)
         case load(destination: Operand, source: Operand)
         case store(source: Operand, destination: Operand)
 
@@ -87,8 +87,10 @@ class Generator {
 
     var labelID = 0
     var operandID = 0
+    var allocationID = 0
     var stringID = 0
 
+    var allocations: [String: Int64] = [:]
     var stringLiterals: [String: [UInt8]] = [:]
 
     func makeLabel() -> String {
@@ -97,10 +99,17 @@ class Generator {
         return labelName
     }
 
-    func makeOperand() -> Operand {
+    func makeTemporary() -> Operand {
         let name = "tmp\(operandID)"
         operandID += 1
         return .temporary(name: name)
+    }
+
+    func makeAllocation(ofSize size: Int64) -> Operand {
+        let name = "alloc\(allocationID)"
+        allocations[name] = size
+        allocationID += 1
+        return .allocation(name: name)
     }
 
     func makeLiteral(string: [UInt8]) -> Operand {
@@ -132,7 +141,10 @@ class Generator {
                 let symbol = resolvedSymbol(of: name)
                 guard case .`var`(_, let type) = symbol else { fatalError() }
                 if case .array(let base, _) = type {
-                    instructions.append(.allocate(address: .symbol(symbol), size: type.size))
+                    instructions.append(
+                        .move(
+                            destination: .symbol(symbol), source: makeAllocation(ofSize: type.size))
+                    )
                     instructions.append(
                         .store(source: .constant(base!.size), destination: .symbol(symbol)))  // size=4
                 }
@@ -170,14 +182,14 @@ class Generator {
                 instructions.append(
                     contentsOf: makeInstructions(expression: value, to: .symbol(symbol)))
             } else if case .subscript(let array, let index) = target {
-                let valueOperand = makeOperand()
+                let valueOperand = makeTemporary()
                 instructions.append(
                     contentsOf: makeInstructions(expression: value, to: valueOperand))
-                let targetOperand = makeOperand()
+                let targetOperand = makeTemporary()
                 instructions.append(
                     contentsOf: makeInstructions(expression: array, to: targetOperand))
-                let offsetOperand = makeOperand()
-                let indexOperand = makeOperand()
+                let offsetOperand = makeTemporary()
+                let indexOperand = makeTemporary()
                 instructions.append(.load(destination: offsetOperand, source: targetOperand))  // size=4
                 instructions.append(
                     contentsOf: makeInstructions(expression: index, to: indexOperand))
@@ -202,7 +214,7 @@ class Generator {
             var instructions: [Instruction] = []
             var argumentOperands: [Operand] = []
             for argument in arguments {
-                let operand = makeOperand()
+                let operand = makeTemporary()
                 instructions.append(contentsOf: makeInstructions(expression: argument, to: operand))
                 argumentOperands.append(operand)
             }
@@ -222,7 +234,7 @@ class Generator {
             // , makeInstructions(elseBody)
             // , <_lbl1>: ]
             var instructions: [Instruction] = []
-            let operand = makeOperand()
+            let operand = makeTemporary()
             let elseLabel = makeLabel()
             let endLabel = makeLabel()
             instructions.append(contentsOf: makeInstructions(expression: condition, to: operand))
@@ -243,7 +255,7 @@ class Generator {
             // , .jump(<_lbl0>)
             // , <_lbl1>: ]
             var instructions: [Instruction] = []
-            let operand = makeOperand()
+            let operand = makeTemporary()
             let conditionLabel = makeLabel()
             let endLabel = makeLabel()
             instructions.append(.label(name: conditionLabel))
@@ -258,7 +270,7 @@ class Generator {
         case .return(let value):
             // makeInstructions(expression: value, to: x0)
             if let value = value {
-                let operand = makeOperand()
+                let operand = makeTemporary()
                 return makeInstructions(expression: value, to: operand) + [.return(value: operand)]
             } else {
                 return [.return(value: nil)]
@@ -283,8 +295,8 @@ class Generator {
             // [ .makeInstructions(left, to: <_tmp0>)
             // , .makeInstructions(right, to: <_tmp1>)
             // , .binary(op, left, right, to: result) ]
-            let leftOperand = makeOperand()
-            let rightOperand = makeOperand()
+            let leftOperand = makeTemporary()
+            let rightOperand = makeTemporary()
             var instructions: [Instruction] = []
             if `operator`.string == "&&" || `operator`.string == "||" {
                 // [ .makeInstructions(left, to: result)
@@ -339,7 +351,7 @@ class Generator {
             // [ .makeInstructions(value, to: <_tmp0>)
             // , .unary(<_tmp0>, to: result) ]
             var instructions: [Instruction] = []
-            let valueOperand = makeOperand()
+            let valueOperand = makeTemporary()
             instructions.append(contentsOf: makeInstructions(expression: value, to: valueOperand))
             let op: UnaryOp
             switch `operator`.string {
@@ -364,8 +376,8 @@ class Generator {
             // ldrb; and (if boolean)
             var instructions: [Instruction] = []
             let type = resolvedType(of: expression)
-            let offsetOperand = makeOperand()
-            let indexOperand = makeOperand()
+            let offsetOperand = makeTemporary()
+            let indexOperand = makeTemporary()
             instructions.append(contentsOf: makeInstructions(expression: array, to: operand))
             instructions.append(.load(destination: offsetOperand, source: operand))  // size=4
             instructions.append(contentsOf: makeInstructions(expression: index, to: indexOperand))
@@ -404,7 +416,7 @@ class Generator {
             var instructions: [Instruction] = []
             var argumentOperands: [Operand] = []
             for argument in arguments {
-                let operand = makeOperand()
+                let operand = makeTemporary()
                 instructions.append(contentsOf: makeInstructions(expression: argument, to: operand))
                 argumentOperands.append(operand)
             }
@@ -445,14 +457,14 @@ extension Resolver.`Type` {
 
 // MARK: - Pretty Printer
 
-func format(symbol: Resolver.Symbol, instructions: [Generator.Instruction]) -> String {
+func format(symbol: Resolver.Symbol, instructions: [IRGenerator.Instruction]) -> String {
     """
     <\(symbol.token)>:
     \(instructions.map(String.init(describing:)).joined(separator: "\n"))
     """
 }
 
-extension Generator.Instruction: CustomStringConvertible {
+extension IRGenerator.Instruction: CustomStringConvertible {
     var description: String {
         switch self {
         case .move(let destination, let source): return "\tmov \(destination) \(source)"
@@ -473,7 +485,6 @@ extension Generator.Instruction: CustomStringConvertible {
             }
         case .return(let value):
             if let value = value { return "\tret \(value)" } else { return "\tret" }
-        case .allocate(let address, let size): return "\talloca \(address) \(size)"
         case .load(let destination, let source): return "\tld \(source) \(destination)"
         case .store(let source, let destination): return "\tst \(destination) \(source)"
         case .label(let name): return "\(name):"
@@ -481,18 +492,19 @@ extension Generator.Instruction: CustomStringConvertible {
     }
 }
 
-extension Generator.Operand: CustomStringConvertible {
+extension IRGenerator.Operand: CustomStringConvertible {
     var description: String {
         switch self {
         case .constant(let value): return "#\(value)"
         case .temporary(let name): return "\(name)"
         case .string(let name): return "=\(name)"
         case .symbol(let symbol): return "\(symbol.token)"
+        case .allocation(let name): return "&\(name)"
         }
     }
 }
 
-extension Generator.UnaryOp: CustomStringConvertible {
+extension IRGenerator.UnaryOp: CustomStringConvertible {
     var description: String {
         switch self {
         case .neg: return "neg"
@@ -502,7 +514,7 @@ extension Generator.UnaryOp: CustomStringConvertible {
     }
 }
 
-extension Generator.BinaryOp: CustomStringConvertible {
+extension IRGenerator.BinaryOp: CustomStringConvertible {
     var description: String {
         switch self {
         case .add: return "add"
