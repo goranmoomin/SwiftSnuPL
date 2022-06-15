@@ -43,20 +43,23 @@ class AssemblyGenerator {
                 switch operand {
                 case .constant(let value): assembly += "\tmov \(register), #\(value)\n"
                 case .temporary, .symbol:
-                    assembly += "\tldr \(register), [sp, #\(stackMapping[operand]!)] // \(operand)\n"
+                    assembly +=
+                        "\tldr \(register), [sp, #\(stackMapping[operand]!)] // \(operand)\n"
                 case .string(let name):
                     assembly += """
                         \tadrp \(register), \(name)
                         \tadd \(register), \(register), :lo12:\(name)\n
                         """
-                case .allocation: assembly += "\tadd \(register), sp, #\(stackMapping[operand]!) // \(operand)\n"
+                case .allocation:
+                    assembly += "\tadd \(register), sp, #\(stackMapping[operand]!) // \(operand)\n"
                 }
             }
             if let body = body { assembly += body() }
             for (operand, register) in zip(destinationOperands, destinationRegisters) {
                 switch operand {
                 case .temporary, .symbol:
-                    assembly += "\tstr \(register), [sp, #\(stackMapping[operand]!)] // \(operand)\n"
+                    assembly +=
+                        "\tstr \(register), [sp, #\(stackMapping[operand]!)] // \(operand)\n"
                 default: break
                 }
             }
@@ -83,13 +86,23 @@ class AssemblyGenerator {
                     """
                 }
             case .binary(let op, let destination, let source1, let source2):
-                guard op == .add || op == .mul else { fatalError() }
+                guard op == .add || op == .mul || op == .eq || op == .gt else { fatalError() }
                 assembly += withOperands(
                     load: [source1, source2], to: ["x8", "x9"], store: [destination], from: ["x8"]
                 ) {
                     switch op {
                     case .add: return "\tadd x8, x8, x9\n"
                     case .mul: return "\tmul x8, x8, x9\n"
+                    case .eq:
+                        return """
+                            \tcmp x9, x8
+                            \tcset x8, eq\n
+                            """
+                    case .gt:
+                        return """
+                            \tcmp x9, x8
+                            \tcset x8, gt\n
+                            """
                     default: fatalError()
                     }
                 }
@@ -133,20 +146,16 @@ class AssemblyGenerator {
                 ) {
                     switch size {
                     case .byte: fatalError()
-                    case .word:
-                        return "\tldrsw x8, [x8]\n"
-                    case .doubleWord:
-                        return "\tldr x8, [x8]\n"
+                    case .word: return "\tldrsw x8, [x8]\n"
+                    case .doubleWord: return "\tldr x8, [x8]\n"
                     }
                 }
             case .store(let source, let destination, let size):
                 assembly += withOperands(load: [source, destination], to: ["x8", "x9"]) {
                     switch size {
                     case .byte: fatalError()
-                    case .word:
-                        return "\tstr w8, [x9]\n"
-                    case .doubleWord:
-                        return "\tstr x8, [x9]\n"
+                    case .word: return "\tstr w8, [x9]\n"
+                    case .doubleWord: return "\tstr x8, [x9]\n"
                     }
                 }
             case .label(let name): assembly += ".\(name):\n"

@@ -152,7 +152,9 @@ class IRGenerator {
                             destination: .symbol(symbol), source: makeAllocation(ofSize: type.size))
                     )
                     instructions.append(
-                        .store(source: .constant(base!.size), destination: .symbol(symbol), size: .word))
+                        .store(
+                            source: .constant(base!.size), destination: .symbol(symbol), size: .word
+                        ))
                 }
             case .const(let name, _, _):
                 let symbol = resolvedSymbol(of: name)
@@ -196,7 +198,8 @@ class IRGenerator {
                     contentsOf: makeInstructions(expression: array, to: targetOperand))
                 let offsetOperand = makeTemporary()
                 let indexOperand = makeTemporary()
-                instructions.append(.load(destination: offsetOperand, source: targetOperand, size: .word))
+                instructions.append(
+                    .load(destination: offsetOperand, source: targetOperand, size: .word))
                 instructions.append(
                     contentsOf: makeInstructions(expression: index, to: indexOperand))
                 instructions.append(
@@ -213,7 +216,8 @@ class IRGenerator {
                         source2: offsetOperand))
 
                 // TODO: Add dynamic store
-                instructions.append(.store(source: valueOperand, destination: targetOperand, size: .doubleWord))
+                instructions.append(
+                    .store(source: valueOperand, destination: targetOperand, size: .doubleWord))
             }
             return instructions
 
