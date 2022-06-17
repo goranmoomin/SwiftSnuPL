@@ -92,18 +92,42 @@ class AssemblyGenerator {
                 ) {
                     switch op {
                     case .add: return "\tadd x8, x8, x9\n"
+                    case .sub: fatalError()
                     case .mul: return "\tmul x8, x8, x9\n"
+                    case .div: fatalError()
+                    case .and: fatalError()
+                    case .or: fatalError()
+
                     case .eq:
                         return """
                             \tcmp x9, x8
                             \tcset x8, eq\n
+                            """
+                    case .neq:
+                        return """
+                            \tcmp x9, x8
+                            \tcset x8, ne\n
+                            """
+                    case .lt:
+                        return """
+                            \tcmp x9, x8
+                            \tcset x8, lt\n
+                            """
+                    case .leq:
+                        return """
+                            \tcmp x9, x8
+                            \tcset x8, le\n
                             """
                     case .gt:
                         return """
                             \tcmp x9, x8
                             \tcset x8, gt\n
                             """
-                    default: fatalError()
+                    case .geq:
+                        return """
+                            \tcmp x9, x8
+                            \tcset x8, ge\n
+                            """
                     }
                 }
             case .parameter(let destination, let index):
@@ -145,7 +169,7 @@ class AssemblyGenerator {
                     load: [source], to: ["x8"], store: [destination], from: ["x8"]
                 ) {
                     switch size {
-                    case .byte: fatalError()
+                    case .byte: return "\tldrb x8, [x8]"
                     case .word: return "\tldrsw x8, [x8]\n"
                     case .doubleWord: return "\tldr x8, [x8]\n"
                     }
@@ -153,7 +177,7 @@ class AssemblyGenerator {
             case .store(let source, let destination, let size):
                 assembly += withOperands(load: [source, destination], to: ["x8", "x9"]) {
                     switch size {
-                    case .byte: fatalError()
+                    case .byte: return "\tstrb x8, [x9]"
                     case .word: return "\tstr w8, [x9]\n"
                     case .doubleWord: return "\tstr x8, [x9]\n"
                     }
