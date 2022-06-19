@@ -300,7 +300,7 @@ class AssemblyGenerator {
                     load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x9"
                 ) {
                     switch size {
-                    case .byte: return "\tldrb x8, [x8]"
+                    case .byte: return "\tldrb w8, [x8]\n"
                     case .word: return "\tldrsw x8, [x8]\n"
                     case .doubleWord: return "\tldr x8, [x8]\n"
                     }
@@ -310,7 +310,7 @@ class AssemblyGenerator {
                     load: [source, destination], to: ["x8", "x9"], scratch: "x10"
                 ) {
                     switch size {
-                    case .byte: return "\tstrb x8, [x9]"
+                    case .byte: return "\tstrb w8, [x9]\n"
                     case .word: return "\tstr w8, [x9]\n"
                     case .doubleWord: return "\tstr x8, [x9]\n"
                     }
