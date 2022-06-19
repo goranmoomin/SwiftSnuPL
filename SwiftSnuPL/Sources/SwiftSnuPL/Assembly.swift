@@ -20,14 +20,6 @@ class AssemblyGenerator {
         var retasm = """
             \t.text
             \(instructions.map(generate(symbol:instructions:)).joined(separator: "\n"))
-            \t.macro embed_string, str
-            \t.word 2f - 1f
-            \t.word 1
-            1:
-            \t.string "\\str"
-            2:
-            \t.endm
-
             \t.data\n
             """
         for glbVar in globalVariables {
@@ -44,9 +36,13 @@ class AssemblyGenerator {
         }
         for (key, value) in stringLiterals {
             retasm += """
-                \(key):
-                \tembed_string "\(literalize(String(Array(value.map{ Character(UnicodeScalar($0)) }))))"\n
-                """
+                    \(key):
+                    \t.word \(value.count)
+                    \t.word 1\n
+                    """
+            for ch in value {
+                retasm += "\t.byte \(ch)\n"
+            }
         }
         return retasm
     }
