@@ -36,9 +36,7 @@ class Resolver {
             case .integer, .longint: return target == .integer || target == .longint
             case .procedure, .function: return false
             case .array(let base, let size):
-                guard case .array(base: let targetBase, size: let targetSize) = target else {
-                    return false
-                }
+                guard case .array(base: let targetBase, size: let targetSize) = target else { return false }
                 // allow passing any array to an untyped array (if size allows)
                 // TODO: Add size check
                 guard let targetBase = targetBase else { return true }
@@ -88,20 +86,15 @@ class Resolver {
             symbols.insert(.`var`(token: token, type: type, isGlobal: true))
         }
         mutating func addGlobalConst(token: Token, type: `Type`, initializer: AnyHashable) {
-            symbols.insert(
-                .const(token: token, type: type, initializer: initializer, isGlobal: true))
+            symbols.insert(.const(token: token, type: type, initializer: initializer, isGlobal: true))
         }
-        mutating func addVar(token: Token, type: `Type`) {
-            symbols.insert(.`var`(token: token, type: type))
-        }
+        mutating func addVar(token: Token, type: `Type`) { symbols.insert(.`var`(token: token, type: type)) }
 
         mutating func addConst(token: Token, type: `Type`, initializer: AnyHashable) {
             symbols.insert(.const(token: token, type: type, initializer: initializer))
         }
 
-        func findSymbol(named name: String) -> Symbol? {
-            symbols.first(where: { $0.token.string == name })
-        }
+        func findSymbol(named name: String) -> Symbol? { symbols.first(where: { $0.token.string == name }) }
     }
 
     // MARK: - Comptime evaluation
@@ -212,9 +205,7 @@ class Resolver {
         case .subscript: fatalError()
         case .call: fatalError()
         case .variable(let name):
-            guard case let .const(_, _, initializer, _) = try resolvedSymbol(of: name) else {
-                fatalError()
-            }
+            guard case let .const(_, _, initializer, _) = try resolvedSymbol(of: name) else { fatalError() }
             return initializer
         case .integer(let integer): return integer
         case .longint(let longint): return longint
@@ -257,11 +248,8 @@ class Resolver {
             let leftIndex = signature.firstIndex(of: "(")!
             let rightIndex = signature.lastIndex(of: ")")!
             let name = signature[signature.startIndex..<leftIndex]
-            let token = Token(
-                id: "builtin:\(name)", kind: .ident, string: String(name), lineNumber: 0,
-                charPosition: 0)
-            let parameters = signature[signature.index(after: leftIndex)..<rightIndex]
-                .split(separator: " ")
+            let token = Token(id: "builtin:\(name)", kind: .ident, string: String(name), lineNumber: 0, charPosition: 0)
+            let parameters = signature[signature.index(after: leftIndex)..<rightIndex].split(separator: " ")
             let `return` = signature[signature.index(after: rightIndex)..<signature.endIndex]
             var parameterTypes: [`Type`] = []
             for parameter in parameters {
@@ -279,8 +267,7 @@ class Resolver {
                         index = parameter.index(after: index)
                         let sizeIndex = index
                         while parameter[index] != "]" { index = parameter.index(after: index) }
-                        let size: Int32? =
-                            sizeIndex < index ? Int32(parameter[sizeIndex..<index])! : nil
+                        let size: Int32? = sizeIndex < index ? Int32(parameter[sizeIndex..<index])! : nil
                         type = .array(base: type, size: size)
                     default: fatalError()
                     }
@@ -322,12 +309,10 @@ class Resolver {
             switch declaration {
             case .`var`(let name, let type):
                 if block == module.block {
-                    scope.addGlobalVar(
-                        token: name, type: try withScope(scope) { try evaluate(type: type) })
+                    scope.addGlobalVar(token: name, type: try withScope(scope) { try evaluate(type: type) })
                     globalVariables.insert(name.string)
                 } else {
-                    scope.addVar(
-                        token: name, type: try withScope(scope) { try evaluate(type: type) })
+                    scope.addVar(token: name, type: try withScope(scope) { try evaluate(type: type) })
                 }
                 try withScope(scope) { try resolveSymbol(of: name) }
             case .const(let name, let type, let initializer):
@@ -348,9 +333,7 @@ class Resolver {
                 try withScope(scope) { try resolveSymbol(of: name) }
             case .procedure(let name, let parameters, let block):
                 // TODO: Check if type evaluation requires scope
-                let parameterTypes = try withScope(scope) {
-                    try parameters.map(\.type).map(evaluate(type:))
-                }
+                let parameterTypes = try withScope(scope) { try parameters.map(\.type).map(evaluate(type:)) }
                 scope.addVar(token: name, type: .procedure(parameters: parameterTypes))
                 if let block = block {
                     var symbols: Set<Symbol> = []
@@ -360,19 +343,14 @@ class Resolver {
                         resolveSymbol(of: parameter.name, as: symbol)
                         symbols.insert(symbol)
                     }
-                    try withScope(scope) {
-                        try resolve(block: block, symbols: symbols, return: nil)
-                    }
+                    try withScope(scope) { try resolve(block: block, symbols: symbols, return: nil) }
                 }
                 try withScope(scope) { try resolveSymbol(of: name) }
             case .function(let name, let parameters, return: let `return`, let block):
                 // TODO: Check if type evaluation requires scope
-                let parameterTypes = try withScope(scope) {
-                    try parameters.map(\.type).map(evaluate(type:))
-                }
+                let parameterTypes = try withScope(scope) { try parameters.map(\.type).map(evaluate(type:)) }
                 let returnType = try withScope(scope) { try evaluate(type: `return`) }
-                scope.addVar(
-                    token: name, type: .function(parameters: parameterTypes, return: returnType))
+                scope.addVar(token: name, type: .function(parameters: parameterTypes, return: returnType))
                 if let block = block {
                     var symbols: Set<Symbol> = []
                     // TODO: Check if parameters do not clash
@@ -381,9 +359,7 @@ class Resolver {
                         resolveSymbol(of: parameter.name, as: symbol)
                         symbols.insert(symbol)
                     }
-                    try withScope(scope) {
-                        try resolve(block: block, symbols: symbols, return: returnType)
-                    }
+                    try withScope(scope) { try resolve(block: block, symbols: symbols, return: returnType) }
                 }
                 try withScope(scope) { try resolveSymbol(of: name) }
             }
@@ -421,8 +397,7 @@ class Resolver {
             for argument in arguments { try resolve(expression: argument) }
             // TODO: Check if arguments are implicitly convertible to parameters
             // e.g. array -> compatible pointer, integer -> longint
-            guard case .procedure(parameters: let parameters) = try resolvedType(of: procedure)
-            else { fatalError() }
+            guard case .procedure(parameters: let parameters) = try resolvedType(of: procedure) else { fatalError() }
 
             // Are there differences between assignment and parameter passing?
             // You can't assign an array to another array
@@ -450,9 +425,7 @@ class Resolver {
             // resolvedType(of: argument).isConvertible(to: resolvedType(parameter)) }
             // TODO: Move type calculations outside of the resolver
             for (parameter, argument) in zip(parameters, arguments) {
-                guard try resolvedType(of: argument).isConvertible(to: parameter) else {
-                    fatalError()
-                }
+                guard try resolvedType(of: argument).isConvertible(to: parameter) else { fatalError() }
             }
         case .if(let condition, let thenBody, let elseBody):
             try resolve(expression: condition)
@@ -513,8 +486,8 @@ class Resolver {
                 resolveType(of: expression, as: .integer)
             case (.longint, .longint, .plusMinus), (.longint, .longint, .mulDiv):
                 resolveType(of: expression, as: .longint)
-            case (.boolean, .boolean, .and), (.boolean, .boolean, .or),
-                (.integer, .integer, .relOp), (.longint, .longint, .relOp), (.char, .char, .relOp):
+            case (.boolean, .boolean, .and), (.boolean, .boolean, .or), (.integer, .integer, .relOp),
+                (.longint, .longint, .relOp), (.char, .char, .relOp):
                 resolveType(of: expression, as: .boolean)
             case (.boolean, .boolean, .relOp):
                 if `operator`.string == "=" || `operator`.string == "#" {
@@ -535,21 +508,17 @@ class Resolver {
             // pointers from subroutine parameters are implicitly casted to arrays
             // if case .pointer(base: let base) = arrayType, case .array = base { arrayType = base }
             // We probably want to prevent subscripting an untyped array
-            guard indexType == .integer, case .array(base: let base, size: _) = arrayType,
-                let base = base
-            else { fatalError() }
+            guard indexType == .integer, case .array(base: let base, size: _) = arrayType, let base = base else {
+                fatalError()
+            }
             resolveType(of: expression, as: base)
         case .call(let function, let arguments):
             try resolve(expression: function)
             for argument in arguments { try resolve(expression: argument) }
-            guard
-                case .function(parameters: let parameters, return: let `return`) = try resolvedType(
-                    of: function)
+            guard case .function(parameters: let parameters, return: let `return`) = try resolvedType(of: function)
             else { fatalError() }
             for (parameter, argument) in zip(parameters, arguments) {
-                guard try resolvedType(of: argument).isConvertible(to: parameter) else {
-                    fatalError()
-                }
+                guard try resolvedType(of: argument).isConvertible(to: parameter) else { fatalError() }
             }
             resolveType(of: expression, as: `return`)
         case .variable(let name):
@@ -578,9 +547,7 @@ class Resolver {
 
     func resolveSymbol(of token: Token, as symbol: Symbol) { resolvedSymbols[token] = symbol }
 
-    func resolveType(of expression: Parser.Expression, as type: `Type`) {
-        resolvedTypes[expression] = type
-    }
+    func resolveType(of expression: Parser.Expression, as type: `Type`) { resolvedTypes[expression] = type }
 
     func resolvedSymbol(of token: Token) throws -> Symbol {
         guard let symbol = resolvedSymbols[token] else { fatalError() }

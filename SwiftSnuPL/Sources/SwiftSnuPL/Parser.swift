@@ -56,21 +56,16 @@ class Parser {
         case procedure(name: Token, parameters: [Parameter], block: Block?)
         case function(name: Token, parameters: [Parameter], `return`: `Type`, block: Block?)
 
-        static func procedure(
-            name: Token, parameters: [Parameter], declarations: [Declaration], body: [Statement]
-        ) -> Self {
-            return .procedure(
-                name: name, parameters: parameters,
-                block: Block(declarations: declarations, body: body))
-        }
+        static func procedure(name: Token, parameters: [Parameter], declarations: [Declaration], body: [Statement])
+            -> Self
+        { return .procedure(name: name, parameters: parameters, block: Block(declarations: declarations, body: body)) }
 
         static func externProcedure(name: Token, parameters: [Parameter]) -> Self {
             return .procedure(name: name, parameters: parameters, block: nil)
         }
 
         static func function(
-            name: Token, parameters: [Parameter], return: `Type`, declarations: [Declaration],
-            body: [Statement]
+            name: Token, parameters: [Parameter], return: `Type`, declarations: [Declaration], body: [Statement]
         ) -> Self {
             return .function(
                 name: name, parameters: parameters, return: `return`,
@@ -118,8 +113,7 @@ class Parser {
     func expected(_ string: String, at place: String? = nil) -> Recover {
         let message: String
         if let place = place {
-            message =
-                "unexpected \(token?.string ?? "end of file"): expected \(string) at \(place)."
+            message = "unexpected \(token?.string ?? "end of file"): expected \(string) at \(place)."
         } else {
             message = "unexpected \(token?.string ?? "end of file"): expected \(string)."
         }
@@ -129,9 +123,7 @@ class Parser {
 
     enum Recover: Error { case tryRecover }
 
-    func recover(on starts: Token.Kind..., after ends: Token.Kind..., body: () throws -> Void)
-        rethrows
-    {
+    func recover(on starts: Token.Kind..., after ends: Token.Kind..., body: () throws -> Void) rethrows {
         do { try body() } catch Recover.tryRecover {
             while !check(starts + ends) && token != nil { advance() }
             _ = match(ends)
@@ -253,9 +245,7 @@ class Parser {
                 let type = try parseType()
                 try consume(.relOp, string: "=")
                 let initializer = try parseExpression()
-                for name in names {
-                    declarations.append(.const(name: name, type: type, initializer: initializer))
-                }
+                for name in names { declarations.append(.const(name: name, type: type, initializer: initializer)) }
                 try consume(.semicolon)
             }
         } while check(.ident)
@@ -288,8 +278,7 @@ class Parser {
             try consume(.ident, string: name.string)
             try consume(.semicolon)
             return .function(
-                name: name, parameters: parameters, return: `return`, declarations: declarations,
-                body: body)
+                name: name, parameters: parameters, return: `return`, declarations: declarations, body: body)
         }
     }
 
@@ -315,8 +304,7 @@ class Parser {
             try consume(.end)
             try consume(.ident, string: name.string)
             try consume(.semicolon)
-            return .procedure(
-                name: name, parameters: parameters, declarations: declarations, body: body)
+            return .procedure(name: name, parameters: parameters, declarations: declarations, body: body)
         }
     }
 
@@ -357,9 +345,7 @@ class Parser {
         // FIRST(statement) = { .ident, .if, .while, .return }
         if check(.ident, .if, .while, .return) {
             repeat {
-                try recover(on: .if, .while, .return, after: .semicolon) {
-                    statements.append(try parseStatement())
-                }
+                try recover(on: .if, .while, .return, after: .semicolon) { statements.append(try parseStatement()) }
             } while match(.semicolon) != nil
         }
         return statements
@@ -458,9 +444,7 @@ class Parser {
         var sizes: [Expression?] = []
         while match(.lBrack) != nil {
             // FIRST(plusMinus) = { .plusMinus, .ident, .number, .boolConst, .charConst, .stringConst, .lParen, .not }
-            if check(
-                .plusMinus, .ident, .number, .boolConst, .charConst, .stringConst, .lParen, .not)
-            {
+            if check(.plusMinus, .ident, .number, .boolConst, .charConst, .stringConst, .lParen, .not) {
                 sizes.append(try parsePlusMinus())
             } else {
                 sizes.append(nil)
@@ -556,8 +540,7 @@ class Parser {
             return .unary(operator: `operator`, value: try parsePrimary())
         }
         throw expected(
-            .ident, .number, .boolConst, .charConst, .stringConst, .lParen,
-            at: "start of primary expression")
+            .ident, .number, .boolConst, .charConst, .stringConst, .lParen, at: "start of primary expression")
     }
 
     func parseSubscript(array: Expression) throws -> Expression {
@@ -600,10 +583,7 @@ class Parser {
                 return .longint(longint)
             } else {
                 guard let integer = Int32(token.string) else {
-                    report(
-                        message:
-                            "unexpected integer literal: integer literals must not be greater than 2147483647."
-                    )
+                    report(message: "unexpected integer literal: integer literals must not be greater than 2147483647.")
                     throw Recover.tryRecover
                 }
                 return .integer(integer)
@@ -676,27 +656,19 @@ func format(declarations: [Parser.Declaration]) -> String {
             if previousType == type && previousInitializer == initializer {
                 string += ", \(name.string)"
             } else {
-                string +=
-                    ": \(format(type: previousType)) = \(format(expression: previousInitializer)); \(name.string)"
+                string += ": \(format(type: previousType)) = \(format(expression: previousInitializer)); \(name.string)"
             }
-        case (
-            .`var`(name: _, type: let previousType), .const(name: let name, type: _, initializer: _)
-        ): string += ": \(format(type: previousType));\nconst \(name.string)"
+        case (.`var`(name: _, type: let previousType), .const(name: let name, type: _, initializer: _)):
+            string += ": \(format(type: previousType));\nconst \(name.string)"
         case (
             .const(name: _, type: let previousType, initializer: let previousInitializer),
             .`var`(name: let name, type: _)
-        ):
-            string +=
-                ": \(format(type: previousType)) = \(format(expression: previousInitializer));\nvar \(name.string)"
+        ): string += ": \(format(type: previousType)) = \(format(expression: previousInitializer));\nvar \(name.string)"
         case (_, .`var`(name: let name, type: _)): string += "\nvar \(name.string)"
-        case (_, .const(name: let name, type: _, initializer: _)):
-            string += "\nconst \(name.string)"
+        case (_, .const(name: let name, type: _, initializer: _)): string += "\nconst \(name.string)"
         case (.`var`(name: _, type: let previousType), let declaration):
             string += ": \(format(type: previousType));\n\(format(declaration: declaration))"
-        case (
-            .const(name: _, type: let previousType, initializer: let previousInitializer),
-            let declaration
-        ):
+        case (.const(name: _, type: let previousType, initializer: let previousInitializer), let declaration):
             string +=
                 ": \(format(type: previousType)) = \(format(expression: previousInitializer));\n\(format(declaration: declaration))"
         case (_, let declaration): string += "\n\(format(declaration: declaration))"
@@ -748,9 +720,7 @@ func format(declaration: Parser.Declaration) -> String {
     }
 }
 
-func format(parameter: Parser.Parameter) -> String {
-    "\(parameter.name.string): \(format(type: parameter.type))"
-}
+func format(parameter: Parser.Parameter) -> String { "\(parameter.name.string): \(format(type: parameter.type))" }
 
 func format(type: Parser.`Type`) -> String {
     switch type {
@@ -766,24 +736,19 @@ func format(type: Parser.`Type`) -> String {
             type = base
         }
         var string = format(type: type)
-        for size in sizes {
-            if let size = size { string += "[\(format(expression: size))]" } else { string += "[]" }
-        }
+        for size in sizes { if let size = size { string += "[\(format(expression: size))]" } else { string += "[]" } }
         return string
     }
 }
 
 func format(expression: Parser.Expression) -> String {
     switch expression {
-    case .unary(operator: let `operator`, let value):
-        return "(\(`operator`.string)\(format(expression: value)))"
+    case .unary(operator: let `operator`, let value): return "(\(`operator`.string)\(format(expression: value)))"
     case .binary(operator: let `operator`, let left, let right):
         return "(\(format(expression: left)) \(`operator`.string) \(format(expression: right)))"
-    case .subscript(let array, let index):
-        return "\(format(expression: array))[\(format(expression: index))]"
+    case .subscript(let array, let index): return "\(format(expression: array))[\(format(expression: index))]"
     case .call(let function, let arguments):
-        return
-            "\(format(expression: function))(\(arguments.map(format(expression:)).joined(separator: ", ")))"
+        return "\(format(expression: function))(\(arguments.map(format(expression:)).joined(separator: ", ")))"
     case .variable(let name): return "\(name.string)"
     case .integer(let integer): return "\(integer)"
     case .longint(let longint): return "\(longint)L"
@@ -798,11 +763,9 @@ func format(expression: Parser.Expression) -> String {
 
 func format(statement: Parser.Statement) -> String {
     switch statement {
-    case .assignment(let target, let value):
-        return "\(format(expression: target)) := \(format(expression: value))"
+    case .assignment(let target, let value): return "\(format(expression: target)) := \(format(expression: value))"
     case .call(let procedure, let arguments):
-        return
-            "\(format(expression: procedure))(\(arguments.map(format(expression:)).joined(separator: ", ")))"
+        return "\(format(expression: procedure))(\(arguments.map(format(expression:)).joined(separator: ", ")))"
     case .if(let condition, let thenBody, let elseBody):
         return """
             if (\(format(expression: condition))) then

@@ -148,8 +148,8 @@ class Scanner: IteratorProtocol {
         if type == Token.Kind.eof.rawValue || type == Token.Kind.ioError.rawValue { return nil }
         // Note: The scanner escapes non-ascii values for valid tokens.
         return Token(
-            id: "tok:\(line_num):\(char_pos)", kind: Token.Kind(rawValue: Int(type))!,
-            string: String(cString: value), lineNumber: Int(line_num), charPosition: Int(char_pos))
+            id: "tok:\(line_num):\(char_pos)", kind: Token.Kind(rawValue: Int(type))!, string: String(cString: value),
+            lineNumber: Int(line_num), charPosition: Int(char_pos))
     }
 }
 

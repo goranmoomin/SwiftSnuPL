@@ -17,22 +17,22 @@ class AssemblyGenerator {
     }
 
     func generate() -> String {
-        var retasm = """
+        var assembly = """
             \t.text
             \(instructions.map(generate(symbol:instructions:)).joined(separator: "\n"))
             \t.data\n
             """
-        for glbVar in globalVariables { retasm += "\t.comm \(glbVar),8\n" }
+        for globalVariable in globalVariables { assembly += "\t.comm \(globalVariable),8\n" }
         for (key, value) in stringLiterals {
-            retasm += """
+            assembly += """
                 \(key):
                 \t.word \(value.count + 1)
                 \t.word 1\n
                 """
-            for ch in value { retasm += "\t.byte \(ch)\n" }
-            retasm += "\t.byte 0\n"
+            for char in value { assembly += "\t.byte \(char)\n" }
+            assembly += "\t.byte 0\n"
         }
-        return retasm
+        return assembly
     }
 
     func generate(symbol: Resolver.Symbol, instructions: [IRGenerator.Instruction]) -> String {
@@ -47,14 +47,12 @@ class AssemblyGenerator {
         if stackSize % 16 != 0 { stackSize += 16 - (stackSize % 16) }
         func withOperands(
             load sourceOperands: [IRGenerator.Operand] = [], to sourceRegisters: [String] = [],
-            store destinationOperands: [IRGenerator.Operand] = [],
-            from destinationRegisters: [String] = [], scratch scratchRegister: String,
-            offset stackExpanded: Int64 = 0, body: (() -> String)? = nil
+            store destinationOperands: [IRGenerator.Operand] = [], from destinationRegisters: [String] = [],
+            scratch scratchRegister: String, offset stackExpanded: Int64 = 0, body: (() -> String)? = nil
         ) -> String {
-            guard
-                !sourceRegisters.contains(scratchRegister)
-                    && !destinationRegisters.contains(scratchRegister)
-            else { fatalError() }
+            guard !sourceRegisters.contains(scratchRegister) && !destinationRegisters.contains(scratchRegister) else {
+                fatalError()
+            }
             guard sourceOperands.count == sourceRegisters.count else { fatalError() }
             guard destinationOperands.count == destinationRegisters.count else { fatalError() }
             var assembly = ""
@@ -94,8 +92,7 @@ class AssemblyGenerator {
                         \tadrp \(register), \(name)
                         \tadd \(register), \(register), :lo12:\(name)\n
                         """
-                case .allocation:
-                    assembly += "\tadd \(register), sp, #\(stackMapping[operand]!) // \(operand)\n"
+                case .allocation: assembly += "\tadd \(register), sp, #\(stackMapping[operand]!) // \(operand)\n"
                 }
             }
             if let body = body { assembly += body() }
@@ -142,13 +139,11 @@ class AssemblyGenerator {
         for instruction in instructions {
             switch instruction {
             case .move(let destination, let source):
-                assembly += withOperands(
-                    load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x10")
+                assembly += withOperands(load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x10")
             case .unary(let op, let destination, let source):
                 guard op == .neg else { fatalError() }
-                assembly += withOperands(
-                    load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x10"
-                ) {
+                assembly += withOperands(load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x10")
+                {
                     """
                     \tmov x9, xzr
                     \tsubs x8, x8, x9\n
@@ -157,8 +152,7 @@ class AssemblyGenerator {
             case .binary(let op, let destination, let source1, let source2):
                 guard op == .add || op == .mul || op == .eq || op == .gt else { fatalError() }
                 assembly += withOperands(
-                    load: [source1, source2], to: ["x8", "x9"], store: [destination], from: ["x8"],
-                    scratch: "x10"
+                    load: [source1, source2], to: ["x8", "x9"], store: [destination], from: ["x8"], scratch: "x10"
                 ) {
                     switch op {
                     case .add: return "\tadd x8, x8, x9\n"
@@ -203,8 +197,7 @@ class AssemblyGenerator {
             case .parameter(let destination, let index):
                 // guard index < 8 else { fatalError() }
                 if index < 8 {
-                    assembly += withOperands(
-                        store: [destination], from: ["x\(index)"], scratch: "x8")
+                    assembly += withOperands(store: [destination], from: ["x\(index)"], scratch: "x8")
                 } else {
                     assembly += """
                         \tadd x8, sp, #\(stackSize + Int64(8 * (index - 8)))
@@ -214,9 +207,7 @@ class AssemblyGenerator {
                 }
             case .jump(let destination): assembly += "\tb .\(destination)\n"
             case .branch(let destination, let source1, let source2):
-                assembly += withOperands(
-                    load: [source1, source2], to: ["x8", "x9"], scratch: "x10"
-                ) {
+                assembly += withOperands(load: [source1, source2], to: ["x8", "x9"], scratch: "x10") {
                     """
                     \tcmp x8, x9
                     \tb.eq .\(destination)\n
@@ -225,9 +216,7 @@ class AssemblyGenerator {
             case .call(let destination, let symbol, let arguments):
                 // guard arguments.count < 8 else { fatalError() }
                 let registers = arguments.prefix(8).enumerated().map { (index, _) in "x\(index)" }
-                assembly += withOperands(
-                    load: Array(arguments.prefix(8)), to: registers, scratch: "x8"
-                ) {
+                assembly += withOperands(load: Array(arguments.prefix(8)), to: registers, scratch: "x8") {
                     """
                     \tstp x29, x30, [sp, #-16]!
                     \tmov x29, sp\n
@@ -239,8 +228,7 @@ class AssemblyGenerator {
                     assembly += "\tadd sp, sp, #-\(extraArgumentsSize)\n"
                     for i in 8..<arguments.count {
                         assembly += withOperands(
-                            load: [arguments[i]], to: ["x8"], scratch: "x9",
-                            offset: Int64(16 + extraArgumentsSize)
+                            load: [arguments[i]], to: ["x8"], scratch: "x9", offset: Int64(16 + extraArgumentsSize)
                         ) {
                             if 8 * (i - 8) < 256 {
                                 return "\tstr x8, [sp, #\(8 * (i-8))]\n"
@@ -265,12 +253,11 @@ class AssemblyGenerator {
                 }
 
                 assembly += withOperands(
-                    store: destination != nil ? [destination!] : [],
-                    from: destination != nil ? ["x0"] : [], scratch: "x8")
+                    store: destination != nil ? [destination!] : [], from: destination != nil ? ["x0"] : [],
+                    scratch: "x8")
             case .return(let value):
                 assembly += withOperands(
-                    load: value != nil ? [value!] : [], to: value != nil ? ["x0"] : [],
-                    scratch: "x10"
+                    load: value != nil ? [value!] : [], to: value != nil ? ["x0"] : [], scratch: "x10"
                 ) {
                     """
                     \tadd sp, sp, #\(stackSize)
@@ -278,9 +265,8 @@ class AssemblyGenerator {
                     """
                 }
             case .load(let destination, let source, let size):
-                assembly += withOperands(
-                    load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x9"
-                ) {
+                assembly += withOperands(load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x9")
+                {
                     switch size {
                     case .byte: return "\tldrb w8, [x8]\n"
                     case .word: return "\tldrsw x8, [x8]\n"
@@ -288,9 +274,7 @@ class AssemblyGenerator {
                     }
                 }
             case .store(let source, let destination, let size):
-                assembly += withOperands(
-                    load: [source, destination], to: ["x8", "x9"], scratch: "x10"
-                ) {
+                assembly += withOperands(load: [source, destination], to: ["x8", "x9"], scratch: "x10") {
                     switch size {
                     case .byte: return "\tstrb w8, [x9]\n"
                     case .word: return "\tstr w8, [x9]\n"
@@ -317,10 +301,8 @@ class AssemblyGenerator {
 
     func operands(in instruction: IRGenerator.Instruction) -> Set<IRGenerator.Operand> {
         switch instruction {
-        case .move(let destination, let source), .unary(_, let destination, let source):
-            return [source, destination]
-        case .binary(_, let destination, let source1, let source2):
-            return [source1, source2, destination]
+        case .move(let destination, let source), .unary(_, let destination, let source): return [source, destination]
+        case .binary(_, let destination, let source1, let source2): return [source1, source2, destination]
         case .parameter(let destination, _): return [destination]
         case .jump: return []
         case .branch(_, let source1, let source2): return [source1, source2]

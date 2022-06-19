@@ -109,10 +109,9 @@ guard (try? resolver.resolve()) != nil else {
 }
 
 let irGenerator = IRGenerator(
-    module: module, resolvedSymbols: resolver.resolvedSymbols, resolvedTypes: resolver.resolvedTypes
-)
+    module: module, resolvedSymbols: resolver.resolvedSymbols, resolvedTypes: resolver.resolvedTypes)
 let tac = irGenerator.generate()
 let asmGenerator = AssemblyGenerator(
-    instructions: tac, allocations: irGenerator.allocations,
-    stringLiterals: irGenerator.stringLiterals, globalVariables: resolver.globalVariables)
+    instructions: tac, allocations: irGenerator.allocations, stringLiterals: irGenerator.stringLiterals,
+    globalVariables: resolver.globalVariables)
 print(asmGenerator.generate())

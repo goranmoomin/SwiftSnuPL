@@ -125,9 +125,7 @@ class IRGenerator {
         return .string(name: name)
     }
 
-    func makeInstructions(module: Parser.Module) -> [Instruction] {
-        return makeInstructions(block: module.block)
-    }
+    func makeInstructions(module: Parser.Module) -> [Instruction] { return makeInstructions(block: module.block) }
 
     func makeInstructions(parameters: [Parser.Parameter], block: Parser.Block) -> [Instruction] {
         var instructions: [Instruction] = []
@@ -147,10 +145,7 @@ class IRGenerator {
                 let symbol = resolvedSymbol(of: name)
                 guard case .`var`(_, let type, _) = symbol else { fatalError() }
                 if case .array = type {
-                    instructions.append(
-                        .move(
-                            destination: .symbol(symbol), source: makeAllocation(ofSize: type.size))
-                    )
+                    instructions.append(.move(destination: .symbol(symbol), source: makeAllocation(ofSize: type.size)))
                     var depth = 0
                     var count = 1
                     var type = type
@@ -163,16 +158,14 @@ class IRGenerator {
                                     source2: .constant(Int64(8 * depth) + Int64(i) * type.size)))
                             instructions.append(
                                 .store(
-                                    source: .constant(base.size * Int64(size)),
-                                    destination: pointerOperand, size: .word))
+                                    source: .constant(base.size * Int64(size)), destination: pointerOperand, size: .word
+                                ))
                             instructions.append(
                                 .binary(
                                     op: .add, destination: pointerOperand, source1: pointerOperand,
                                     source2: .constant(4)))
                             instructions.append(
-                                .store(
-                                    source: .constant(base.size), destination: pointerOperand,
-                                    size: .word))
+                                .store(source: .constant(base.size), destination: pointerOperand, size: .word))
                         }
                         depth += 1
                         count *= Int(size)
@@ -188,8 +181,7 @@ class IRGenerator {
                 case let initializer as Int32: initializerOperand = .constant(Int64(initializer))
                 case let initializer as UInt8: initializerOperand = .constant(Int64(initializer))
                 case let initializer as Bool: initializerOperand = .constant(initializer ? 1 : 0)
-                case let initializer as [UInt8]:
-                    initializerOperand = makeLiteral(string: initializer)
+                case let initializer as [UInt8]: initializerOperand = makeLiteral(string: initializer)
                 default: fatalError()
                 }
                 instructions.append(.move(destination: .symbol(symbol), source: initializerOperand))
@@ -210,57 +202,39 @@ class IRGenerator {
             var instructions: [Instruction] = []
             if case .variable(name: let name) = target {
                 let symbol = resolvedSymbol(of: name)
-                instructions.append(
-                    contentsOf: makeInstructions(expression: value, to: .symbol(symbol)))
+                instructions.append(contentsOf: makeInstructions(expression: value, to: .symbol(symbol)))
             } else if case .subscript(let array, let index) = target {
                 let valueOperand = makeTemporary()
-                instructions.append(
-                    contentsOf: makeInstructions(expression: value, to: valueOperand))
+                instructions.append(contentsOf: makeInstructions(expression: value, to: valueOperand))
                 let targetOperand = makeTemporary()
-                instructions.append(
-                    contentsOf: makeInstructions(expression: array, to: targetOperand))
+                instructions.append(contentsOf: makeInstructions(expression: array, to: targetOperand))
                 let sizeOperand = makeTemporary()
                 let offsetOperand = makeTemporary()
                 let indexOperand = makeTemporary()
                 instructions.append(
-                    .binary(
-                        op: .add, destination: sizeOperand, source1: targetOperand,
-                        source2: .constant(4)))
+                    .binary(op: .add, destination: sizeOperand, source1: targetOperand, source2: .constant(4)))
+                instructions.append(.load(destination: sizeOperand, source: sizeOperand, size: .word))
+                instructions.append(contentsOf: makeInstructions(expression: index, to: indexOperand))
                 instructions.append(
-                    .load(destination: sizeOperand, source: sizeOperand, size: .word))
+                    .binary(op: .mul, destination: offsetOperand, source1: sizeOperand, source2: indexOperand))
                 instructions.append(
-                    contentsOf: makeInstructions(expression: index, to: indexOperand))
+                    .binary(op: .add, destination: offsetOperand, source1: offsetOperand, source2: .constant(8)))
                 instructions.append(
-                    .binary(
-                        op: .mul, destination: offsetOperand, source1: sizeOperand,
-                        source2: indexOperand))
-                instructions.append(
-                    .binary(
-                        op: .add, destination: offsetOperand, source1: offsetOperand,
-                        source2: .constant(8)))
-                instructions.append(
-                    .binary(
-                        op: .add, destination: targetOperand, source1: targetOperand,
-                        source2: offsetOperand))
+                    .binary(op: .add, destination: targetOperand, source1: targetOperand, source2: offsetOperand))
 
                 let byteLabel = makeLabel()
                 let wordLabel = makeLabel()
                 let endLabel = makeLabel()
 
-                instructions.append(
-                    .branch(destination: byteLabel, source1: sizeOperand, source2: .constant(1)))
-                instructions.append(
-                    .branch(destination: wordLabel, source1: sizeOperand, source2: .constant(4)))
-                instructions.append(
-                    .store(source: valueOperand, destination: targetOperand, size: .doubleWord))
+                instructions.append(.branch(destination: byteLabel, source1: sizeOperand, source2: .constant(1)))
+                instructions.append(.branch(destination: wordLabel, source1: sizeOperand, source2: .constant(4)))
+                instructions.append(.store(source: valueOperand, destination: targetOperand, size: .doubleWord))
                 instructions.append(.jump(destination: endLabel))
                 instructions.append(.label(name: wordLabel))
-                instructions.append(
-                    .store(source: valueOperand, destination: targetOperand, size: .word))
+                instructions.append(.store(source: valueOperand, destination: targetOperand, size: .word))
                 instructions.append(.jump(destination: endLabel))
                 instructions.append(.label(name: byteLabel))
-                instructions.append(
-                    .store(source: valueOperand, destination: targetOperand, size: .byte))
+                instructions.append(.store(source: valueOperand, destination: targetOperand, size: .byte))
                 instructions.append(.label(name: endLabel))
             }
             return instructions
@@ -275,8 +249,7 @@ class IRGenerator {
             }
             guard case .variable(name: let name) = procedure else { fatalError() }
             let symbol = resolvedSymbol(of: name)
-            instructions.append(
-                .call(destination: nil, symbol: symbol, arguments: argumentOperands))
+            instructions.append(.call(destination: nil, symbol: symbol, arguments: argumentOperands))
             return instructions
 
         case .if(let condition, let thenBody, let elseBody):
@@ -293,8 +266,7 @@ class IRGenerator {
             let elseLabel = makeLabel()
             let endLabel = makeLabel()
             instructions.append(contentsOf: makeInstructions(expression: condition, to: operand))
-            instructions.append(
-                .branch(destination: elseLabel, source1: operand, source2: .constant(0)))
+            instructions.append(.branch(destination: elseLabel, source1: operand, source2: .constant(0)))
             instructions.append(contentsOf: makeInstructions(statements: thenBody))
             instructions.append(.jump(destination: endLabel))
             instructions.append(.label(name: elseLabel))
@@ -315,8 +287,7 @@ class IRGenerator {
             let endLabel = makeLabel()
             instructions.append(.label(name: conditionLabel))
             instructions.append(contentsOf: makeInstructions(expression: condition, to: operand))
-            instructions.append(
-                .branch(destination: endLabel, source1: operand, source2: .constant(0)))
+            instructions.append(.branch(destination: endLabel, source1: operand, source2: .constant(0)))
             instructions.append(contentsOf: makeInstructions(statements: body))
             instructions.append(.jump(destination: conditionLabel))
             instructions.append(.label(name: endLabel))
@@ -335,14 +306,11 @@ class IRGenerator {
 
     func makeInstructions(expression: Parser.Expression, to operand: Operand) -> [Instruction] {
         switch expression {
-        case .integer(let integer):
-            return [.move(destination: operand, source: .constant(Int64(integer)))]
+        case .integer(let integer): return [.move(destination: operand, source: .constant(Int64(integer)))]
         case .longint(let longint): return [.move(destination: operand, source: .constant(longint))]
-        case .boolean(let boolean):
-            return [.move(destination: operand, source: .constant(boolean ? 1 : 0))]
+        case .boolean(let boolean): return [.move(destination: operand, source: .constant(boolean ? 1 : 0))]
         case .char(let char): return [.move(destination: operand, source: .constant(Int64(char)))]
-        case .string(let string):
-            return [.move(destination: operand, source: makeLiteral(string: string))]
+        case .string(let string): return [.move(destination: operand, source: makeLiteral(string: string))]
         case .variable(let name):
             let symbol = resolvedSymbol(of: name)
             return [.move(destination: operand, source: .symbol(symbol))]
@@ -370,17 +338,13 @@ class IRGenerator {
                 let branchOperand: Operand = .constant(`operator`.string == "&&" ? 0 : 1)
                 let op: BinaryOp = `operator`.string == "&&" ? .and : .or
                 instructions.append(contentsOf: makeInstructions(expression: left, to: operand))
-                instructions.append(
-                    .branch(destination: branchLabel, source1: operand, source2: branchOperand))
-                instructions.append(
-                    contentsOf: makeInstructions(expression: right, to: rightOperand))
-                instructions.append(
-                    .binary(op: op, destination: operand, source1: rightOperand, source2: operand))
+                instructions.append(.branch(destination: branchLabel, source1: operand, source2: branchOperand))
+                instructions.append(contentsOf: makeInstructions(expression: right, to: rightOperand))
+                instructions.append(.binary(op: op, destination: operand, source1: rightOperand, source2: operand))
                 instructions.append(.label(name: branchLabel))
             } else {
                 instructions.append(contentsOf: makeInstructions(expression: left, to: leftOperand))
-                instructions.append(
-                    contentsOf: makeInstructions(expression: right, to: rightOperand))
+                instructions.append(contentsOf: makeInstructions(expression: right, to: rightOperand))
                 let op: BinaryOp
                 switch `operator`.string {
                 case "+": op = .add
@@ -395,9 +359,7 @@ class IRGenerator {
                 case ">=": op = .leq
                 default: fatalError()
                 }
-                instructions.append(
-                    .binary(
-                        op: op, destination: operand, source1: leftOperand, source2: rightOperand))
+                instructions.append(.binary(op: op, destination: operand, source1: leftOperand, source2: rightOperand))
             }
             return instructions
 
@@ -435,29 +397,20 @@ class IRGenerator {
             let offsetOperand = makeTemporary()
             let indexOperand = makeTemporary()
             instructions.append(contentsOf: makeInstructions(expression: array, to: operand))
-            instructions.append(
-                .binary(op: .add, destination: sizeOperand, source1: operand, source2: .constant(4))
-            )
+            instructions.append(.binary(op: .add, destination: sizeOperand, source1: operand, source2: .constant(4)))
             instructions.append(.load(destination: sizeOperand, source: sizeOperand, size: .word))
             instructions.append(contentsOf: makeInstructions(expression: index, to: indexOperand))
             instructions.append(
-                .binary(
-                    op: .mul, destination: offsetOperand, source1: sizeOperand,
-                    source2: indexOperand))
+                .binary(op: .mul, destination: offsetOperand, source1: sizeOperand, source2: indexOperand))
             instructions.append(
-                .binary(
-                    op: .add, destination: offsetOperand, source1: offsetOperand,
-                    source2: .constant(8)))
-            instructions.append(
-                .binary(op: .add, destination: operand, source1: operand, source2: offsetOperand))
+                .binary(op: .add, destination: offsetOperand, source1: offsetOperand, source2: .constant(8)))
+            instructions.append(.binary(op: .add, destination: operand, source1: operand, source2: offsetOperand))
             if type.isScalar {
                 let byteLabel = makeLabel()
                 let wordLabel = makeLabel()
                 let endLabel = makeLabel()
-                instructions.append(
-                    .branch(destination: byteLabel, source1: sizeOperand, source2: .constant(1)))
-                instructions.append(
-                    .branch(destination: wordLabel, source1: sizeOperand, source2: .constant(4)))
+                instructions.append(.branch(destination: byteLabel, source1: sizeOperand, source2: .constant(1)))
+                instructions.append(.branch(destination: wordLabel, source1: sizeOperand, source2: .constant(4)))
                 instructions.append(.load(destination: operand, source: operand, size: .doubleWord))
                 instructions.append(.jump(destination: endLabel))
                 instructions.append(.label(name: wordLabel))
@@ -468,9 +421,7 @@ class IRGenerator {
                 instructions.append(.label(name: endLabel))
             }
             if type == .boolean {
-                instructions.append(
-                    .binary(op: .and, destination: operand, source1: operand, source2: .constant(1))
-                )
+                instructions.append(.binary(op: .and, destination: operand, source1: operand, source2: .constant(1)))
             }
             return instructions
 
@@ -495,8 +446,7 @@ class IRGenerator {
             }
             guard case .variable(name: let name) = function else { fatalError() }
             let symbol = resolvedSymbol(of: name)
-            instructions.append(
-                .call(destination: operand, symbol: symbol, arguments: argumentOperands))
+            instructions.append(.call(destination: operand, symbol: symbol, arguments: argumentOperands))
             return instructions
         }
     }
@@ -546,18 +496,15 @@ extension IRGenerator.Instruction: CustomStringConvertible {
             return "\t\(op) \(destination) \(source1) \(source2)"
         case .parameter(let destination, let index): return "\tparam #\(index) \(destination)"
         case .jump(let destination): return "\tjmp .\(destination)"
-        case .branch(let destination, let source1, let source2):
-            return "\tbeq \(destination) \(source1) \(source2)"
+        case .branch(let destination, let source1, let source2): return "\tbeq \(destination) \(source1) \(source2)"
         case .call(let destination, let symbol, let arguments):
-            let argumentsDescription = arguments.map(String.init(describing:))
-                .joined(separator: ",")
+            let argumentsDescription = arguments.map(String.init(describing:)).joined(separator: ",")
             if let destination = destination {
                 return "\tcall \(destination) \(symbol.token)(\(argumentsDescription))"
             } else {
                 return "\tcall \(symbol.token)(\(argumentsDescription))"
             }
-        case .return(let value):
-            if let value = value { return "\tret \(value)" } else { return "\tret" }
+        case .return(let value): if let value = value { return "\tret \(value)" } else { return "\tret" }
         case .load(let destination, let source, _): return "\tld \(source) \(destination)"
         case .store(let source, let destination, _): return "\tst \(destination) \(source)"
         case .label(let name): return "\(name):"
