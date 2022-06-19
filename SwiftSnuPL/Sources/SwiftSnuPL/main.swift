@@ -9,24 +9,23 @@ let source = #"""
 
     module test2;
 
-    var i: integer;
+    const abcde: integer = 40;
 
     procedure foo(v: integer);
-    var i: integer;
+    // var i: integer;
     begin
-      WriteInt(v)
+      WriteInt(v+abcde)
     end foo;
 
-    function bar(p1, p2, p3, p4: integer): integer;
+    function bar(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10: integer): integer;
     begin
-      return p1 + p2 + p3 + p4
+      return p1 + p2 + p3 + p7 + p8 + p9 + p10
     end bar;
 
     begin
-      foo(bar(1, 2, 3, 4))
+      foo(bar(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
     end test2.
     """#
-
 
 let sourceData = source.data(using: .utf8)!
 let scanner = Scanner(data: sourceData)
@@ -52,5 +51,5 @@ let irGenerator = IRGenerator(
 let tac = irGenerator.generate()
 let asmGenerator = AssemblyGenerator(
     instructions: tac, allocations: irGenerator.allocations,
-    stringLiterals: irGenerator.stringLiterals)
+    stringLiterals: irGenerator.stringLiterals, globalVariables: resolver.globalVariables)
 print(asmGenerator.generate())

@@ -145,20 +145,43 @@ class IRGenerator {
             switch declaration {
             case .`var`(let name, _):
                 let symbol = resolvedSymbol(of: name)
-                guard case .`var`(_, let type) = symbol else { fatalError() }
-                if case .array(let base, _) = type {
+                guard case .`var`(_, let type, _) = symbol else { fatalError() }
+                if case .array = type {
                     instructions.append(
                         .move(
                             destination: .symbol(symbol), source: makeAllocation(ofSize: type.size))
                     )
-                    instructions.append(
-                        .store(
-                            source: .constant(base!.size), destination: .symbol(symbol), size: .word
-                        ))
+                    var depth = 0
+                    var count = 1
+                    var type = type
+                    let pointerOperand = makeTemporary()
+                    while case .array(let base, let size) = type, let base = base, let size = size {
+                        for i in 0..<count {
+                            instructions.append(
+                                .binary(
+                                    op: .add, destination: pointerOperand, source1: .symbol(symbol),
+                                    source2: .constant(Int64(8 * depth) + Int64(i) * type.size)))
+                            instructions.append(
+                                .store(
+                                    source: .constant(base.size), destination: pointerOperand,
+                                    size: .word))
+                            instructions.append(
+                                .binary(
+                                    op: .add, destination: pointerOperand, source1: pointerOperand,
+                                    source2: .constant(4)))
+                            instructions.append(
+                                .store(
+                                    source: .constant(type.size), destination: pointerOperand,
+                                    size: .word))
+                        }
+                        depth += 1
+                        count *= Int(size)
+                        type = base
+                    }
                 }
             case .const(let name, _, _):
                 let symbol = resolvedSymbol(of: name)
-                guard case .const(_, _, let initializer) = symbol else { fatalError() }
+                guard case .const(_, _, let initializer, _) = symbol else { fatalError() }
                 let initializerOperand: Operand
                 switch initializer {
                 case let initializer as Int64: initializerOperand = .constant(initializer)
@@ -209,7 +232,7 @@ class IRGenerator {
                 instructions.append(
                     .binary(
                         op: .add, destination: offsetOperand, source1: offsetOperand,
-                        source2: .constant(4)))
+                        source2: .constant(8)))
                 instructions.append(
                     .binary(
                         op: .add, destination: targetOperand, source1: targetOperand,
@@ -399,7 +422,7 @@ class IRGenerator {
             instructions.append(
                 .binary(
                     op: .add, destination: offsetOperand, source1: offsetOperand,
-                    source2: .constant(4)))
+                    source2: .constant(8)))
             instructions.append(
                 .binary(op: .add, destination: operand, source1: operand, source2: offsetOperand))
             if type.isScalar {
@@ -460,7 +483,7 @@ extension Resolver.`Type` {
         case .char: return 1
         case .integer: return 4
         case .longint: return 8
-        case .array(let base, let size): return 4 + (base?.size ?? 0) * Int64(size ?? 0)
+        case .array(let base, let size): return 8 + (base?.size ?? 0) * Int64(size ?? 0)
         case .procedure: return 8
         case .function: return 8
         }

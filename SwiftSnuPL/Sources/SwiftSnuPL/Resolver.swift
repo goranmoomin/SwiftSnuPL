@@ -4,6 +4,7 @@ class Resolver {
     var scopes: [Scope] = []
     var resolvedTypes: [Parser.Expression: `Type`] = [:]
     var resolvedSymbols: [Token: Symbol] = [:]
+    var globalVariables: Set<String> = []
     var module: Parser.Module
 
     init(module: Parser.Module) { self.module = module }
@@ -55,20 +56,26 @@ class Resolver {
     }
 
     enum Symbol: Equatable, Hashable {
-        case `var`(token: Token, type: `Type`)
-        case const(token: Token, type: `Type`, initializer: AnyHashable)
+        case `var`(token: Token, type: `Type`, isGlobal: Bool = false)
+        case const(token: Token, type: `Type`, initializer: AnyHashable, isGlobal: Bool = false)
 
         var token: Token {
             switch self {
-            case .`var`(let token, _): return token
-            case .const(let token, _, _): return token
+            case .`var`(let token, _, _): return token
+            case .const(let token, _, _, _): return token
             }
         }
 
         var type: `Type` {
             switch self {
-            case .`var`(_, let type): return type
-            case .const(_, let type, _): return type
+            case .`var`(_, let type, _): return type
+            case .const(_, let type, _, _): return type
+            }
+        }
+        var isGlobal: Bool {
+            switch self {
+            case .`var`(_, _, let isGlobal): return isGlobal
+            case .const(_, _, _, let isGlobal): return isGlobal
             }
         }
     }
@@ -77,6 +84,13 @@ class Resolver {
         var symbols: Set<Symbol>
         let `return`: `Type`?
 
+        mutating func addGlobalVar(token: Token, type: `Type`) {
+            symbols.insert(.`var`(token: token, type: type, isGlobal: true))
+        }
+        mutating func addGlobalConst(token: Token, type: `Type`, initializer: AnyHashable) {
+            symbols.insert(
+                .const(token: token, type: type, initializer: initializer, isGlobal: true))
+        }
         mutating func addVar(token: Token, type: `Type`) {
             symbols.insert(.`var`(token: token, type: type))
         }
@@ -198,7 +212,7 @@ class Resolver {
         case .subscript: fatalError()
         case .call: fatalError()
         case .variable(let name):
-            guard case let .const(_, _, initializer) = try resolvedSymbol(of: name) else {
+            guard case let .const(_, _, initializer, _) = try resolvedSymbol(of: name) else {
                 fatalError()
             }
             return initializer
@@ -307,16 +321,30 @@ class Resolver {
         for declaration in block.declarations {
             switch declaration {
             case .`var`(let name, let type):
-                scope.addVar(token: name, type: try withScope(scope) { try evaluate(type: type) })
+                if block == module.block {
+                    scope.addGlobalVar(
+                        token: name, type: try withScope(scope) { try evaluate(type: type) })
+                    globalVariables.insert(name.string)
+                } else {
+                    scope.addVar(
+                        token: name, type: try withScope(scope) { try evaluate(type: type) })
+                }
                 try withScope(scope) { try resolveSymbol(of: name) }
             case .const(let name, let type, let initializer):
                 let initializerValue: AnyHashable = try withScope(scope) {
                     try resolve(expression: initializer)
                     return try evaluate(expression: initializer)
                 }
-                scope.addConst(
-                    token: name, type: try withScope(scope) { try evaluate(type: type) },
-                    initializer: initializerValue)
+                if block == module.block {
+                    scope.addGlobalConst(
+                        token: name, type: try withScope(scope) { try evaluate(type: type) },
+                        initializer: initializerValue)
+                    globalVariables.insert(name.string)
+                } else {
+                    scope.addConst(
+                        token: name, type: try withScope(scope) { try evaluate(type: type) },
+                        initializer: initializerValue)
+                }
                 try withScope(scope) { try resolveSymbol(of: name) }
             case .procedure(let name, let parameters, let block):
                 // TODO: Check if type evaluation requires scope

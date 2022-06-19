@@ -4,21 +4,53 @@ class AssemblyGenerator {
     var instructions: [Resolver.Symbol: [IRGenerator.Instruction]]
     var allocations: [String: Int64]
     var stringLiterals: [String: [UInt8]]
+    var globalVariables: Set<String>
 
     init(
         instructions: [Resolver.Symbol: [IRGenerator.Instruction]], allocations: [String: Int64],
-        stringLiterals: [String: [UInt8]]
+        stringLiterals: [String: [UInt8]], globalVariables: Set<String>
     ) {
         self.instructions = instructions
         self.allocations = allocations
         self.stringLiterals = stringLiterals
+        self.globalVariables = globalVariables
     }
 
     func generate() -> String {
-        """
-        \t.text
-        \(instructions.map(generate(symbol:instructions:)).joined(separator: "\n"))
-        """
+        var retasm = """
+            \t.text
+            \(instructions.map(generate(symbol:instructions:)).joined(separator: "\n"))
+            \t.macro embed_string, str
+            \t.word 2f - 1f
+            \t.word 1
+            1:
+            \t.string "\\str"
+            2:
+            \t.endm
+
+            \t.data\n
+            """
+        for glbVar in globalVariables {
+            retasm += """
+                \t.comm \(glbVar),8
+                """
+        }
+        func literalize(_ string: String) -> String {
+            return string.replacingOccurrences(of: "\0", with: "\\0")
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "\t", with: "\\t")
+                .replacingOccurrences(of: "\n", with: "\\n")
+                .replacingOccurrences(of: "\r", with: "\\r")
+                .replacingOccurrences(of: "\"", with: "\\\"")
+                .replacingOccurrences(of: "\'", with: "\\'")
+        }
+        for (key, value) in stringLiterals {
+            retasm += """
+                \(key):
+                \tembed_string "\(literalize(String(Array(value.map{ Character(UnicodeScalar($0)) }))))"
+                """
+        }
+        return retasm
     }
 
     func generate(symbol: Resolver.Symbol, instructions: [IRGenerator.Instruction]) -> String {
@@ -34,17 +66,47 @@ class AssemblyGenerator {
         func withOperands(
             load sourceOperands: [IRGenerator.Operand] = [], to sourceRegisters: [String] = [],
             store destinationOperands: [IRGenerator.Operand] = [],
-            from destinationRegisters: [String] = [], body: (() -> String)? = nil
+            from destinationRegisters: [String] = [], scratch scratchRegister: String,
+            offset stackExpanded: Int64 = 0, body: (() -> String)? = nil
         ) -> String {
+            guard
+                !sourceRegisters.contains(scratchRegister)
+                    && !destinationRegisters.contains(scratchRegister)
+            else { fatalError() }
             guard sourceOperands.count == sourceRegisters.count else { fatalError() }
             guard destinationOperands.count == destinationRegisters.count else { fatalError() }
             var assembly = ""
             for (operand, register) in zip(sourceOperands, sourceRegisters) {
                 switch operand {
                 case .constant(let value): assembly += "\tmov \(register), #\(value)\n"
-                case .temporary, .symbol:
-                    assembly +=
-                        "\tldr \(register), [sp, #\(stackMapping[operand]!)] // \(operand)\n"
+                case .temporary:
+                    let stackOffset = stackMapping[operand]! + stackExpanded
+                    if stackOffset < 256 {
+                        assembly += "\tldr \(register), [sp, #\(stackOffset)] // \(operand)\n"
+                    } else {
+                        assembly += """
+                            \tadd \(register), sp, #\(stackOffset)
+                            \tldr \(register), [\(register)] // \(operand)\n
+                            """
+                    }
+                case .symbol(let symbol):
+                    let stackOffset = stackMapping[operand]! + stackExpanded
+                    if symbol.isGlobal {
+                        assembly += """
+                            \tadrp \(register), \(symbol.token.string)
+                            \tadd \(register), \(register), :lo12:\(symbol.token.string)
+                            \tldr \(register), [\(register)] // \(symbol.token.string)\n
+                            """
+                    } else {
+                        if stackOffset < 256 {
+                            assembly += "\tldr \(register), [sp, #\(stackOffset)] // \(operand)\n"
+                        } else {
+                            assembly += """
+                                \tadd \(register), sp, #\(stackOffset)
+                                \tldr \(register), [\(register)] // \(operand)\n
+                                """
+                        }
+                    }
                 case .string(let name):
                     assembly += """
                         \tadrp \(register), \(name)
@@ -57,9 +119,34 @@ class AssemblyGenerator {
             if let body = body { assembly += body() }
             for (operand, register) in zip(destinationOperands, destinationRegisters) {
                 switch operand {
-                case .temporary, .symbol:
-                    assembly +=
-                        "\tstr \(register), [sp, #\(stackMapping[operand]!)] // \(operand)\n"
+                case .temporary:
+                    let stackOffset = stackMapping[operand]! + stackExpanded
+                    if stackOffset < 256 {
+                        assembly += "\tstr \(register), [sp, #\(stackOffset)] // \(operand)\n"
+                    } else {
+                        assembly += """
+                            \tadd \(scratchRegister), sp, #\(stackOffset)
+                            \tstr \(register), [\(scratchRegister)] // \(operand)\n
+                            """
+                    }
+                case .symbol(let symbol):
+                    let stackOffset = stackMapping[operand]! + stackExpanded
+                    if symbol.isGlobal {
+                        assembly += """
+                            \tadrp \(scratchRegister), \(symbol.token.string)
+                            \tadd \(scratchRegister), \(scratchRegister), :lo12:\(symbol.token.string)
+                            \tstr \(register), [\(scratchRegister)]\n
+                            """
+                    } else {
+                        if stackOffset < 256 {
+                            assembly += "\tstr \(register), [sp, #\(stackOffset)] // \(operand)\n"
+                        } else {
+                            assembly += """
+                                \tadd \(scratchRegister), sp, #\(stackOffset)
+                                \tstr \(register), [\(scratchRegister)] // \(operand)\n
+                                """
+                        }
+                    }
                 default: break
                 }
             }
@@ -74,11 +161,11 @@ class AssemblyGenerator {
             switch instruction {
             case .move(let destination, let source):
                 assembly += withOperands(
-                    load: [source], to: ["x8"], store: [destination], from: ["x8"])
+                    load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x10")
             case .unary(let op, let destination, let source):
                 guard op == .neg else { fatalError() }
                 assembly += withOperands(
-                    load: [source], to: ["x8"], store: [destination], from: ["x8"]
+                    load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x10"
                 ) {
                     """
                     \tmov x9, xzr
@@ -88,7 +175,8 @@ class AssemblyGenerator {
             case .binary(let op, let destination, let source1, let source2):
                 guard op == .add || op == .mul || op == .eq || op == .gt else { fatalError() }
                 assembly += withOperands(
-                    load: [source1, source2], to: ["x8", "x9"], store: [destination], from: ["x8"]
+                    load: [source1, source2], to: ["x8", "x9"], store: [destination], from: ["x8"],
+                    scratch: "x10"
                 ) {
                     switch op {
                     case .add: return "\tadd x8, x8, x9\n"
@@ -131,33 +219,76 @@ class AssemblyGenerator {
                     }
                 }
             case .parameter(let destination, let index):
-                guard index < 8 else { fatalError() }
-                assembly += withOperands(store: [destination], from: ["x\(index)"])
+                // guard index < 8 else { fatalError() }
+                if index < 8 {
+                    assembly += withOperands(
+                        store: [destination], from: ["x\(index)"], scratch: "x8")
+                } else {
+                    assembly += """
+                        \tadd x8, sp, #\(stackSize + Int64(8 * (index - 8)))
+                        \tldr x8, [x8]\n
+                        """
+                    assembly += withOperands(store: [destination], from: ["x8"], scratch: "x9")
+                }
             case .jump(let destination): assembly += "\tb .\(destination)\n"
             case .branch(let destination, let source1, let source2):
-                assembly += withOperands(load: [source1, source2], to: ["x8", "x9"]) {
+                assembly += withOperands(
+                    load: [source1, source2], to: ["x8", "x9"], scratch: "x10"
+                ) {
                     """
                     \tcmp x8, x9
                     \tb.eq .\(destination)\n
                     """
                 }
             case .call(let destination, let symbol, let arguments):
-                guard arguments.count < 8 else { fatalError() }
-                let registers = arguments.enumerated().map { (index, _) in "x\(index)" }
+                // guard arguments.count < 8 else { fatalError() }
+                let registers = arguments.prefix(8).enumerated().map { (index, _) in "x\(index)" }
                 assembly += withOperands(
-                    load: arguments, to: registers, store: destination != nil ? [destination!] : [],
-                    from: destination != nil ? ["x0"] : []
+                    load: Array(arguments.prefix(8)), to: registers, scratch: "x8"
                 ) {
                     """
                     \tstp x29, x30, [sp, #-16]!
-                    \tmov x29, sp
-                    \tbl \(symbol.token.string)
-                    \tldp x29, x30, [sp], #16\n
+                    \tmov x29, sp\n
                     """
                 }
+                if arguments.count > 8 {
+                    let extraArgumentsSize =
+                        8 * ((arguments.count % 2 == 1 ? arguments.count + 1 : arguments.count) - 8)
+                    assembly += "\tadd sp, sp, #-\(extraArgumentsSize)\n"
+                    for i in 8..<arguments.count {
+                        assembly += withOperands(
+                            load: [arguments[i]], to: ["x8"], scratch: "x9",
+                            offset: Int64(16 + extraArgumentsSize)
+                        ) {
+                            if 8 * (i - 8) < 256 {
+                                return "\tstr x8, [sp, #\(8 * (i-8))]\n"
+                            } else {
+                                return """
+                                    \tadd x9, sp, #\(8 * (i-8))
+                                    \tstr x8, x9\n
+                                    """
+                            }
+                        }
+                    }
+                    assembly += """
+                        \tbl \(symbol.token.string)
+                        \tadd sp, sp, #\(extraArgumentsSize)
+                        \tldp x29, x30, [sp], #16\n
+                        """
+                } else {
+                    assembly += """
+                        \tbl \(symbol.token.string)
+                        \tldp x29, x30, [sp], #16\n
+                        """
+                }
+
+                assembly += withOperands(
+                    store: destination != nil ? [destination!] : [],
+                    from: destination != nil ? ["x0"] : [], scratch: "x8")
             case .return(let value):
                 assembly += withOperands(
-                    load: value != nil ? [value!] : [], to: value != nil ? ["x0"] : []
+                    load: value != nil ? [value!] : [], to: value != nil ? ["x0"] : [],
+                    scratch: "x10"
                 ) {
                     """
                     \tadd sp, sp, #\(stackSize)
@@ -166,7 +297,7 @@ class AssemblyGenerator {
                 }
             case .load(let destination, let source, let size):
                 assembly += withOperands(
-                    load: [source], to: ["x8"], store: [destination], from: ["x8"]
+                    load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x9"
                 ) {
                     switch size {
                     case .byte: return "\tldrb x8, [x8]"
@@ -175,7 +306,9 @@ class AssemblyGenerator {
                     }
                 }
             case .store(let source, let destination, let size):
-                assembly += withOperands(load: [source, destination], to: ["x8", "x9"]) {
+                assembly += withOperands(
+                    load: [source, destination], to: ["x8", "x9"], scratch: "x10"
+                ) {
                     switch size {
                     case .byte: return "\tstrb x8, [x9]"
                     case .word: return "\tstr w8, [x9]\n"
