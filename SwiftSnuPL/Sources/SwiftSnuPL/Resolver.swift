@@ -31,9 +31,9 @@ class Resolver {
 
         func isConvertible(to target: Self) -> Bool {
             switch self {
-            case .boolean, .char, .integer, .longint: return self == target
+            case .boolean, .char: return self == target
             // disable integer widening for now
-            // case .integer: return target == .integer || target == .longint
+            case .integer, .longint: return target == .integer || target == .longint
             case .procedure, .function: return false
             case .array(let base, let size):
                 guard case .array(base: let targetBase, size: let targetSize) = target else {

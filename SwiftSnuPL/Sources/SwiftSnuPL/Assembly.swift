@@ -22,27 +22,15 @@ class AssemblyGenerator {
             \(instructions.map(generate(symbol:instructions:)).joined(separator: "\n"))
             \t.data\n
             """
-        for glbVar in globalVariables {
-            retasm += "\t.comm \(glbVar),8\n"
-        }
-        func literalize(_ string: String) -> String {
-            return string.replacingOccurrences(of: "\0", with: "\\0")
-                .replacingOccurrences(of: "\\", with: "\\\\")
-                .replacingOccurrences(of: "\t", with: "\\t")
-                .replacingOccurrences(of: "\n", with: "\\n")
-                .replacingOccurrences(of: "\r", with: "\\r")
-                .replacingOccurrences(of: "\"", with: "\\\"")
-                .replacingOccurrences(of: "\'", with: "\\'")
-        }
+        for glbVar in globalVariables { retasm += "\t.comm \(glbVar),8\n" }
         for (key, value) in stringLiterals {
             retasm += """
-                    \(key):
-                    \t.word \(value.count)
-                    \t.word 1\n
-                    """
-            for ch in value {
-                retasm += "\t.byte \(ch)\n"
-            }
+                \(key):
+                \t.word \(value.count + 1)
+                \t.word 1\n
+                """
+            for ch in value { retasm += "\t.byte \(ch)\n" }
+            retasm += "\t.byte 0\n"
         }
         return retasm
     }

@@ -247,15 +247,20 @@ class IRGenerator {
                 let wordLabel = makeLabel()
                 let endLabel = makeLabel()
 
-                instructions.append(.branch(destination: byteLabel, source1: sizeOperand, source2: .constant(1)))
-                instructions.append(.branch(destination: wordLabel, source1: sizeOperand, source2: .constant(4)))
-                instructions.append(.store(source: valueOperand, destination: targetOperand, size: .doubleWord))
+                instructions.append(
+                    .branch(destination: byteLabel, source1: sizeOperand, source2: .constant(1)))
+                instructions.append(
+                    .branch(destination: wordLabel, source1: sizeOperand, source2: .constant(4)))
+                instructions.append(
+                    .store(source: valueOperand, destination: targetOperand, size: .doubleWord))
                 instructions.append(.jump(destination: endLabel))
                 instructions.append(.label(name: wordLabel))
-                instructions.append(.store(source: valueOperand, destination: targetOperand, size: .word))
+                instructions.append(
+                    .store(source: valueOperand, destination: targetOperand, size: .word))
                 instructions.append(.jump(destination: endLabel))
                 instructions.append(.label(name: byteLabel))
-                instructions.append(.store(source: valueOperand, destination: targetOperand, size: .byte))
+                instructions.append(
+                    .store(source: valueOperand, destination: targetOperand, size: .byte))
                 instructions.append(.label(name: endLabel))
             }
             return instructions
@@ -431,10 +436,9 @@ class IRGenerator {
             let indexOperand = makeTemporary()
             instructions.append(contentsOf: makeInstructions(expression: array, to: operand))
             instructions.append(
-                .binary(
-                    op: .add, destination: sizeOperand, source1: operand, source2: .constant(4)))
-            instructions.append(
-                .load(destination: sizeOperand, source: sizeOperand, size: .word))
+                .binary(op: .add, destination: sizeOperand, source1: operand, source2: .constant(4))
+            )
+            instructions.append(.load(destination: sizeOperand, source: sizeOperand, size: .word))
             instructions.append(contentsOf: makeInstructions(expression: index, to: indexOperand))
             instructions.append(
                 .binary(
@@ -450,8 +454,10 @@ class IRGenerator {
                 let byteLabel = makeLabel()
                 let wordLabel = makeLabel()
                 let endLabel = makeLabel()
-                instructions.append(.branch(destination: byteLabel, source1: sizeOperand, source2: .constant(1)))
-                instructions.append(.branch(destination: wordLabel, source1: sizeOperand, source2: .constant(4)))
+                instructions.append(
+                    .branch(destination: byteLabel, source1: sizeOperand, source2: .constant(1)))
+                instructions.append(
+                    .branch(destination: wordLabel, source1: sizeOperand, source2: .constant(4)))
                 instructions.append(.load(destination: operand, source: operand, size: .doubleWord))
                 instructions.append(.jump(destination: endLabel))
                 instructions.append(.label(name: wordLabel))
