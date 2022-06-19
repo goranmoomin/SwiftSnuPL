@@ -31,9 +31,7 @@ class AssemblyGenerator {
             \t.data\n
             """
         for glbVar in globalVariables {
-            retasm += """
-                \t.comm \(glbVar),8
-                """
+            retasm += "\t.comm \(glbVar),8\n"
         }
         func literalize(_ string: String) -> String {
             return string.replacingOccurrences(of: "\0", with: "\\0")
@@ -47,7 +45,7 @@ class AssemblyGenerator {
         for (key, value) in stringLiterals {
             retasm += """
                 \(key):
-                \tembed_string "\(literalize(String(Array(value.map{ Character(UnicodeScalar($0)) }))))"
+                \tembed_string "\(literalize(String(Array(value.map{ Character(UnicodeScalar($0)) }))))"\n
                 """
         }
         return retasm

@@ -9,28 +9,17 @@ let source = #"""
 
     module test2;
 
-    const abcde: integer = 40;
-
-    procedure foo(v: integer);
-    // var i: integer;
+    const
+      str1: char[] = "Matrix\t Adder\n\n";
+      str2: char[] = "Matrix2\t Multiplier\n";
     begin
-      WriteInt(v+abcde)
-    end foo;
-
-    function bar(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10: integer): integer;
-    begin
-      return p1 + p2 + p3 + p7 + p8 + p9 + p10
-    end bar;
-
-    begin
-      foo(bar(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
     end test2.
     """#
 
 let sourceData = source.data(using: .utf8)!
 let scanner = Scanner(data: sourceData)
 let parser = Parser(scanner: scanner)
-guard let module = try? parser.parse() else {
+guard let module = try? parser.parse(), !parser.hasError else {
     for parseError in parser.errors {
         if let token = parseError.token, let message = parseError.message {
             print("error: \(token.lineNumber):\(token.charPosition) \(message)")

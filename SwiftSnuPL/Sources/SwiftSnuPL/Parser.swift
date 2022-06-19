@@ -133,7 +133,7 @@ class Parser {
         rethrows
     {
         do { try body() } catch Recover.tryRecover {
-            while !check(starts + ends) { advance() }
+            while !check(starts + ends) && token != nil { advance() }
             _ = match(ends)
         }
     }
