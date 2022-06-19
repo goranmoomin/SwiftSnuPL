@@ -163,15 +163,15 @@ class IRGenerator {
                                     source2: .constant(Int64(8 * depth) + Int64(i) * type.size)))
                             instructions.append(
                                 .store(
-                                    source: .constant(base.size), destination: pointerOperand,
-                                    size: .word))
+                                    source: .constant(base.size * Int64(size)),
+                                    destination: pointerOperand, size: .word))
                             instructions.append(
                                 .binary(
                                     op: .add, destination: pointerOperand, source1: pointerOperand,
                                     source2: .constant(4)))
                             instructions.append(
                                 .store(
-                                    source: .constant(type.size), destination: pointerOperand,
+                                    source: .constant(base.size), destination: pointerOperand,
                                     size: .word))
                         }
                         depth += 1
@@ -222,7 +222,11 @@ class IRGenerator {
                 let offsetOperand = makeTemporary()
                 let indexOperand = makeTemporary()
                 instructions.append(
-                    .load(destination: offsetOperand, source: targetOperand, size: .word))
+                    .binary(
+                        op: .add, destination: offsetOperand, source1: targetOperand,
+                        source2: .constant(4)))
+                instructions.append(
+                    .load(destination: offsetOperand, source: offsetOperand, size: .word))
                 instructions.append(
                     contentsOf: makeInstructions(expression: index, to: indexOperand))
                 instructions.append(
@@ -413,7 +417,11 @@ class IRGenerator {
             let offsetOperand = makeTemporary()
             let indexOperand = makeTemporary()
             instructions.append(contentsOf: makeInstructions(expression: array, to: operand))
-            instructions.append(.load(destination: offsetOperand, source: operand, size: .word))
+            instructions.append(
+                .binary(
+                    op: .add, destination: offsetOperand, source1: operand, source2: .constant(4)))
+            instructions.append(
+                .load(destination: offsetOperand, source: offsetOperand, size: .word))
             instructions.append(contentsOf: makeInstructions(expression: index, to: indexOperand))
             instructions.append(
                 .binary(
