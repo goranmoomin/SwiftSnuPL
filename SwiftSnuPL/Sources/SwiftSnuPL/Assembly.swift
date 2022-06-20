@@ -34,6 +34,22 @@ class AssemblyGenerator {
         }
         return assembly
     }
+    func embedImm(imm: Int64, scratch scratchRegister: String) -> String {
+        if imm < 0 {
+            return """
+                \tmov \(scratchRegister), #\(imm % (1 << 16))
+                \tmovk \(scratchRegister), #\((imm >> 16) % (1 << 16)), LSL 16
+                \tmovk \(scratchRegister), #\((imm >> 32) % (1 << 16)), LSL 32
+                \tmovk \(scratchRegister), #\((imm >> 48) % (1 << 16)), LSL 48
+                """
+        } else {
+            var retasm = "\tmov \(scratchRegister), #\(imm % (1 << 16))\n"
+            if imm >= (1 << 16) { retasm += "\tmovk \(scratchRegister), #\((imm >> 16) % (1 << 16)), LSL 16\n" }
+            if imm >= (1 << 32) { retasm += "\tmovk \(scratchRegister), #\((imm >> 32) % (1 << 16)), LSL 32\n" }
+            if imm >= (1 << 48) { retasm += "\tmovk \(scratchRegister), #\((imm >> 48) % (1 << 16)), LSL 48\n" }
+            return retasm
+        }
+    }
 
     func generate(symbol: Resolver.Symbol, instructions: [IRGenerator.Instruction]) -> String {
         let operands = operands(in: instructions)
@@ -58,14 +74,25 @@ class AssemblyGenerator {
             var assembly = ""
             for (operand, register) in zip(sourceOperands, sourceRegisters) {
                 switch operand {
-                case .constant(let value): assembly += "\tmov \(register), #\(value)\n"
+                case .constant(let value):
+                    if 0 <= value && value < 4096 {
+                        assembly += "\tmov \(register), #\(value)\n"
+                    } else {
+                        assembly += embedImm(imm: value, scratch: "x15") + "\tmov \(register), x15\n"
+                    }
                 case .temporary:
                     let stackOffset = stackMapping[operand]! + stackExpanded
                     if stackOffset < 256 {
                         assembly += "\tldr \(register), [sp, #\(stackOffset)] // \(operand)\n"
-                    } else {
+                    } else if stackOffset < 4096 {
                         assembly += """
                             \tadd \(register), sp, #\(stackOffset)
+                            \tldr \(register), [\(register)] // \(operand)\n
+                            """
+                    } else {
+                        assembly += embedImm(imm: stackOffset, scratch: "x15")
+                        assembly += """
+                            \tadd \(register), sp, x15
                             \tldr \(register), [\(register)] // \(operand)\n
                             """
                     }
@@ -80,9 +107,15 @@ class AssemblyGenerator {
                     } else {
                         if stackOffset < 256 {
                             assembly += "\tldr \(register), [sp, #\(stackOffset)] // \(operand)\n"
-                        } else {
+                        } else if stackOffset < 4096 {
                             assembly += """
                                 \tadd \(register), sp, #\(stackOffset)
+                                \tldr \(register), [\(register)] // \(operand)\n
+                                """
+                        } else {
+                            assembly += embedImm(imm: stackOffset, scratch: "x15")
+                            assembly += """
+                                \tadd \(register), sp, x15
                                 \tldr \(register), [\(register)] // \(operand)\n
                                 """
                         }
@@ -92,7 +125,13 @@ class AssemblyGenerator {
                         \tadrp \(register), \(name)
                         \tadd \(register), \(register), :lo12:\(name)\n
                         """
-                case .allocation: assembly += "\tadd \(register), sp, #\(stackMapping[operand]!) // \(operand)\n"
+                case .allocation:
+                    let value = stackMapping[operand]!
+                    if 0 <= value && value < 4096 {
+                        assembly += "\tadd \(register), sp, #\(value) // \(operand)\n"
+                    } else {
+                        assembly += embedImm(imm: value, scratch: "x15") + "\tadd \(register), sp, x15 // \(operand)\n"
+                    }
                 }
             }
             if let body = body { assembly += body() }
@@ -102,9 +141,15 @@ class AssemblyGenerator {
                     let stackOffset = stackMapping[operand]! + stackExpanded
                     if stackOffset < 256 {
                         assembly += "\tstr \(register), [sp, #\(stackOffset)] // \(operand)\n"
-                    } else {
+                    } else if stackOffset < 4096 {
                         assembly += """
                             \tadd \(scratchRegister), sp, #\(stackOffset)
+                            \tstr \(register), [\(scratchRegister)] // \(operand)\n
+                            """
+                    } else {
+                        assembly += embedImm(imm: stackOffset, scratch: "x15")
+                        assembly += """
+                            \tadd \(scratchRegister), sp, x15
                             \tstr \(register), [\(scratchRegister)] // \(operand)\n
                             """
                     }
@@ -119,9 +164,15 @@ class AssemblyGenerator {
                     } else {
                         if stackOffset < 256 {
                             assembly += "\tstr \(register), [sp, #\(stackOffset)] // \(operand)\n"
-                        } else {
+                        } else if stackOffset < 4096 {
                             assembly += """
                                 \tadd \(scratchRegister), sp, #\(stackOffset)
+                                \tstr \(register), [\(scratchRegister)] // \(operand)\n
+                                """
+                        } else {
+                            assembly += embedImm(imm: stackOffset, scratch: "x15")
+                            assembly += """
+                                \tadd \(scratchRegister), sp, x15
                                 \tstr \(register), [\(scratchRegister)] // \(operand)\n
                                 """
                         }
@@ -134,34 +185,49 @@ class AssemblyGenerator {
         var assembly = """
             \t.globl \(symbol.token.string)
             \(symbol.token.string):
-            \tsub sp, sp, #\(stackSize)\n
             """
+        if stackSize < 4096 {
+            assembly += "\tsub sp, sp, #\(stackSize)\n"
+        } else {
+            assembly += embedImm(imm: stackSize, scratch: "x15") + "\tsub sp, sp, x15\n"
+        }
         for instruction in instructions {
             switch instruction {
             case .move(let destination, let source):
                 assembly += withOperands(load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x10")
             case .unary(let op, let destination, let source):
-                guard op == .neg else { fatalError() }
                 assembly += withOperands(load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x10")
                 {
-                    """
-                    \tmov x9, xzr
-                    \tsubs x8, x8, x9\n
-                    """
+                    switch op {
+                    case .neg:
+                        return """
+                            \tmov x9, xzr
+                            \tsubs x8, x8, x9\n
+                            """
+                    case .not:
+                        return """
+                            \tcmp x8, xzr
+                            \tcset x8, eq\n
+                            """
+                    default: fatalError()
+                    }
                 }
             case .binary(let op, let destination, let source1, let source2):
-                guard op == .add || op == .mul || op == .eq || op == .gt else { fatalError() }
                 assembly += withOperands(
                     load: [source1, source2], to: ["x8", "x9"], store: [destination], from: ["x8"], scratch: "x10"
                 ) {
                     switch op {
                     case .add: return "\tadd x8, x8, x9\n"
-                    case .sub: fatalError()
+                    case .sub:
+                        return """
+                            \tmov x10, xzr
+                            \tsubs x9, x10, x9
+                            \tadd x8, x8, x9\n
+                            """
                     case .mul: return "\tmul x8, x8, x9\n"
-                    case .div: fatalError()
-                    case .and: fatalError()
-                    case .or: fatalError()
-
+                    case .div: return "\tsdiv x8, x8, x9\n"
+                    case .and: return "\tand x8, x8, x9\n"
+                    case .or: return "\torr x8, x8, x9\n"
                     case .eq:
                         return """
                             \tcmp x9, x8
@@ -199,10 +265,19 @@ class AssemblyGenerator {
                 if index < 8 {
                     assembly += withOperands(store: [destination], from: ["x\(index)"], scratch: "x8")
                 } else {
-                    assembly += """
-                        \tadd x8, sp, #\(stackSize + Int64(8 * (index - 8)))
-                        \tldr x8, [x8]\n
-                        """
+                    let offset = stackSize + Int64(8 * (index - 8))
+                    if offset < 4096 {
+                        assembly += """
+                            \tadd x8, sp, #\(offset)
+                            \tldr x8, [x8]\n
+                            """
+                    } else {
+                        assembly += embedImm(imm: offset, scratch: "x15")
+                        assembly += """
+                            \tadd x8, sp, x15
+                            \tldr x8, [x8]\n
+                            """
+                    }
                     assembly += withOperands(store: [destination], from: ["x8"], scratch: "x9")
                 }
             case .jump(let destination): assembly += "\tb .\(destination)\n"
@@ -227,24 +302,41 @@ class AssemblyGenerator {
                         8 * ((arguments.count % 2 == 1 ? arguments.count + 1 : arguments.count) - 8)
                     assembly += "\tadd sp, sp, #-\(extraArgumentsSize)\n"
                     for i in 8..<arguments.count {
+                        let offsetLoadAsm = embedImm(imm: Int64(8 * (i - 8)), scratch: "x15")
                         assembly += withOperands(
                             load: [arguments[i]], to: ["x8"], scratch: "x9", offset: Int64(16 + extraArgumentsSize)
                         ) {
                             if 8 * (i - 8) < 256 {
                                 return "\tstr x8, [sp, #\(8 * (i-8))]\n"
-                            } else {
+                            } else if (8 * (i - 8)) < 4096 {
                                 return """
                                     \tadd x9, sp, #\(8 * (i-8))
+                                    \tstr x8, x9\n
+                                    """
+                            } else {
+                                return offsetLoadAsm + """
+                                    \tadd x9, sp, x15
                                     \tstr x8, x9\n
                                     """
                             }
                         }
                     }
-                    assembly += """
-                        \tbl \(symbol.token.string)
-                        \tadd sp, sp, #\(extraArgumentsSize)
-                        \tldp x29, x30, [sp], #16\n
-                        """
+                    if extraArgumentsSize < 4096 {
+                        assembly += """
+                            \tbl \(symbol.token.string)
+                            \tadd sp, sp, #\(extraArgumentsSize)
+                            \tldp x29, x30, [sp], #16\n
+                            """
+                    } else {
+                        assembly += """
+                            \tbl \(symbol.token.string)
+                            \tmov x15, xzr
+                            \tmovk x15, #\((extraArgumentsSize >> 16) % (1 << 16)), LSL 16
+                            \tmovk x15, #\(extraArgumentsSize % (1 << 16))
+                            \tadd sp, sp, x15
+                            \tldp x29, x30, [sp], #16\n
+                            """
+                    }
                 } else {
                     assembly += """
                         \tbl \(symbol.token.string)
@@ -256,13 +348,21 @@ class AssemblyGenerator {
                     store: destination != nil ? [destination!] : [], from: destination != nil ? ["x0"] : [],
                     scratch: "x8")
             case .return(let value):
+                let offsetLoadAsm = embedImm(imm: stackSize, scratch: "x15")
                 assembly += withOperands(
                     load: value != nil ? [value!] : [], to: value != nil ? ["x0"] : [], scratch: "x10"
                 ) {
-                    """
-                    \tadd sp, sp, #\(stackSize)
-                    \tret\n
-                    """
+                    if stackSize < 4096 {
+                        return """
+                            \tadd sp, sp, #\(stackSize)
+                            \tret\n
+                            """
+                    } else {
+                        return offsetLoadAsm + """
+                            \tadd sp, sp, x15
+                            \tret\n
+                            """
+                    }
                 }
             case .load(let destination, let source, let size):
                 assembly += withOperands(load: [source], to: ["x8"], store: [destination], from: ["x8"], scratch: "x9")
@@ -284,10 +384,18 @@ class AssemblyGenerator {
             case .label(let name): assembly += ".\(name):\n"
             }
         }
-        assembly += """
-            \tadd sp, sp, #\(stackSize)
-            \tret\n
-            """
+        if stackSize < 4096 {
+            assembly += """
+                \tadd sp, sp, #\(stackSize)
+                \tret\n
+                """
+        } else {
+            assembly +=
+                embedImm(imm: stackSize, scratch: "x15") + """
+                \tadd sp, sp, x15
+                \tret\n
+                """
+        }
         return assembly
     }
 

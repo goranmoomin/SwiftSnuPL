@@ -1,93 +1,53 @@
 import Foundation
 
 let source = #"""
-    //
-    // Matrix Add
-    //
-    // A valid SnuPL/2 test program
-    //
+    module big_sort;
 
-    module MatrixAdd;
+    const N: integer = 100000;
 
-    const
-      N : integer = 2*(2+2);
-      ProgramName : char[] = "Matrix\t Adder\n\n";
-
-    procedure minit(m: integer[][]);
-    var x,y,v: integer;
+    procedure insertion_sort(a: integer[]);
+    var i, j, t: integer;
     begin
-      y := 0;
-      v := 1;
-      while (y < N) do
-        x := 0;
-        while (x < N) do
-          m[y][x] := v;
-          v := v+1;
-          if (v = 10) then v := 0 end;
-          x := x+1
+        i := 0;
+        while (i < DIM(a, 1)) do
+            t := a[i];
+            j := i;
+            while ((j > 0) && (a[j - 1] > t)) do
+                a[j] := a[j - 1];
+                j := j - 1
+            end;
+            a[j] := t;
+            i := i + 1
+        end
+    end insertion_sort;
+
+    var arr: integer[N];
+    var i: integer;
+        correct: integer;
+    begin
+        i := 0;
+        while (i < N / 2) do
+            arr[i] := i * 2;
+            i := i + 1
         end;
-        y := y+1
-      end
-    end minit;
-
-    procedure madd(sum: integer[N][N]; a,b: integer[N][N]);
-    var x,y: integer;
-    begin
-      y := 0;
-      while (y < N) do
-        x := 0;
-        while (x < N) do
-          sum[y][x] := a[y][x] + b[y][x];
-          x := x+1
-        end;
-        y := y+1
-      end
-    end madd;
-
-    procedure mprint(m: integer[][]; title: char[]);
-    const MStr : char[] = ". Matrix ";
-    var N,M,x,y: integer;
-    begin
-      M := DIM(m, 1);
-      N := DIM(m, 2);
-
-      WriteStr(title); WriteStr(MStr); WriteInt(M); WriteChar('x'); WriteInt(N);
-      WriteLn();
-      WriteStr("[\n");
-
-      y := 0;
-      while (y < M) do
-        WriteStr("  "); WriteInt(y); WriteStr(":  [   ");
-
-        x := 0;
-        while (x < N) do
-          WriteInt(m[y][x]); WriteStr("   ");
-          x := x+1
+        while (i < N) do
+            arr[i] := ((i - N / 2) * 2) + 1;
+            i := i + 1
         end;
 
-        WriteStr("]\n");
-        y := y+1
-      end;
+        insertion_sort(arr);
+        i := 0;
+        correct := 0;
+        while (i < N) do
+            if (arr[i] = i) then
+                correct := correct + 1
+            end;
+            i := i + 1
+        end;
 
-      WriteStr("]\n\n")
-    end mprint;
+        WriteInt(correct); WriteStr(" out of "); WriteInt(N); WriteStr(" correct.\n")
+    end big_sort.
 
-    var
-      A, B, C : integer[N][N];
-    begin
-      WriteStr(ProgramName); WriteLn();
-
-      minit(A);
-      minit(B);
-      minit(C);
-
-      mprint(A, "A");
-      mprint(B, "B");
-
-      madd(C, A, B);
-
-      mprint(C, "C = A+B")
-    end MatrixAdd.
     """#
 
 let sourceData = source.data(using: .utf8)!
