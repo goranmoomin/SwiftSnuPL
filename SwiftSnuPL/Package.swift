@@ -3,7 +3,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftSnuPL", products: [.executable(name: "SwiftSnuPL", targets: ["SwiftSnuPL"])],
+    name: "SwiftSnuPL", platforms: [.macOS(.v11)], products: [.executable(name: "SwiftSnuPL", targets: ["SwiftSnuPL"])],
+    dependencies: [.package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0")],
     targets: [
-        .target(name: "CppSnuPL", dependencies: []), .executableTarget(name: "SwiftSnuPL", dependencies: ["CppSnuPL"]),
+        .target(name: "CppSnuPL", dependencies: []),
+        .executableTarget(
+            name: "SwiftSnuPL",
+            dependencies: ["CppSnuPL", .product(name: "ArgumentParser", package: "swift-argument-parser")]),
     ], cxxLanguageStandard: .cxx11)
